@@ -1,4 +1,7 @@
 const mongoose = require('mongoose');
+const dns = require('dns');
+dns.setServers(['8.8.8.8', '1.1.1.1']);
+
 
 /**
  * Establishes a connection to the MongoDB database using the MONGODB_URI environment variable.
@@ -10,7 +13,6 @@ const connectDB = async () => {
     console.error('Error: MONGODB_URI environment variable is missing.');
     throw new Error('MONGODB_URI is not defined');
   }
-
   try {
     const conn = await mongoose.connect(uri);
     console.log(`MongoDB connected successfully to host: ${conn.connection.host}`);
@@ -20,11 +22,9 @@ const connectDB = async () => {
     throw error;
   }
 };
-
-/**
- * Disconnects from the MongoDB database.
- * @returns {Promise<void>}
- */
+/*** 
+ @returns {Promise<void>}
+*/
 const disconnectDB = async () => {
   try {
     await mongoose.disconnect();
