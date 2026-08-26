@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-
 const EventSchema = new mongoose.Schema(
   {
     aggregateId: {
@@ -25,16 +24,8 @@ const EventSchema = new mongoose.Schema(
       required: true,
       min: 0
     }
-  },
-  {
-    // Disable the Mongoose default __v field since we manage our own domain 'version'
-    versionKey: false
   }
 );
-
-// Compound index to ensure uniqueness of version per aggregate (concurrency control)
 EventSchema.index({ aggregateId: 1, version: 1 }, { unique: true });
-
 const Event = mongoose.model('Event', EventSchema);
-
 module.exports = Event;
