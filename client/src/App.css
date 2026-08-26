@@ -182,3 +182,22 @@
     border-right-color: var(--border);
   }
 }
+
+/* ==== NAYA 3D HOVER EFFECT — saare clickable/interactive elements pe ==== */
+.counter,
+#next-steps ul a,
+#next-steps > div,
+button,
+a {
+  transform-style: preserve-3d;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, filter 0.3s ease;
+}
+
+.counter:hover,
+#next-steps ul a:hover,
+#next-steps > div:hover,
+button:hover {
+  transform: perspective(700px) rotateX(8deg) rotateY(-8deg) translateY(-4px) scale(1.03);
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.35);
+  filter: brightness(1.08);
+}
