@@ -1,8 +1,9 @@
 const { COMMAND_TYPES, validateCommand, validateStateTransition } = require('../domain/commandValidation');
 const { createDomainEvent } = require('../events/createDomainEvent');
 const { EVENT_TYPES } = require('../events/eventTypes');
-const Event = require('../models/Event');
 const { createInitialShipmentState } = require('../domain/shipmentState');
+const eventStore = require('../events/eventStore');
+const { persistDomainEvent } = require('../events/persistDomainEvent');
 
 /**
  * Replays domain events sequentially to reconstruct the current shipment state.
@@ -57,7 +58,9 @@ const handleCreateShipment = async (commandData) => {
   };
 
   validateCommand(command);
-  const existingEvent = await Event.findOne({ aggregateId: shipmentId });
+  const events = await eventStore.getEventsByAggregateId(shipmentId);
+  const existingEvent = events.length > 0 ? events[0] : null;
+
   if (existingEvent) {
     const err = new Error(`Shipment with ID ${shipmentId} already exists`);
     err.status = 409;
@@ -69,15 +72,8 @@ const handleCreateShipment = async (commandData) => {
   const eventPayload = { origin, destination, cargo };
   const domainEvent = createDomainEvent(shipmentId, EVENT_TYPES.CONTAINER_CREATED, eventPayload, 1);
 
-  const persistedEvent = new Event({
-    aggregateId: domainEvent.aggregateId,
-    eventType: domainEvent.eventType,
-    payload: domainEvent.payload,
-    timestamp: domainEvent.timestamp,
-    version: domainEvent.version
-  });
 
-  await persistedEvent.save();
+  await persistDomainEvent(domainEvent, eventStore);
 
   return {
     aggregateId: domainEvent.aggregateId,
@@ -103,7 +99,8 @@ const handleLoadShipment = async (commandData) => {
 
   validateCommand(command);
 
-  const events = await Event.find({ aggregateId: shipmentId }).sort({ version: 1 });
+  const events = await eventStore.getEventsByAggregateId(shipmentId);
+
   if (events.length === 0) {
     const err = new Error(`Shipment with ID ${shipmentId} not found`);
     err.status = 404;
@@ -117,15 +114,8 @@ const handleLoadShipment = async (commandData) => {
   const nextVersion = currentState.version + 1;
   const domainEvent = createDomainEvent(shipmentId, EVENT_TYPES.LOADED_ON_SHIP, eventPayload, nextVersion);
 
-  const persistedEvent = new Event({
-    aggregateId: domainEvent.aggregateId,
-    eventType: domainEvent.eventType,
-    payload: domainEvent.payload,
-    timestamp: domainEvent.timestamp,
-    version: domainEvent.version
-  });
+  await persistDomainEvent(domainEvent, eventStore);
 
-  await persistedEvent.save();
 
   return {
     aggregateId: domainEvent.aggregateId,
@@ -152,7 +142,8 @@ const handleTemperatureSpike = async (commandData) => {
 
   validateCommand(command);
 
-  const events = await Event.find({ aggregateId: shipmentId }).sort({ version: 1 });
+  const events = await eventStore.getEventsByAggregateId(shipmentId);
+
   if (events.length === 0) {
     const err = new Error(`Shipment with ID ${shipmentId} not found`);
     err.status = 404;
@@ -166,15 +157,7 @@ const handleTemperatureSpike = async (commandData) => {
   const nextVersion = currentState.version + 1;
   const domainEvent = createDomainEvent(shipmentId, EVENT_TYPES.TEMPERATURE_SPIKE, eventPayload, nextVersion);
 
-  const persistedEvent = new Event({
-    aggregateId: domainEvent.aggregateId,
-    eventType: domainEvent.eventType,
-    payload: domainEvent.payload,
-    timestamp: domainEvent.timestamp,
-    version: domainEvent.version
-  });
-
-  await persistedEvent.save();
+  await persistDomainEvent(domainEvent, eventStore);
 
   return {
     aggregateId: domainEvent.aggregateId,
@@ -199,7 +182,8 @@ const handleArriveAtPort = async (commandData) => {
 
   validateCommand(command);
 
-  const events = await Event.find({ aggregateId: shipmentId }).sort({ version: 1 });
+  const events = await eventStore.getEventsByAggregateId(shipmentId);
+
   if (events.length === 0) {
     const err = new Error(`Shipment with ID ${shipmentId} not found`);
     err.status = 404;
@@ -213,15 +197,9 @@ const handleArriveAtPort = async (commandData) => {
   const nextVersion = currentState.version + 1;
   const domainEvent = createDomainEvent(shipmentId, EVENT_TYPES.ARRIVED_AT_PORT, eventPayload, nextVersion);
 
-  const persistedEvent = new Event({
-    aggregateId: domainEvent.aggregateId,
-    eventType: domainEvent.eventType,
-    payload: domainEvent.payload,
-    timestamp: domainEvent.timestamp,
-    version: domainEvent.version
-  });
 
-  await persistedEvent.save();
+
+  await persistDomainEvent(domainEvent, eventStore);
 
   return {
     aggregateId: domainEvent.aggregateId,
