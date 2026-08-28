@@ -15,7 +15,7 @@ const queryService = require('./queryService');
  */
 const getShipmentState = async (request, response, next) => {
 	try {
-		const { shipmentId } = request.params;
+		const shipmentId = request.params.shipmentId || request.params.id;
 
 		const shipmentState = await queryService.getShipmentState(shipmentId);
 
@@ -41,7 +41,7 @@ const getShipmentState = async (request, response, next) => {
  */
 const getShipmentEvents = async (request, response, next) => {
 	try {
-		const { shipmentId } = request.params;
+		const shipmentId = request.params.shipmentId || request.params.id;
 
 		const events = await queryService.getShipmentEvents(shipmentId);
 

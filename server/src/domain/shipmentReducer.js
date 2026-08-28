@@ -26,7 +26,8 @@ function applyEvent(state, event) {
       return {
         ...nextState,
         status: 'LOADED',
-        location: event.payload?.location ?? state.location
+        location: event.payload?.location ?? event.payload?.port ?? state.location,
+        vessel: event.payload?.vessel ?? state.vessel ?? null
       };
 
     case EVENT_TYPES.TEMPERATURE_SPIKE:
@@ -41,7 +42,7 @@ function applyEvent(state, event) {
       return {
         ...nextState,
         status: 'ARRIVED',
-        location: event.payload?.location ?? state.location
+        location: event.payload?.location ?? event.payload?.port ?? state.location
       };
 
     default:
@@ -61,6 +62,10 @@ function replayShipmentEvents(shipmentId, events) {
   let state = createInitialShipmentState(shipmentId);
 
   for (const event of events) {
+    if (!event || typeof event !== 'object') {
+      throw new Error('event is required');
+    }
+
     if (event.aggregateId && event.aggregateId !== shipmentId) {
       throw new Error(
         `Event aggregateId ${event.aggregateId} does not match shipmentId ${shipmentId}`
