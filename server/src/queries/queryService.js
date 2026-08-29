@@ -1,4 +1,4 @@
-const { replayShipmentEvents } = require('../domain/shipmentReducer');
+const { reconstructShipmentState } = require('../domain/shipmentReconstruction');
 const eventStore = require('../events/eventStore');
 const Event = require('../models/Event');
 
@@ -12,7 +12,7 @@ const getShipmentState = async (shipmentId) => {
 	if (!events || events.length === 0) {
 		return null;
 	}
-	return replayShipmentEvents(shipmentId, events);
+	return reconstructShipmentState(shipmentId, events);
 };
 
 /**
@@ -34,7 +34,7 @@ const listShipments = async () => {
 	for (const shipmentId of aggregateIds) {
 		const events = await eventStore.getEventsByAggregateId(shipmentId);
 		if (events && events.length > 0) {
-			const state = replayShipmentEvents(shipmentId, events);
+			const state = reconstructShipmentState(shipmentId, events);
 			shipments.push(state);
 		}
 	}
