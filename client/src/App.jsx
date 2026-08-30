@@ -1,10 +1,16 @@
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Dashboard from "./pages/Dashboard";
+import ShipmentDetails from "./pages/ShipmentDetails";
+
 function App() {
   return (
-    
-      <div className="bg-red-900 text-3xl font-bold underline">
-        Audit Trail
-      </div>
-  )
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/shipment/:shipmentId" element={<ShipmentDetails />} />
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
 export default App;
