@@ -1,4 +1,6 @@
-
+const { reconstructShipmentState } = require('../domain/shipmentReconstruction');
+const eventStore = require('../events/eventStore');
+const Event = require('../models/Event');
 
 /**
  * Reconstruct the current state of a shipment by replaying its events.
@@ -6,7 +8,11 @@
  * @returns {Promise<Object|null>} The reconstructed shipment state, or null if not found.
  */
 const getShipmentState = async (shipmentId) => {
-	throw new Error('getShipmentState is not yet implemented. Scheduled for Day 7.');
+	const events = await eventStore.getEventsByAggregateId(shipmentId);
+	if (!events || events.length === 0) {
+		return null;
+	}
+	return reconstructShipmentState(shipmentId, events);
 };
 
 /**
@@ -15,8 +21,7 @@ const getShipmentState = async (shipmentId) => {
  * @returns {Promise<Array>} The ordered list of domain events.
  */
 const getShipmentEvents = async (shipmentId) => {
-	// Day 7: fetch events from event store ordered by version/timestamp
-	throw new Error('getShipmentEvents is not yet implemented. Scheduled for Day 7.');
+	return await eventStore.getEventsByAggregateId(shipmentId);
 };
 
 /**
@@ -24,8 +29,16 @@ const getShipmentEvents = async (shipmentId) => {
  * @returns {Promise<Array>} A list of shipment summary objects.
  */
 const listShipments = async () => {
-	// Day 7 / Week 3: query from read model or derive from event store
-	throw new Error('listShipments is not yet implemented. Scheduled for Day 7.');
+	const aggregateIds = await Event.distinct('aggregateId');
+	const shipments = [];
+	for (const shipmentId of aggregateIds) {
+		const events = await eventStore.getEventsByAggregateId(shipmentId);
+		if (events && events.length > 0) {
+			const state = reconstructShipmentState(shipmentId, events);
+			shipments.push(state);
+		}
+	}
+	return shipments;
 };
 
 module.exports = {

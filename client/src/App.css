@@ -1,3 +1,4 @@
+
 .counter {
   font-size: 16px;
   padding: 5px 10px;
@@ -201,3 +202,5 @@ button:hover {
   box-shadow: 0 16px 32px rgba(0, 0, 0, 0.35);
   filter: brightness(1.08);
 }
+}
+
