@@ -1,14 +1,29 @@
 import { useParams, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { getShipmentState } from '../services/api';
 import './ShipmentDetails.css';
 
 function ShipmentDetails() {
   const { shipmentId } = useParams();
+  const [shipmentData, setShipmentData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const placeholderData = {
-    currentState: null,
-    version: null,
-    lastUpdated: null,
-  };
+  useEffect(() => {
+    setLoading(true);
+    setError(null);
+
+    getShipmentState(shipmentId)
+      .then((data) => {
+        setShipmentData(data);
+      })
+      .catch((err) => {
+        setError(err.message);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, [shipmentId]);
 
   return (
     <div className="shipment-details">
@@ -21,31 +36,41 @@ function ShipmentDetails() {
         <span className="shipment-details__id">{shipmentId}</span>
       </div>
 
-      <div className="shipment-details__grid">
-        <div className="shipment-details__card">
-          <span className="shipment-details__label">Current State</span>
-          <span className="shipment-details__value shipment-details__value--placeholder">
-            {placeholderData.currentState || 'Not yet available'}
-          </span>
-        </div>
+      {loading && <p className="shipment-details__status">Loading shipment data...</p>}
 
-        <div className="shipment-details__card">
-          <span className="shipment-details__label">Version</span>
-          <span className="shipment-details__value shipment-details__value--placeholder">
-            {placeholderData.version ?? 'Not yet available'}
-          </span>
-        </div>
+      {error && (
+        <p className="shipment-details__status shipment-details__status--error">
+          Could not load shipment: {error}
+        </p>
+      )}
 
-        <div className="shipment-details__card">
-          <span className="shipment-details__label">Last Updated</span>
-          <span className="shipment-details__value shipment-details__value--placeholder">
-            {placeholderData.lastUpdated || 'Not yet available'}
-          </span>
+      {!loading && !error && shipmentData && (
+        <div className="shipment-details__grid">
+          <div className="shipment-details__card">
+            <span className="shipment-details__label">Current State</span>
+            <span className="shipment-details__value">
+              {shipmentData.status || shipmentData.state || 'Unknown'}
+            </span>
+          </div>
+
+          <div className="shipment-details__card">
+            <span className="shipment-details__label">Version</span>
+            <span className="shipment-details__value">
+              {shipmentData.version ?? 'N/A'}
+            </span>
+          </div>
+
+          <div className="shipment-details__card">
+            <span className="shipment-details__label">Location</span>
+            <span className="shipment-details__value">
+              {shipmentData.location || 'N/A'}
+            </span>
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="shipment-details__timeline-placeholder">
-        <p>Event timeline will appear here.</p>
+        <p>Event timeline will appear here (Day 6-7).</p>
       </div>
     </div>
   );
