@@ -1,8 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
-import ShipmentDetails from "./pages/ShipmentDetails";
-
-function App() {
+import ShipmentDetails from "./pages/ShipmentDetails";function App() {
   return (
     <BrowserRouter>
       <Routes>
