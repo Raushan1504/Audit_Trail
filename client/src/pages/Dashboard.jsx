@@ -1,5 +1,9 @@
 import { useNavigate } from 'react-router-dom';
 import SearchBar from '../components/SearchBar';
+import './Dashboard.css';
+
+const QUICK_ACCESS_IDS = ['SHIP001', 'TEST1', 'DEMO'];
+
 function Dashboard() {
   const navigate = useNavigate();
 
@@ -15,6 +19,21 @@ function Dashboard() {
       </header>
 
       <SearchBar onSearch={handleSearch} />
+
+      <div className="dashboard__quick-access">
+        <span className="dashboard__quick-label">Quick test IDs:</span>
+        <div className="dashboard__quick-buttons">
+          {QUICK_ACCESS_IDS.map((id) => (
+            <button
+              key={id}
+              className="dashboard__quick-button"
+              onClick={() => handleSearch(id)}
+            >
+              {id}
+            </button>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

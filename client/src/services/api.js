@@ -5,7 +5,8 @@ async function handleResponse(response) {
     const errorBody = await response.json().catch(() => ({}));
     throw new Error(errorBody.error || `Request failed with status ${response.status}`);
   }
-  return response.json();
+  const json = await response.json();
+  return json.data; // backend { success, data } wrapper se sirf 'data' nikalo
 }
 
 export async function getShipmentState(shipmentId) {

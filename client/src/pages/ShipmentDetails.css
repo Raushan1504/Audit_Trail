@@ -2,11 +2,12 @@
   max-width: 800px;
   margin: 0 auto;
   padding: 32px 20px;
+  color: #f0f0f0;
 }
 
 .shipment-details__back {
   display: inline-block;
-  color: var(--accent, #6d5dfc);
+  color: #8b7cf6;
   text-decoration: none;
   font-size: 14px;
   margin-bottom: 24px;
@@ -28,6 +29,7 @@
 .shipment-details__header h2 {
   margin: 0;
   font-size: 24px;
+  color: #f0f0f0;
 }
 
 .shipment-details__id {
@@ -35,8 +37,17 @@
   font-size: 16px;
   padding: 4px 12px;
   border-radius: 6px;
-  background: var(--accent-bg, #1a1a1a);
-  color: var(--accent, #6d5dfc);
+  background: #2a2a2a;
+  color: #8b7cf6;
+}
+
+.shipment-details__status {
+  color: #cccccc;
+  font-size: 15px;
+}
+
+.shipment-details__status--error {
+  color: #ff6b6b;
 }
 
 .shipment-details__grid {
@@ -52,8 +63,8 @@
   gap: 8px;
   padding: 20px;
   border-radius: 12px;
-  border: 1px solid var(--border, #333);
-  background: var(--accent-bg, #1a1a1a);
+  border: 1px solid #3a3a3a;
+  background: #1e1e1e;
   transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
@@ -66,16 +77,17 @@
   font-size: 13px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: var(--text-h, #999);
+  color: #999999;
 }
 
 .shipment-details__value {
   font-size: 18px;
   font-weight: 600;
+  color: #f0f0f0;
 }
 
 .shipment-details__value--placeholder {
-  color: var(--text-h, #777);
+  color: #777777;
   font-style: italic;
   font-weight: 400;
   font-size: 15px;
@@ -84,7 +96,17 @@
 .shipment-details__timeline-placeholder {
   padding: 40px 20px;
   text-align: center;
-  border: 1px dashed var(--border, #333);
+  border: 1px dashed #3a3a3a;
   border-radius: 12px;
-  color: var(--text-h, #777);
+  color: #777777;
+}
+
+.shipment-details__timeline-section {
+  margin-top: 8px;
+}
+
+.shipment-details__timeline-section h3 {
+  font-size: 18px;
+  margin-bottom: 8px;
+  color: #f0f0f0;
 }
