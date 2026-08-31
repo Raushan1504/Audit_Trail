@@ -21,7 +21,9 @@ const queryController = require('./queryController');
 router.get('/shipments', queryController.listShipments);
 
 router.get('/shipments/:shipmentId', queryController.getShipmentState);
+router.get('/shipment/:id', queryController.getShipmentState);
 
 router.get('/shipments/:shipmentId/events', queryController.getShipmentEvents);
+router.get('/shipment/:id/events', queryController.getShipmentEvents);
 
 module.exports = router;
