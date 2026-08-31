@@ -1,6 +1,7 @@
 import { useParams, Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { getShipmentState } from '../services/api';
+import EventTimeline from '../components/EventTimeline';
 import './ShipmentDetails.css';
 
 function ShipmentDetails() {
@@ -69,8 +70,9 @@ function ShipmentDetails() {
         </div>
       )}
 
-      <div className="shipment-details__timeline-placeholder">
-        <p>Event timeline will appear here (Day 6-7).</p>
+      <div className="shipment-details__timeline-section">
+        <h3>Event History</h3>
+        <EventTimeline events={[]} />
       </div>
     </div>
   );
