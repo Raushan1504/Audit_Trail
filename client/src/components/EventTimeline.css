@@ -8,8 +8,8 @@
 .event-timeline--empty {
   padding: 40px 20px;
   text-align: center;
-  color: #777777;
-  border: 1px dashed #3a3a3a;
+  color: #999999;
+  border: 1px dashed #e0e0e0;
   border-radius: 12px;
 }
 
@@ -25,10 +25,10 @@
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: #8b7cf6;
+  background: #6d5dfc;
   flex-shrink: 0;
   margin-top: 4px;
-  box-shadow: 0 0 0 4px rgba(139, 124, 246, 0.15);
+  box-shadow: 0 0 0 4px rgba(109, 93, 252, 0.15);
   z-index: 1;
 }
 
@@ -38,7 +38,7 @@
   top: 18px;
   bottom: -10px;
   width: 2px;
-  background: #3a3a3a;
+  background: #e0e0e0;
 }
 
 .event-timeline__content {
@@ -47,24 +47,24 @@
   gap: 4px;
   padding: 12px 16px;
   border-radius: 8px;
-  background: #1e1e1e;
-  border: 1px solid #3a3a3a;
+  background: #f7f7f9;
+  border: 1px solid #e0e0e0;
   flex: 1;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .event-timeline__content:hover {
   transform: translateX(4px);
-  box-shadow: 0 8px 16px rgba(247, 5, 5, 0.908);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
 }
 
 .event-timeline__type {
   font-weight: 600;
   font-size: 15px;
-  color: #f0f0f0;
+  color: #1a1a1a;
 }
 
 .event-timeline__timestamp {
   font-size: 13px;
-  color: #999999;
+  color: #777777;
 }
