@@ -6,7 +6,7 @@ async function handleResponse(response) {
     throw new Error(errorBody.error || `Request failed with status ${response.status}`);
   }
   const json = await response.json();
-  return json.data; // backend { success, data } wrapper se sirf 'data' nikalo
+  return json.data;
 }
 
 export async function getShipmentState(shipmentId) {

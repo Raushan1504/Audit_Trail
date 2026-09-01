@@ -1,7 +1,7 @@
 import './EventTimeline.css';
 
 function EventTimeline({ events = [] }) {
-  if (events.length === 0) {
+  if (!events || events.length === 0) {
     return (
       <div className="event-timeline event-timeline--empty">
         <p>No events to display yet.</p>

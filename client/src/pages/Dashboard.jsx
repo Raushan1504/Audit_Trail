@@ -8,7 +8,8 @@ function Dashboard() {
   const navigate = useNavigate();
 
   const handleSearch = (shipmentId) => {
-    navigate(`/shipment/${shipmentId}`);
+    if (!shipmentId || shipmentId.trim() === '') return;
+    navigate(`/shipment/${shipmentId.trim()}`);
   };
 
   return (
@@ -26,6 +27,7 @@ function Dashboard() {
           {QUICK_ACCESS_IDS.map((id) => (
             <button
               key={id}
+              type="button"
               className="dashboard__quick-button"
               onClick={() => handleSearch(id)}
             >
