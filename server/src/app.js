@@ -15,8 +15,11 @@ app.get('/health', (_request, response) => {
 app.use('/api/commands', commandRoutes);
 app.use('/api/queries', queryRoutes);
 app.use((error, _request, response, _next) => {
-	console.error(error);
-	response.status(500).json({ error: 'Internal server error' });
+  console.error(error);
+
+  response.status(error.status || 400).json({
+    error: error.message || 'Bad request'
+  });
 });
 if (require.main === module) {
 	connectDB()
