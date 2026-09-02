@@ -49,8 +49,9 @@ function ShipmentDetails() {
         {shipmentId && <span className="shipment-details__id">{shipmentId}</span>}
       </div>
 
-      {loading && <p className="shipment-details__status">Loading shipment data...</p>}
-
+{!loading && !error && shipmentData && (
+  <ShipmentState data={shipmentData} eventCount={events.length} />
+)}
       {error && (
         <p className="shipment-details__status shipment-details__status--error">
           Could not load shipment: {error}
