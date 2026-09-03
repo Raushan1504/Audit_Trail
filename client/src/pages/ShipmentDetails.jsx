@@ -1,22 +1,34 @@
 import { useParams, Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { getShipmentState } from '../services/api';
+import { getShipmentState, getShipmentEvents } from '../services/api';
 import EventTimeline from '../components/EventTimeline';
+import ShipmentState from '../components/ShipmentState';
 import './ShipmentDetails.css';
 
 function ShipmentDetails() {
   const { shipmentId } = useParams();
   const [shipmentData, setShipmentData] = useState(null);
+  const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    if (!shipmentId) {
+      setError('No shipment ID provided.');
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
-    getShipmentState(shipmentId)
-      .then((data) => {
-        setShipmentData(data);
+    Promise.all([
+      getShipmentState(shipmentId),
+      getShipmentEvents(shipmentId),
+    ])
+      .then(([stateData, eventsData]) => {
+        setShipmentData(stateData);
+        setEvents(Array.isArray(eventsData) ? eventsData : []);
       })
       .catch((err) => {
         setError(err.message);
@@ -34,11 +46,12 @@ function ShipmentDetails() {
 
       <div className="shipment-details__header">
         <h2>Shipment Details</h2>
-        <span className="shipment-details__id">{shipmentId}</span>
+        {shipmentId && <span className="shipment-details__id">{shipmentId}</span>}
       </div>
 
-      {loading && <p className="shipment-details__status">Loading shipment data...</p>}
-
+{!loading && !error && shipmentData && (
+  <ShipmentState data={shipmentData} eventCount={events.length} />
+)}
       {error && (
         <p className="shipment-details__status shipment-details__status--error">
           Could not load shipment: {error}
@@ -46,33 +59,12 @@ function ShipmentDetails() {
       )}
 
       {!loading && !error && shipmentData && (
-        <div className="shipment-details__grid">
-          <div className="shipment-details__card">
-            <span className="shipment-details__label">Current State</span>
-            <span className="shipment-details__value">
-              {shipmentData.status || shipmentData.state || 'Unknown'}
-            </span>
-          </div>
-
-          <div className="shipment-details__card">
-            <span className="shipment-details__label">Version</span>
-            <span className="shipment-details__value">
-              {shipmentData.version ?? 'N/A'}
-            </span>
-          </div>
-
-          <div className="shipment-details__card">
-            <span className="shipment-details__label">Location</span>
-            <span className="shipment-details__value">
-              {shipmentData.location || 'N/A'}
-            </span>
-          </div>
-        </div>
+        <ShipmentState data={shipmentData} />
       )}
 
       <div className="shipment-details__timeline-section">
         <h3>Event History</h3>
-        <EventTimeline events={[]} />
+        {!loading && !error && <EventTimeline events={events} />}
       </div>
     </div>
   );
