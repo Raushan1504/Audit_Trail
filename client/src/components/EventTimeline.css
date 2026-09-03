@@ -44,8 +44,8 @@
 .event-timeline__content {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 12px 16px;
+  gap: 6px;
+  padding: 14px 16px;
   border-radius: 8px;
   background: #f7f7f9;
   border: 1px solid #e0e0e0;
@@ -58,13 +58,52 @@
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
 }
 
+.event-timeline__top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
 .event-timeline__type {
   font-weight: 600;
   font-size: 15px;
   color: #1a1a1a;
+  text-transform: capitalize;
+}
+
+.event-timeline__version {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6d5dfc;
+  background: #eeeaff;
+  padding: 2px 8px;
+  border-radius: 999px;
+  flex-shrink: 0;
 }
 
 .event-timeline__timestamp {
   font-size: 13px;
   color: #777777;
+}
+
+.event-timeline__aggregate {
+  font-size: 12px;
+  color: #999999;
+}
+
+.event-timeline__aggregate code {
+  background: #eeeeee;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+  color: #555555;
+}
+
+.event-timeline__payload {
+  font-size: 13px;
+  color: #555555;
+  margin-top: 2px;
+  padding-top: 6px;
+  border-top: 1px dashed #e0e0e0;
 }
