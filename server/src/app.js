@@ -4,6 +4,7 @@ const cors = require('cors');
 const { connectDB } = require('./config/db');
 const commandRoutes = require('./commands/commandRoutes');
 const queryRoutes = require('./queries/queryRoutes');
+const { notFoundHandler, errorHandler } = require('./middleware');
 const app = express();
 const port = Number(process.env.PORT) || 5000;
 app.use(cors());
@@ -14,13 +15,12 @@ app.get('/health', (_request, response) => {
 });
 app.use('/api/commands', commandRoutes);
 app.use('/api/queries', queryRoutes);
-app.use((error, _request, response, _next) => {
-  console.error(error);
 
-  response.status(error.status || 400).json({
-    error: error.message || 'Bad request'
-  });
-});
+// Catch-all 404 handler for unmatched routes
+app.use(notFoundHandler);
+
+// Centralized error-handling middleware
+app.use(errorHandler);
 if (require.main === module) {
 	connectDB()
 		.then(() => {
