@@ -20,12 +20,12 @@ function createEvent(aggregateId, eventType, version, payload = {}) {
 
 test('replayShipmentEvents', async (t) => {
 
-  await t.test('should replay events in correct version order', () => {
+  await t.test('should completely reconstruct shipment state from full event history', () => {
     const events = [
       createEvent('SHIP-001', EVENT_TYPES.CONTAINER_CREATED, 1),
       createEvent('SHIP-001', EVENT_TYPES.LOADED_ON_SHIP, 2, {
         port: 'Mumbai Port',
-        vessel: 'MSC'
+        vessel: 'MV-AUDIT-01'
       }),
       createEvent('SHIP-001', EVENT_TYPES.TEMPERATURE_SPIKE, 3, {
         temperature: 12
@@ -37,10 +37,12 @@ test('replayShipmentEvents', async (t) => {
 
     const state = replayShipmentEvents('SHIP-001', events);
 
+    assert.strictEqual(state.shipmentId, 'SHIP-001');
     assert.strictEqual(state.version, 4);
     assert.strictEqual(state.status, 'ARRIVED');
     assert.strictEqual(state.location, 'Chennai Port');
     assert.strictEqual(state.temperature, 12);
+    assert.strictEqual(state.vessel, 'MV-AUDIT-01');
   });
 
   await t.test('should reject skipped event versions', () => {
