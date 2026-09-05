@@ -303,3 +303,244 @@ test('End-to-End Event Append and Ordered Retrieval Lifecycle', async () => {
     Event.find = originalFind;
   }
 });
+
+// ═══════════════════════════════════════════════════════════════════════
+// Append-only enforcement tests
+// ═══════════════════════════════════════════════════════════════════════
+
+test('Append-Only Enforcement - Event Store module surface', async (t) => {
+  const eventStore = require('../src/events/eventStore');
+
+  await t.test('exports only appendEvent and getEventsByAggregateId', () => {
+    const exportedKeys = Object.keys(eventStore).sort();
+    assert.deepStrictEqual(
+      exportedKeys,
+      ['appendEvent', 'getEventsByAggregateId'],
+      'Event store must expose only append/read operations — no update or delete'
+    );
+  });
+
+  await t.test('does not expose any update method', () => {
+    const updatePatterns = ['updateEvent', 'updateOne', 'update', 'modify', 'patch', 'editEvent'];
+    for (const name of updatePatterns) {
+      assert.strictEqual(
+        typeof eventStore[name],
+        'undefined',
+        `Event store must not export "${name}"`
+      );
+    }
+  });
+
+  await t.test('does not expose any delete method', () => {
+    const deletePatterns = ['deleteEvent', 'deleteOne', 'delete', 'remove', 'removeEvent', 'purge'];
+    for (const name of deletePatterns) {
+      assert.strictEqual(
+        typeof eventStore[name],
+        'undefined',
+        `Event store must not export "${name}"`
+      );
+    }
+  });
+});
+
+test('Append-Only Enforcement - Schema rejects update operations', async (t) => {
+  const EXPECTED_MSG = 'Event store is append-only: update/delete operations are not permitted';
+
+  await t.test('rejects Event.updateOne()', async () => {
+    const originalUpdateOne = Event.updateOne;
+    let middlewareError = null;
+
+    // Mongoose pre-hooks fire inside the model method, so we need to actually call it
+    // and let the hook throw. We stub the underlying exec to avoid hitting a real DB,
+    // but the pre-hook fires first.
+    try {
+      // The pre-hook should throw before any DB call is attempted
+      await Event.updateOne(
+        { aggregateId: 'SHIP-IMMUTABLE' },
+        { $set: { eventType: 'TAMPERED' } }
+      );
+    } catch (err) {
+      middlewareError = err;
+    }
+
+    assert.ok(middlewareError, 'updateOne must be rejected');
+    assert.match(middlewareError.message, /append-only/);
+    assert.strictEqual(middlewareError.message, EXPECTED_MSG);
+  });
+
+  await t.test('rejects Event.updateMany()', async () => {
+    let middlewareError = null;
+    try {
+      await Event.updateMany(
+        { aggregateId: 'SHIP-IMMUTABLE' },
+        { $set: { eventType: 'TAMPERED' } }
+      );
+    } catch (err) {
+      middlewareError = err;
+    }
+
+    assert.ok(middlewareError, 'updateMany must be rejected');
+    assert.strictEqual(middlewareError.message, EXPECTED_MSG);
+  });
+
+  await t.test('rejects Event.replaceOne()', async () => {
+    let middlewareError = null;
+    try {
+      await Event.replaceOne(
+        { aggregateId: 'SHIP-IMMUTABLE' },
+        { aggregateId: 'SHIP-IMMUTABLE', eventType: 'TAMPERED', version: 1 }
+      );
+    } catch (err) {
+      middlewareError = err;
+    }
+
+    assert.ok(middlewareError, 'replaceOne must be rejected');
+    assert.strictEqual(middlewareError.message, EXPECTED_MSG);
+  });
+
+  await t.test('rejects Event.findOneAndUpdate()', async () => {
+    let middlewareError = null;
+    try {
+      await Event.findOneAndUpdate(
+        { aggregateId: 'SHIP-IMMUTABLE' },
+        { $set: { payload: { tampered: true } } }
+      );
+    } catch (err) {
+      middlewareError = err;
+    }
+
+    assert.ok(middlewareError, 'findOneAndUpdate must be rejected');
+    assert.strictEqual(middlewareError.message, EXPECTED_MSG);
+  });
+
+  await t.test('rejects Event.findOneAndReplace()', async () => {
+    let middlewareError = null;
+    try {
+      await Event.findOneAndReplace(
+        { aggregateId: 'SHIP-IMMUTABLE' },
+        { aggregateId: 'SHIP-IMMUTABLE', eventType: 'REPLACED', version: 1, timestamp: new Date() }
+      );
+    } catch (err) {
+      middlewareError = err;
+    }
+
+    assert.ok(middlewareError, 'findOneAndReplace must be rejected');
+    assert.strictEqual(middlewareError.message, EXPECTED_MSG);
+  });
+});
+
+test('Append-Only Enforcement - Schema rejects delete operations', async (t) => {
+  const EXPECTED_MSG = 'Event store is append-only: update/delete operations are not permitted';
+
+  await t.test('rejects Event.deleteOne()', async () => {
+    let middlewareError = null;
+    try {
+      await Event.deleteOne({ aggregateId: 'SHIP-IMMUTABLE' });
+    } catch (err) {
+      middlewareError = err;
+    }
+
+    assert.ok(middlewareError, 'deleteOne must be rejected');
+    assert.strictEqual(middlewareError.message, EXPECTED_MSG);
+  });
+
+  await t.test('rejects Event.deleteMany()', async () => {
+    let middlewareError = null;
+    try {
+      await Event.deleteMany({ aggregateId: 'SHIP-IMMUTABLE' });
+    } catch (err) {
+      middlewareError = err;
+    }
+
+    assert.ok(middlewareError, 'deleteMany must be rejected');
+    assert.strictEqual(middlewareError.message, EXPECTED_MSG);
+  });
+
+  await t.test('rejects Event.findOneAndDelete()', async () => {
+    let middlewareError = null;
+    try {
+      await Event.findOneAndDelete({ aggregateId: 'SHIP-IMMUTABLE' });
+    } catch (err) {
+      middlewareError = err;
+    }
+
+    assert.ok(middlewareError, 'findOneAndDelete must be rejected');
+    assert.strictEqual(middlewareError.message, EXPECTED_MSG);
+  });
+});
+
+test('Append-Only Enforcement - events remain immutable after persistence', async () => {
+  const store = [];
+  const originalSave = Event.prototype.save;
+  const originalFind = Event.find;
+
+  Event.prototype.save = async function () {
+    const doc = {
+      _id: `mock-id-${store.length + 1}`,
+      aggregateId: this.aggregateId,
+      eventType: this.eventType,
+      payload: this.payload,
+      timestamp: this.timestamp,
+      version: this.version
+    };
+    store.push(doc);
+    return doc;
+  };
+
+  Event.find = function (query) {
+    const filtered = store.filter((e) => e.aggregateId === query.aggregateId);
+    return {
+      sort(criteria) {
+        if (criteria && criteria.version === 1) {
+          filtered.sort((a, b) => a.version - b.version);
+        }
+        return Promise.resolve(filtered);
+      }
+    };
+  };
+
+  try {
+    const shipmentId = 'SHIP-IMMUTABLE-LIFECYCLE';
+
+    // 1. Append an event
+    const ev = createDomainEvent(shipmentId, EVENT_TYPES.CONTAINER_CREATED, {
+      origin: 'Hamburg',
+      destination: 'New York',
+      cargo: 'Machinery'
+    }, 1);
+    await appendEvent(ev);
+
+    // 2. Attempt to update via Mongoose — must throw
+    let updateRejected = false;
+    try {
+      await Event.updateOne(
+        { aggregateId: shipmentId },
+        { $set: { payload: { tampered: true } } }
+      );
+    } catch {
+      updateRejected = true;
+    }
+    assert.ok(updateRejected, 'Update attempt must be rejected');
+
+    // 3. Attempt to delete via Mongoose — must throw
+    let deleteRejected = false;
+    try {
+      await Event.deleteOne({ aggregateId: shipmentId });
+    } catch {
+      deleteRejected = true;
+    }
+    assert.ok(deleteRejected, 'Delete attempt must be rejected');
+
+    // 4. Verify event is still intact and untouched
+    const events = await getEventsByAggregateId(shipmentId);
+    assert.strictEqual(events.length, 1, 'Event must still exist after failed mutation attempts');
+    assert.strictEqual(events[0].aggregateId, shipmentId);
+    assert.strictEqual(events[0].eventType, EVENT_TYPES.CONTAINER_CREATED);
+    assert.strictEqual(events[0].payload.origin, 'Hamburg');
+    assert.strictEqual(events[0].payload.cargo, 'Machinery');
+    assert.strictEqual(events[0].version, 1);
+  } finally {
+    Event.prototype.save = originalSave;
+    Event.find = originalFind;
+  }
+});
