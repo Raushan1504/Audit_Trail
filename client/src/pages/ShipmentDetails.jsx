@@ -5,6 +5,20 @@ import EventTimeline from '../components/EventTimeline';
 import ShipmentState from '../components/ShipmentState';
 import './ShipmentDetails.css';
 
+function getErrorMessage(err) {
+  if (!err) return 'Something went wrong.';
+  if (err.status === 404) {
+    return `No shipment found with this ID. Double-check the ID and try again.`;
+  }
+  if (err.status >= 500) {
+    return 'The server ran into a problem. Please try again in a moment.';
+  }
+  if (err.message === 'Failed to fetch') {
+    return 'Could not reach the server. Make sure the backend is running.';
+  }
+  return err.message || 'Something went wrong.';
+}
+
 function ShipmentDetails() {
   const { shipmentId } = useParams();
   const [shipmentData, setShipmentData] = useState(null);
@@ -14,7 +28,7 @@ function ShipmentDetails() {
 
   useEffect(() => {
     if (!shipmentId) {
-      setError('No shipment ID provided.');
+      setError({ message: 'No shipment ID provided.' });
       setLoading(false);
       return;
     }
@@ -31,7 +45,7 @@ function ShipmentDetails() {
         setEvents(Array.isArray(eventsData) ? eventsData : []);
       })
       .catch((err) => {
-        setError(err.message);
+        setError(err);
       })
       .finally(() => {
         setLoading(false);
@@ -49,23 +63,30 @@ function ShipmentDetails() {
         {shipmentId && <span className="shipment-details__id">{shipmentId}</span>}
       </div>
 
-{!loading && !error && shipmentData && (
-  <ShipmentState data={shipmentData} eventCount={events.length} />
-)}
-      {error && (
-        <p className="shipment-details__status shipment-details__status--error">
-          Could not load shipment: {error}
-        </p>
+      {loading && (
+        <div className="shipment-details__loading">
+          <div className="shipment-details__spinner" />
+          <span>Loading shipment data...</span>
+        </div>
+      )}
+
+      {!loading && error && (
+        <div className="shipment-details__error">
+          <span className="shipment-details__error-icon">⚠</span>
+          <span>{getErrorMessage(error)}</span>
+        </div>
       )}
 
       {!loading && !error && shipmentData && (
-        <ShipmentState data={shipmentData} />
+        <ShipmentState data={shipmentData} eventCount={events.length} />
       )}
 
-      <div className="shipment-details__timeline-section">
-        <h3>Event History</h3>
-        {!loading && !error && <EventTimeline events={events} />}
-      </div>
+      {!loading && !error && (
+        <div className="shipment-details__timeline-section">
+          <h3>Event History</h3>
+          <EventTimeline events={events} />
+        </div>
+      )}
     </div>
   );
 }
