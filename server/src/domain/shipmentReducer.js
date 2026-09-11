@@ -60,6 +60,7 @@ function replayShipmentEvents(shipmentId, events) {
   }
 
   let state = createInitialShipmentState(shipmentId);
+  let expectedVersion = 1;
 
   for (const event of events) {
     if (!event || typeof event !== 'object') {
@@ -71,6 +72,14 @@ function replayShipmentEvents(shipmentId, events) {
         `Event aggregateId ${event.aggregateId} does not match shipmentId ${shipmentId}`
       );
     }
+
+    if (event.version !== expectedVersion) {
+      throw new Error(
+        `invalid event version: expected ${expectedVersion}, got ${event.version}`
+      );
+    }
+
+    expectedVersion++;
 
     state = applyEvent(state, event);
   }
