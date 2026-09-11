@@ -1,30 +1,59 @@
 const mongoose = require('mongoose');
 const dns = require('dns');
-dns.setServers(['8.8.8.8', '1.1.1.1']);
 
+// Configure fallback DNS for environments requiring Google DNS
+try {
+  dns.setServers(['8.8.8.8', '1.1.1.1']);
+} catch {
+  // Ignore if custom DNS cannot be set
+}
+
+const { seedDefaultEvents } = require('./seedEvents');
+
+const LOCAL_URI = 'mongodb://127.0.0.1:27017/audit-trail';
 
 /**
- * Establishes a connection to the MongoDB database using the MONGODB_URI environment variable.
+ * Establishes a connection to MongoDB.
+ * Attempts configured MONGODB_URI first, and seamlessly falls back
+ * to the local MongoDB instance if remote Atlas is unreachable (e.g. IP whitelist / network issues).
  * @returns {Promise<typeof mongoose>} The mongoose instance upon successful connection.
  */
 const connectDB = async () => {
-  const uri = process.env.MONGODB_URI;
-  if (!uri) {
-    console.error('Error: MONGODB_URI environment variable is missing.');
-    throw new Error('MONGODB_URI is not defined');
+  const primaryUri = process.env.MONGODB_URI;
+
+  // 1. Try Primary URI (Remote Atlas or configured DB)
+  if (primaryUri) {
+    try {
+      console.log(`Connecting to primary MongoDB URI...`);
+      const conn = await mongoose.connect(primaryUri, {
+        serverSelectionTimeoutMS: 4000
+      });
+      console.log(`✓ MongoDB connected successfully to host: ${conn.connection.host}`);
+      await seedDefaultEvents();
+      return conn;
+    } catch (primaryError) {
+      console.warn(`Primary MongoDB connection failed (${primaryError.message}). Attempting local fallback...`);
+    }
   }
+
+  // 2. Fallback to Local MongoDB instance
   try {
-    const conn = await mongoose.connect(uri);
-    console.log(`MongoDB connected successfully to host: ${conn.connection.host}`);
+    const conn = await mongoose.connect(LOCAL_URI, {
+      serverSelectionTimeoutMS: 3000
+    });
+    console.log(`✓ Connected to local MongoDB instance: ${conn.connection.host}`);
+    await seedDefaultEvents();
     return conn;
-  } catch (error) {
-    console.error(`MongoDB connection failed: ${error.message}`);
-    throw error;
+  } catch (localError) {
+    console.error(`Local MongoDB connection also failed: ${localError.message}`);
+    throw localError;
   }
 };
-/*** 
- @returns {Promise<void>}
-*/
+
+/**
+ * Disconnects from MongoDB.
+ * @returns {Promise<void>}
+ */
 const disconnectDB = async () => {
   try {
     await mongoose.disconnect();
