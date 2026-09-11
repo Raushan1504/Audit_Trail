@@ -1,0 +1,113 @@
+.loading-state-3d {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  gap: 24px;
+}
+
+.loading-state-3d__radar {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-state-3d__ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 240, 255, 0.25);
+  box-sizing: border-box;
+}
+
+.loading-state-3d__ring--outer {
+  width: 100%;
+  height: 100%;
+  border-style: dashed;
+  animation: spin 8s linear infinite;
+}
+
+.loading-state-3d__ring--middle {
+  width: 70%;
+  height: 70%;
+  border-color: rgba(99, 102, 241, 0.4);
+  animation: spin-reverse 5s linear infinite;
+}
+
+.loading-state-3d__ring--inner {
+  width: 40%;
+  height: 40%;
+  border-color: rgba(16, 185, 129, 0.5);
+  animation: pulse-ring 2s ease-in-out infinite;
+}
+
+.loading-state-3d__core {
+  width: 14px;
+  height: 14px;
+  background: #00f0ff;
+  border-radius: 50%;
+  box-shadow: 0 0 16px #00f0ff, 0 0 32px rgba(0, 240, 255, 0.6);
+  animation: core-pulse 1.5s ease-in-out infinite alternate;
+}
+
+.loading-state-3d__sweep {
+  position: absolute;
+  width: 50%;
+  height: 50%;
+  top: 0;
+  right: 0;
+  transform-origin: 0% 100%;
+  background: conic-gradient(from 0deg, rgba(0, 240, 255, 0.35) 0deg, transparent 60deg);
+  border-radius: 100% 0 0 0;
+  animation: radar-sweep 2s linear infinite;
+}
+
+.loading-state-3d__info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.loading-state-3d__title {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #00f0ff;
+  text-shadow: 0 0 12px rgba(0, 240, 255, 0.5);
+}
+
+.loading-state-3d__sub {
+  font-size: 12px;
+  color: #94a3b8;
+  font-family: monospace;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes spin-reverse {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+
+@keyframes pulse-ring {
+  0%, 100% { transform: scale(1); opacity: 0.6; }
+  50% { transform: scale(1.15); opacity: 1; }
+}
+
+@keyframes core-pulse {
+  from { transform: scale(0.8); opacity: 0.7; }
+  to { transform: scale(1.2); opacity: 1; }
+}
+
+@keyframes radar-sweep {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
