@@ -2,7 +2,32 @@ import { useNavigate } from 'react-router-dom';
 import SearchBar from '../components/SearchBar';
 import './Dashboard.css';
 
-const QUICK_ACCESS_IDS = ['SHIP001', 'TEST1', 'DEMO'];
+const DEMO_PRESETS = [
+  {
+    id: 'SHIP-001',
+    title: 'Standard Sea Freight',
+    status: 'ARRIVED',
+    desc: 'Full 4-event sequence: Container Created → Vessel Load → Temperature Spike → Port Arrival',
+    tag: 'Full Voyage',
+    color: 'emerald'
+  },
+  {
+    id: 'SHIP-TEMP-ALERT',
+    title: 'Cold Chain Anomaly',
+    status: 'ALERT',
+    desc: 'Thermal violation detected during ocean transit. Requires forensic audit inspection.',
+    tag: 'Temp Spike',
+    color: 'amber'
+  },
+  {
+    id: 'CONT-GENESIS-99',
+    title: 'New Container Inception',
+    status: 'CREATED',
+    desc: 'Genesis event appended. Ready for port loading and voyage scheduling.',
+    tag: 'Genesis Block',
+    color: 'cyan'
+  }
+];
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -13,29 +38,101 @@ function Dashboard() {
   };
 
   return (
-    <div className="dashboard">
-      <header className="dashboard__header">
-        <h1>Audit Trail — Forensic Dashboard</h1>
-        <p>Search a shipment to view its event history and current state.</p>
+    <div className="dashboard-cinematic">
+      {/* 3D Ambient Background Lights */}
+      <div className="ambient-glow ambient-glow--top" />
+      <div className="ambient-glow ambient-glow--bottom" />
+
+      {/* Cinematic Hero */}
+      <header className="dashboard-hero">
+        <div className="dashboard-hero__badge">
+          <span className="badge-pulse" />
+          <span>EVENT SOURCING & CQRS FORENSIC LEDGER</span>
+        </div>
+
+        <h1 className="dashboard-hero__title">
+          AUDIT <span className="text-gradient">TRAIL</span>
+        </h1>
+
+        <p className="dashboard-hero__subtitle">
+          Next-generation immutable inventory & logistics ledger. Shipment states are never mutated — they are reconstructed on-demand by replaying historical events.
+        </p>
+
+        {/* Live Architecture Status Bar */}
+        <div className="architecture-bar">
+          <div className="arch-item">
+            <span className="arch-icon">🔒</span>
+            <div>
+              <span className="arch-title">IMMUTABLE LOG</span>
+              <span className="arch-detail">Append-Only / No Updates</span>
+            </div>
+          </div>
+          <div className="arch-divider" />
+          <div className="arch-item">
+            <span className="arch-icon">⚡</span>
+            <div>
+              <span className="arch-title">CQRS SEPARATION</span>
+              <span className="arch-detail">Command & Query Routes</span>
+            </div>
+          </div>
+          <div className="arch-divider" />
+          <div className="arch-item">
+            <span className="arch-icon">🔄</span>
+            <div>
+              <span className="arch-title">EVENT REPLAY</span>
+              <span className="arch-detail">Pure State Reconstruction</span>
+            </div>
+          </div>
+        </div>
       </header>
 
-      <SearchBar onSearch={handleSearch} />
+      {/* Center Search Console */}
+      <section className="dashboard-search-section">
+        <SearchBar onSearch={handleSearch} />
+      </section>
 
-      <div className="dashboard__quick-access">
-        <span className="dashboard__quick-label">Quick test IDs:</span>
-        <div className="dashboard__quick-buttons">
-          {QUICK_ACCESS_IDS.map((id) => (
-            <button
-              key={id}
-              type="button"
-              className="dashboard__quick-button"
-              onClick={() => handleSearch(id)}
+      {/* 3D Demo Showcase Presets */}
+      <section className="dashboard-presets">
+        <div className="presets-header">
+          <span className="presets-tag">MID-PROJECT REVIEW PRESETS</span>
+          <h2>Select a Demonstration Scenario</h2>
+          <p>Click any test shipment below to examine its reconstructed state and replay its immutable event stream.</p>
+        </div>
+
+        <div className="presets-grid">
+          {DEMO_PRESETS.map((preset) => (
+            <div
+              key={preset.id}
+              className={`preset-card-3d preset-card-3d--${preset.color}`}
+              onClick={() => handleSearch(preset.id)}
             >
-              {id}
-            </button>
+              <div className="preset-card-3d__glare" />
+              <div className="preset-card-3d__top">
+                <span className="preset-card__id">{preset.id}</span>
+                <span className="preset-card__tag">{preset.tag}</span>
+              </div>
+              <h3 className="preset-card__title">{preset.title}</h3>
+              <p className="preset-card__desc">{preset.desc}</p>
+              <div className="preset-card__action">
+                <span>Inspect Event Stream</span>
+                <span className="arrow">→</span>
+              </div>
+            </div>
           ))}
         </div>
-      </div>
+      </section>
+
+      {/* Review Verification Guide Footer */}
+      <footer className="dashboard-footer">
+        <div className="footer-card">
+          <h4>Mid-Project Review Checklist</h4>
+          <div className="footer-checklist">
+            <span>✓ <strong>Immutability Audit:</strong> MongoDB Event Store enforces append-only storage. Updates & deletes return 403.</span>
+            <span>✓ <strong>Reconstruction Check:</strong> Current state computed dynamically by replaying event log.</span>
+            <span>✓ <strong>CQRS Integrity:</strong> Commands mutate via domain events; Queries reconstruct read models.</span>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
