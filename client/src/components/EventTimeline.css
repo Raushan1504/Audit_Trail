@@ -107,3 +107,155 @@
   padding-top: 6px;
   border-top: 1px dashed #e0e0e0;
 }
+
+/* Day 12 Immutability Banner */
+.event-timeline__immutability-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 12px 16px;
+  margin-bottom: 24px;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(99, 102, 241, 0.08) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: 10px;
+}
+
+.immutability-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.immutability-icon {
+  font-size: 16px;
+}
+
+.immutability-text {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #059669;
+}
+
+.immutability-guarantees {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.guarantee-pill {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-family: monospace;
+}
+
+.guarantee-pill--allowed {
+  background: rgba(16, 185, 129, 0.15);
+  color: #047857;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.guarantee-pill--blocked {
+  background: rgba(239, 68, 68, 0.12);
+  color: #b91c1c;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.event-timeline__heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.event-tag {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+
+.event-tag--genesis {
+  background: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+}
+
+.event-tag--anomaly {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  animation: pulse-danger 2s infinite ease-in-out;
+}
+
+.event-tag--terminal {
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.event-timeline__badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.event-timeline__immutable-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #059669;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.event-timeline__immutable-badge .lock-icon {
+  font-size: 10px;
+}
+
+.event-timeline__meta-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+}
+
+.event-timeline__block-num {
+  color: #6366f1;
+  font-family: monospace;
+  font-weight: 600;
+}
+
+.event-timeline__item--anomaly .event-timeline__marker {
+  background: #ef4444;
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.2);
+}
+
+.event-timeline__item--anomaly .event-timeline__content {
+  border-left: 3px solid #ef4444;
+}
+
+.payload-label {
+  font-weight: 600;
+  margin-right: 6px;
+  color: #64748b;
+}
+
+.payload-data {
+  color: #334155;
+  font-family: monospace;
+}
+
+@keyframes pulse-danger {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
