@@ -91,12 +91,11 @@ function Dashboard() {
         <SearchBar onSearch={handleSearch} />
       </section>
 
-      {/* 3D Demo Showcase Presets */}
+      {/* Tracked Shipment Presets */}
       <section className="dashboard-presets">
         <div className="presets-header">
-          <span className="presets-tag">MID-PROJECT REVIEW PRESETS</span>
-          <h2>Select a Demonstration Scenario</h2>
-          <p>Click any test shipment below to examine its reconstructed state and replay its immutable event stream.</p>
+          <span className="presets-tag">ACTIVE SHIPMENT LEDGERS</span>
+          <h2>Quick Access Shipments</h2>
         </div>
 
         <div className="presets-grid">
@@ -114,25 +113,13 @@ function Dashboard() {
               <h3 className="preset-card__title">{preset.title}</h3>
               <p className="preset-card__desc">{preset.desc}</p>
               <div className="preset-card__action">
-                <span>Inspect Event Stream</span>
+                <span>Inspect Ledger</span>
                 <span className="arrow">→</span>
               </div>
             </div>
           ))}
         </div>
       </section>
-
-      {/* Review Verification Guide Footer */}
-      <footer className="dashboard-footer">
-        <div className="footer-card">
-          <h4>Mid-Project Review Checklist</h4>
-          <div className="footer-checklist">
-            <span>✓ <strong>Immutability Audit:</strong> MongoDB Event Store enforces append-only storage. Updates & deletes return 403.</span>
-            <span>✓ <strong>Reconstruction Check:</strong> Current state computed dynamically by replaying event log.</span>
-            <span>✓ <strong>CQRS Integrity:</strong> Commands mutate via domain events; Queries reconstruct read models.</span>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }
