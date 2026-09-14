@@ -23,6 +23,13 @@ function errorHandler(err, req, res, next) { // eslint-disable-line no-unused-va
   let code = err.code || (statusCode === 500 ? 'INTERNAL_SERVER_ERROR' : 'BAD_REQUEST');
   let details = err.details || null;
 
+  // Handle Event Store Immutability Violations (Append-only enforcement)
+  if (err.message && err.message.includes('append-only')) {
+    statusCode = 403;
+    code = 'IMMUTABLE_EVENT_STORE';
+    message = err.message;
+  }
+
   // Handle express/body-parser JSON parse errors
   if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
     statusCode = 400;

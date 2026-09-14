@@ -4,7 +4,8 @@ const cors = require('cors');
 const { connectDB } = require('./config/db');
 const commandRoutes = require('./commands/commandRoutes');
 const queryRoutes = require('./queries/queryRoutes');
-const { notFoundHandler, errorHandler } = require('./middleware');
+const auditRoutes = require('./audit/auditRoutes');
+const { notFoundHandler, errorHandler, immutabilityGuard } = require('./middleware');
 const app = express();
 const port = Number(process.env.PORT) || 5000;
 app.use(cors());
@@ -13,8 +14,13 @@ app.use(express.urlencoded({ extended: true }));
 app.get('/health', (_request, response) => {
 	response.status(200).json({ status: 'ok' });
 });
+
+// Guard all mutating HTTP verbs (PUT, PATCH, DELETE) against the event log
+app.use(['/api/events', '/api/commands', '/api/queries', '/api/audit'], immutabilityGuard);
+
 app.use('/api/commands', commandRoutes);
 app.use('/api/queries', queryRoutes);
+app.use('/api/audit', auditRoutes);
 
 // Catch-all 404 handler for unmatched routes
 app.use(notFoundHandler);
