@@ -47,9 +47,9 @@
 .loading-state-3d__core {
   width: 14px;
   height: 14px;
-  background: #00f0ff;
+  background: var(--theme-accent, #00f0ff);
   border-radius: 50%;
-  box-shadow: 0 0 16px #00f0ff, 0 0 32px rgba(0, 240, 255, 0.6);
+  box-shadow: 0 0 16px var(--theme-accent, #00f0ff), 0 0 32px var(--theme-accent-glow, rgba(0, 240, 255, 0.6));
   animation: core-pulse 1.5s ease-in-out infinite alternate;
 }
 
@@ -60,7 +60,7 @@
   top: 0;
   right: 0;
   transform-origin: 0% 100%;
-  background: conic-gradient(from 0deg, rgba(0, 240, 255, 0.35) 0deg, transparent 60deg);
+  background: conic-gradient(from 0deg, var(--theme-accent-glow, rgba(0, 240, 255, 0.35)) 0deg, transparent 60deg);
   border-radius: 100% 0 0 0;
   animation: radar-sweep 2s linear infinite;
 }
@@ -77,8 +77,8 @@
   font-size: 15px;
   font-weight: 700;
   letter-spacing: 0.08em;
-  color: #00f0ff;
-  text-shadow: 0 0 12px rgba(0, 240, 255, 0.5);
+  color: var(--theme-accent, #00f0ff);
+  text-shadow: 0 0 12px var(--theme-accent-glow, rgba(0, 240, 255, 0.5));
 }
 
 .loading-state-3d__sub {
