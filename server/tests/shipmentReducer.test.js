@@ -92,4 +92,58 @@ test('replayShipmentEvents', async (t) => {
       /does not match shipmentId/
     );
   });
+  await t.test('should complete reconstruction audit from historical event sequence', () => {
+    const shipmentId = 'AUDIT-SHIP-001';
+
+    const historicalEvents = [
+      createEvent(
+        shipmentId,
+        EVENT_TYPES.CONTAINER_CREATED,
+        1
+      ),
+      createEvent(
+        shipmentId,
+        EVENT_TYPES.LOADED_ON_SHIP,
+        2,
+        {
+          port: 'Mumbai Port',
+          vessel: 'MV-AUDIT-01'
+        }
+      ),
+      createEvent(
+        shipmentId,
+        EVENT_TYPES.TEMPERATURE_SPIKE,
+        3,
+        {
+          temperature: 12
+        }
+      ),
+      createEvent(
+        shipmentId,
+        EVENT_TYPES.ARRIVED_AT_PORT,
+        4,
+        {
+          port: 'Chennai Port'
+        }
+      )
+    ];
+
+    const reconstructedState = replayShipmentEvents(
+      shipmentId,
+      historicalEvents
+    );
+
+    assert.strictEqual(historicalEvents.length, 4);
+    assert.strictEqual(historicalEvents[0].version, 1);
+    assert.strictEqual(historicalEvents[1].version, 2);
+    assert.strictEqual(historicalEvents[2].version, 3);
+    assert.strictEqual(historicalEvents[3].version, 4);
+
+    assert.strictEqual(reconstructedState.shipmentId, shipmentId);
+    assert.strictEqual(reconstructedState.version, 4);
+    assert.strictEqual(reconstructedState.status, 'ARRIVED');
+    assert.strictEqual(reconstructedState.location, 'Chennai Port');
+    assert.strictEqual(reconstructedState.temperature, 12);
+    assert.strictEqual(reconstructedState.vessel, 'MV-AUDIT-01');
+  });
 });
