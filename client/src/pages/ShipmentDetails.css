@@ -2,7 +2,7 @@
   position: relative;
   max-width: 1080px;
   margin: 0 auto;
-  padding: 32px 20px 80px;
+  padding: 24px 20px 80px;
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -15,6 +15,7 @@
   filter: blur(140px);
   pointer-events: none;
   z-index: -1;
+  opacity: 0.8;
 }
 
 .details-ambient--left {
@@ -22,7 +23,7 @@
   height: 300px;
   top: 0;
   left: 10%;
-  background: radial-gradient(circle, rgba(0, 240, 255, 0.12) 0%, transparent 70%);
+  background: radial-gradient(circle, var(--theme-accent-glow, rgba(0, 240, 255, 0.12)) 0%, transparent 70%);
 }
 
 .details-ambient--right {
@@ -30,7 +31,7 @@
   height: 350px;
   top: 200px;
   right: 5%;
-  background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
+  background: radial-gradient(circle, var(--theme-badge-bg, rgba(99, 102, 241, 0.1)) 0%, transparent 70%);
 }
 
 /* Navigation Bar */
@@ -48,23 +49,23 @@
   gap: 8px;
   font-size: 13px;
   font-weight: 700;
-  color: #38bdf8;
+  color: var(--theme-accent, #38bdf8);
   text-decoration: none;
   padding: 8px 16px;
-  background: rgba(15, 23, 42, 0.7);
+  background: var(--theme-card-bg, rgba(15, 23, 42, 0.7));
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(56, 189, 248, 0.25);
+  border: 1px solid var(--theme-card-border, rgba(56, 189, 248, 0.25));
   border-radius: 10px;
   transition: all 0.25s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 }
 
 .details-nav__back:hover {
-  background: rgba(56, 189, 248, 0.15);
-  border-color: #00f0ff;
-  color: #00f0ff;
+  background: var(--theme-badge-bg, rgba(56, 189, 248, 0.15));
+  border-color: var(--theme-accent, #00f0ff);
+  color: var(--theme-accent, #00f0ff);
   transform: translateX(-4px);
-  box-shadow: 0 0 16px rgba(0, 240, 255, 0.3);
+  box-shadow: 0 0 16px var(--theme-accent-glow, rgba(0, 240, 255, 0.3));
 }
 
 .back-arrow {
@@ -82,27 +83,27 @@
   gap: 8px;
   font-size: 12px;
   font-family: monospace;
-  color: #64748b;
+  color: var(--theme-text-muted, #64748b);
 }
 
 .bc-sep {
-  color: #475569;
+  color: var(--theme-card-border, #475569);
 }
 
 .bc-id {
-  color: #00f0ff;
+  color: var(--theme-accent, #00f0ff);
   font-weight: 700;
 }
 
 /* Header Card */
 .details-header-card {
   position: relative;
-  background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.85) 100%);
+  background: var(--theme-card-bg, rgba(30, 41, 59, 0.7));
   backdrop-filter: blur(14px);
-  border: 1px solid rgba(0, 240, 255, 0.25);
+  border: 1px solid var(--theme-card-border, rgba(0, 240, 255, 0.25));
   border-radius: 16px;
   padding: 24px 28px;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(0, 240, 255, 0.08);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35), 0 0 20px var(--theme-accent-glow, rgba(0, 240, 255, 0.08));
   overflow: hidden;
 }
 
@@ -112,7 +113,7 @@
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.4), transparent);
+  background: linear-gradient(90deg, transparent, var(--theme-accent, rgba(0, 240, 255, 0.4)), transparent);
 }
 
 .details-header__main {
@@ -133,7 +134,7 @@
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.1em;
-  color: #64748b;
+  color: var(--theme-text-muted, #64748b);
 }
 
 .details-header__id {
@@ -141,9 +142,9 @@
   font-weight: 900;
   font-family: monospace;
   letter-spacing: 0.02em;
-  color: #f8fafc;
+  color: var(--theme-text-primary, #f8fafc);
   margin: 0;
-  text-shadow: 0 0 16px rgba(0, 240, 255, 0.3);
+  text-shadow: 0 0 16px var(--theme-accent-glow, rgba(0, 240, 255, 0.3));
 }
 
 .details-header__audit-badge {
@@ -171,7 +172,7 @@
 .audit-sub {
   display: block;
   font-size: 11px;
-  color: #94a3b8;
+  color: var(--theme-text-muted, #94a3b8);
   font-family: monospace;
 }
 
@@ -216,12 +217,12 @@
 .timeline-section-header h2 {
   font-size: 20px;
   font-weight: 800;
-  color: #f8fafc;
+  color: var(--theme-text-primary, #f8fafc);
   margin: 0 0 4px 0;
 }
 
 .timeline-section-header p {
   font-size: 13px;
-  color: #94a3b8;
+  color: var(--theme-text-secondary, #94a3b8);
   margin: 0;
 }
