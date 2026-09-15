@@ -1,12 +1,130 @@
 @import "tailwindcss";
 
-:root {
-  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-  color: #f8fafc;
-  background-color: #080c14;
+:root, [data-theme="cyber"] {
+  --theme-font: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --theme-bg: #080c14;
+  --theme-bg-gradient: radial-gradient(at 0% 0%, rgba(0, 240, 255, 0.12) 0px, transparent 50%),
+                       radial-gradient(at 100% 0%, rgba(99, 102, 241, 0.12) 0px, transparent 50%),
+                       radial-gradient(at 50% 100%, rgba(16, 185, 129, 0.08) 0px, transparent 50%),
+                       linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                       linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  --theme-card-bg: linear-gradient(145deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.85) 100%);
+  --theme-card-border: rgba(255, 255, 255, 0.08);
+  --theme-accent: #00f0ff;
+  --theme-accent-hover: #38bdf8;
+  --theme-accent-glow: rgba(0, 240, 255, 0.3);
+  --theme-text-primary: #f8fafc;
+  --theme-text-secondary: #94a3b8;
+  --theme-text-muted: #64748b;
+  --theme-nav-bg: rgba(15, 23, 42, 0.8);
+  --theme-badge-bg: rgba(0, 240, 255, 0.1);
+  --theme-badge-border: rgba(0, 240, 255, 0.25);
   color-scheme: dark;
+}
+
+[data-theme="black"] {
+  --theme-font: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --theme-bg: #000000;
+  --theme-bg-gradient: radial-gradient(at 0% 0%, rgba(255, 255, 255, 0.08) 0px, transparent 50%),
+                       radial-gradient(at 100% 100%, rgba(255, 255, 255, 0.05) 0px, transparent 50%),
+                       linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                       linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  --theme-card-bg: linear-gradient(145deg, #111116 0%, #060608 100%);
+  --theme-card-border: rgba(255, 255, 255, 0.14);
+  --theme-accent: #ffffff;
+  --theme-accent-hover: #e2e8f0;
+  --theme-accent-glow: rgba(255, 255, 255, 0.3);
+  --theme-text-primary: #ffffff;
+  --theme-text-secondary: #a1a1aa;
+  --theme-text-muted: #71717a;
+  --theme-nav-bg: rgba(10, 10, 12, 0.95);
+  --theme-badge-bg: rgba(255, 255, 255, 0.1);
+  --theme-badge-border: rgba(255, 255, 255, 0.25);
+  color-scheme: dark;
+}
+
+[data-theme="enterprise"] {
+  --theme-bg: #0b1120;
+  --theme-bg-gradient: radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.14) 0px, transparent 50%),
+                       radial-gradient(at 100% 0%, rgba(99, 102, 241, 0.1) 0px, transparent 50%),
+                       radial-gradient(at 50% 100%, rgba(14, 165, 233, 0.06) 0px, transparent 50%),
+                       linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                       linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  --theme-card-bg: linear-gradient(145deg, rgba(26, 38, 57, 0.8) 0%, rgba(15, 23, 42, 0.95) 100%);
+  --theme-card-border: rgba(59, 130, 246, 0.22);
+  --theme-accent: #3b82f6;
+  --theme-accent-hover: #60a5fa;
+  --theme-accent-glow: rgba(59, 130, 246, 0.35);
+  --theme-text-primary: #f8fafc;
+  --theme-text-secondary: #94a3b8;
+  --theme-text-muted: #64748b;
+  --theme-nav-bg: rgba(15, 23, 42, 0.85);
+  --theme-badge-bg: rgba(59, 130, 246, 0.12);
+  --theme-badge-border: rgba(59, 130, 246, 0.3);
+  color-scheme: dark;
+}
+
+[data-theme="emerald"] {
+  --theme-bg: #06110d;
+  --theme-bg-gradient: radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.15) 0px, transparent 50%),
+                       radial-gradient(at 100% 0%, rgba(20, 184, 166, 0.1) 0px, transparent 50%),
+                       radial-gradient(at 50% 100%, rgba(34, 197, 94, 0.06) 0px, transparent 50%),
+                       linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                       linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  --theme-card-bg: linear-gradient(145deg, rgba(6, 32, 22, 0.8) 0%, rgba(4, 18, 12, 0.95) 100%);
+  --theme-card-border: rgba(16, 185, 129, 0.22);
+  --theme-accent: #10b981;
+  --theme-accent-hover: #34d399;
+  --theme-accent-glow: rgba(16, 185, 129, 0.35);
+  --theme-text-primary: #f0fdf4;
+  --theme-text-secondary: #a7f3d0;
+  --theme-text-muted: #6ee7b7;
+  --theme-nav-bg: rgba(6, 24, 16, 0.85);
+  --theme-badge-bg: rgba(16, 185, 129, 0.12);
+  --theme-badge-border: rgba(16, 185, 129, 0.3);
+  color-scheme: dark;
+}
+
+[data-theme="amber"] {
+  --theme-bg: #14100c;
+  --theme-bg-gradient: radial-gradient(at 0% 0%, rgba(245, 158, 11, 0.14) 0px, transparent 50%),
+                       radial-gradient(at 100% 0%, rgba(251, 146, 60, 0.1) 0px, transparent 50%),
+                       radial-gradient(at 50% 100%, rgba(234, 88, 12, 0.06) 0px, transparent 50%),
+                       linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                       linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  --theme-card-bg: linear-gradient(145deg, rgba(40, 28, 20, 0.8) 0%, rgba(20, 14, 10, 0.95) 100%);
+  --theme-card-border: rgba(245, 158, 11, 0.22);
+  --theme-accent: #f59e0b;
+  --theme-accent-hover: #fbbf24;
+  --theme-accent-glow: rgba(245, 158, 11, 0.35);
+  --theme-text-primary: #fef3c7;
+  --theme-text-secondary: #fde68a;
+  --theme-text-muted: #d97706;
+  --theme-nav-bg: rgba(30, 20, 14, 0.85);
+  --theme-badge-bg: rgba(245, 158, 11, 0.12);
+  --theme-badge-border: rgba(245, 158, 11, 0.3);
+  color-scheme: dark;
+}
+
+[data-theme="light"] {
+  --theme-bg: #f8fafc;
+  --theme-bg-gradient: radial-gradient(at 0% 0%, rgba(2, 132, 199, 0.08) 0px, transparent 50%),
+                       radial-gradient(at 100% 0%, rgba(99, 102, 241, 0.06) 0px, transparent 50%),
+                       radial-gradient(at 50% 100%, rgba(14, 165, 233, 0.04) 0px, transparent 50%),
+                       linear-gradient(rgba(0, 0, 0, 0.04) 1px, transparent 1px),
+                       linear-gradient(90deg, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
+  --theme-card-bg: #ffffff;
+  --theme-card-border: rgba(203, 213, 225, 0.8);
+  --theme-accent: #0284c7;
+  --theme-accent-hover: #0369a1;
+  --theme-accent-glow: rgba(2, 132, 199, 0.2);
+  --theme-text-primary: #0f172a;
+  --theme-text-secondary: #475569;
+  --theme-text-muted: #94a3b8;
+  --theme-nav-bg: rgba(255, 255, 255, 0.9);
+  --theme-badge-bg: rgba(2, 132, 199, 0.08);
+  --theme-badge-border: rgba(2, 132, 199, 0.2);
+  color-scheme: light;
 }
 
 html, body, #root {
@@ -17,38 +135,35 @@ html, body, #root {
 
 body {
   min-height: 100vh;
-  background-color: #080c14;
-  background-image: 
-    radial-gradient(at 0% 0%, rgba(0, 240, 255, 0.1) 0px, transparent 50%),
-    radial-gradient(at 100% 0%, rgba(99, 102, 241, 0.1) 0px, transparent 50%),
-    radial-gradient(at 50% 100%, rgba(16, 185, 129, 0.06) 0px, transparent 50%),
-    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  font-family: var(--theme-font);
+  background-color: var(--theme-bg);
+  background-image: var(--theme-bg-gradient);
   background-size: 100% 100%, 100% 100%, 100% 100%, 36px 36px, 36px 36px;
   background-position: 0 0, 0 0, 0 0, -1px -1px, -1px -1px;
-  color: #f8fafc;
+  color: var(--theme-text-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* Custom Cyber Scrollbar */
+/* Custom Cyber/Enterprise Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #080c14;
+  background: var(--theme-bg);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1e293b;
+  background: var(--theme-card-border);
   border-radius: 4px;
-  border: 1px solid rgba(0, 240, 255, 0.2);
+  border: 1px solid var(--theme-badge-border);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #0284c7;
+  background: var(--theme-accent);
 }
 
 code {
