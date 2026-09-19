@@ -1,600 +1,496 @@
 # Audit Trail
 
-**14-Day Team Development, GitHub & AI-Assisted Coding Workflow**
+**Event-Sourced Inventory & Logistics Ledger**  
+*MERN • Event Sourcing • CQRS • Optimistic Concurrency Control • 28-Day Team Engineering Roadmap • 84 Planned Commits*
 
-MERN • Event Sourcing • CQRS • 42 planned commits • Mid-Project Review by Day 14
+---
 
-## 1. Purpose
+### Project Milestone Status
 
-This document is the single source of truth for the three-person development team. It combines project architecture, folder structure, ownership, the 14-day commit plan, AI-assisted coding rules, prompt context, Git workflow, testing expectations, and the Mid-Project Review checklist.
+| Phase | Duration | Scope | Status |
+|---|---|---|---|
+| **Phase 1: Weeks 1 & 2** | Days 1 – 14 | Foundation, CQRS, MongoDB Event Store, React Timeline, Immutability Audit, State Reconstruction | **COMPLETED & VERIFIED** ✅ |
+| **Mid-Project Review** | Day 14 | Proof of Event Store Immutability (`APPEND/READ` only, `UPDATE/DELETE` rejected) + Historical Event Replay State Reconstruction | **OFFICIALLY PASSED** ✅ |
+| **Phase 2: Week 3** | Days 15 – 21 | High-Performance Read Models (Projections), Background Worker, React Time-Scrubbing Slider | **ACTIVE (Days 15–21)** 🚀 |
+| **Phase 3: Week 4** | Days 22 – 28 | Optimistic Concurrency Control (OCC), Recharts Sensor Telemetry, Production Deployment & Final Review | **SCHEDULED (Days 22–28)** 🎯 |
 
-The source project brief defines Audit Trail as an Event-Sourced Inventory & Logistics Ledger. It specifically calls for a MongoDB append-only Event Store, a Node.js Event Sourcing Engine, CQRS, and a React/Recharts forensic dashboard.
+---
 
-The official Week 2 milestone is the Mid-Project Review: prove Event Store immutability and prove shipment-state reconstruction by replaying historical events.
+## 1. Purpose & Vision
 
-## 2. Team Target
+This document is the single source of truth for the three-person engineering team. It provides a complete, month-long roadmap to take **Audit Trail** from the successful Mid-Project Review to an enterprise-grade, publicly deployed MERN application.
 
-Three members × one meaningful commit per member per day × 14 days = **42 planned commits**.
+Traditional CRUD systems overwrite historical data during updates (e.g., updating stock from 10 to 5 discards the fact that it was ever 10). In regulated logistics, supply chain, and FinTech domains, overwriting state is unacceptable. 
 
-- Exactly one meaningful commit per person per day.
-- No meaningless commits such as `update`, `changes`, or `final`.
-- Each commit must correspond to a real engineering contribution.
-- All code is AI-assisted, but every team member remains responsible for understanding, testing and reviewing their code.
-- The Day 14 goal is the Mid-Project Review, not the completion of every Week 3/Week 4 feature.
+**Audit Trail** implements an **Event-Sourced Architecture with CQRS**:
+1. Every state mutation is represented as an **immutable, append-only domain event** stored in MongoDB.
+2. Current shipment states can always be mathematically derived by **replaying historical events**.
+3. High read performance is achieved via asynchronous **Projections (Read Models)** maintained by a background Node.js worker.
+4. Concurrency conflicts are prevented using **Optimistic Concurrency Control (OCC)**.
+5. Forensic investigations are supported via **Time-Scrubbing ("Rewind Time")** and **Recharts Sensor Telemetry Visualization**.
 
-## 3. Technology & Architecture
+---
 
-- **MongoDB + Mongoose** — persistence and Event Store.
-- **Express.js + Node.js** — API and Event Sourcing engine.
-- **React.js** — forensic dashboard.
-- **Recharts** — later-stage sensor visualization.
-- **Event Sourcing** — historical events are the source of truth.
-- **CQRS** — separate command/write and query/read responsibilities.
+## 2. Team Target: 1-Month Engineering Workflow
 
-```
-React Forensic Dashboard
-        │
-        │ REST API
-        ▼
-Express / Node.js
-        │
-        ├───────────────┐
-        │               │
-   COMMAND SIDE     QUERY SIDE
-        │               │
-        ▼               ▼
-Shipment Domain     Read/Query Layer
-   Aggregate             │
-        │                │
-        ▼                │
-Immutable Event Store ◄──┘
-        │
-        ▼
-   Event Replay
-        │
-        ▼
-Current Shipment State
-```
+To ensure systematic progress and equal contribution across all teammates, the project follows a disciplined daily commit schedule:
 
-### Core Event Flow
+$$\text{3 Team Members} \times \text{1 Meaningful Commit / Day} \times \text{28 Days} = \mathbf{84\ \text{Total Commits}}$$
+
+- **Days 1 – 14 (Commits 1 – 42):** Foundation & Mid-Project Review — **COMPLETED** ✅
+- **Days 15 – 28 (Commits 43 – 84):** Projections, Time Travel, OCC, Sensor Analytics & Deployment — **IN PROGRESS / THIS MONTH** 🚀
+- Every commit must represent a verifiable feature, test, or architectural component.
+- Meaningless commit messages (e.g., `fix`, `update`, `wip`) are strictly prohibited. Follow conventional commit standards (e.g., `feat(projections): ...`, `test(occ): ...`).
+
+---
+
+## 3. Technology & Advanced System Architecture
+
+### Tech Stack
+- **Database:** MongoDB Atlas + Mongoose (Event Store collection + Read Model collection)
+- **Backend:** Node.js & Express.js (CQRS routers, Domain Aggregates, Background Projection Worker)
+- **Frontend:** React 19, Tailwind CSS, React Router v7, Lucide Icons, Recharts (sensor telemetry)
+- **Build Tool:** Vite 8
+- **Testing:** Node.js Native Test Runner (`node --test`)
+- **Deployment:** Vercel (Frontend SPA) + Render / Railway (Backend API & Projection Worker) + MongoDB Atlas
+
+### End-to-End Enterprise Architecture Diagram
 
 ```
-User Action
-    ↓
-React
-    ↓
-POST /api/commands/...
-    ↓
-Express Command Route
-    ↓
-Command Service
-    ↓
-Shipment Aggregate / Domain Validation
-    ↓
-Create Domain Event
-    ↓
-Append Event to MongoDB Event Store
-    ↓
-Historical Events remain immutable
-    ↓
-Query / Replay
-    ↓
-Reconstruct Current State
-    ↓
-React Timeline + State
+                              ┌─────────────────────────────────────────────────────────┐
+                              │                 CLIENT TIER (React + Vite)              │
+                              │  - Forensic Dashboard       - Time-Scrubbing Slider     │
+                              │  - Event Timeline View      - Recharts Sensor Graph     │
+                              └───────────────────────────┬─────────────────────────────┘
+                                                          │ HTTPS / REST
+                                     ┌────────────────────┴────────────────────┐
+                                     │                                         │
+                         COMMANDS    ▼                                         ▼  QUERIES
+                   (POST /api/commands)                              (GET /api/queries)
+                                     │                                         │
+┌────────────────────────────────────┼─────────────────────────────────────────┼────────────────────────────────────┐
+│ EXPRESS BACKEND                    │                                         │                                    │
+│                                    ▼                                         │                                    │
+│                       ┌─────────────────────────┐                            │                                    │
+│                       │   Command Controller    │                            │                                    │
+│                       └────────────┬────────────┘                            │                                    │
+│                                    │                                         │                                    │
+│                                    ▼                                         │                                    │
+│                       ┌─────────────────────────┐                            │                                    │
+│                       │  Shipment Aggregate &   │                            │                                    │
+│                       │  OCC Version Validation │                            │                                    │
+│                       └────────────┬────────────┘                            │                                    │
+│                                    │ Emits Validated Events                  │                                    │
+│                                    ▼                                         │                                    │
+│                       ┌─────────────────────────┐                            │                                    │
+│                       │  Immutable Event Store  │                            │                                    │
+│                       │  (Append-Only Log)      │                            │                                    │
+│                       └────────────┬────────────┘                            │                                    │
+│                                    │                                         │                                    │
+│                                    ├──────────────────────┐                  │                                    │
+│                                    │                      │                  │                                    │
+│                                    ▼                      ▼                  ▼                                    │
+│                       ┌─────────────────────────┐    ┌─────────────────────────────────┐                          │
+│                       │  Event Replay Engine    │    │ Background Projection Worker    │                          │
+│                       │  (Forensic Time-Travel) │    │ (Asynchronous Event Consumer)   │                          │
+│                       └────────────┬────────────┘    └────────────────┬────────────────┘                          │
+│                                    │                                  │                                           │
+└────────────────────────────────────┼──────────────────────────────────┼───────────────────────────────────────────┘
+                                     │                                  │ Updates
+                                     │ Historical Fold                  ▼
+                                     │                     ┌─────────────────────────────┐
+                                     │                     │ MongoDB Read Model          │
+                                     │                     │ (ShipmentReadModel Cache)   │
+                                     │                     └────────────┬────────────────┘
+                                     │                                  │ Fast O(1) Reads
+                                     └──────────────────┬───────────────┘
+                                                        │
+                                                        ▼
+                                          JSON Response to Dashboard
 ```
 
-### Example Event Stream
+---
 
-```
-CONTAINER_CREATED
-        ↓
-LOADED_ON_SHIP
-        ↓
-TEMPERATURE_SPIKE
-        ↓
-ARRIVED_AT_PORT
-```
+## 4. Team Ownership & Responsibilities
 
-The project brief uses this type of chronological event stream to illustrate reconstruction of a shipment's state.
+| Role | Primary Ownership | Phase 1 Completed (Days 1–14) | Phase 2 Scope (Days 15–28 / Rest of Month) |
+|---|---|---|---|
+| **Person 1** | **Event Sourcing & Domain Architecture** | Aggregate root, Domain events, Replay fold engine, Immutability guards | Time-travel state reconstruction (`as-of`), OCC domain validation rules, version conflict detection, temporal delta algorithms |
+| **Person 2** | **CQRS, MongoDB & Background Workers** | Express setup, Mongoose Event model, CQRS routes, Immutability verification tests | Background projection worker, `ShipmentReadModel` schema & pipeline, OCC persistence verification, production deployment config |
+| **Person 3** | **React Forensic Dashboard & Visualizations** | Search bar, initial layout, chronological timeline, current state card | State-scrubbing slider UI ("Rewind Time"), Recharts sensor graphs (temperature & shock spikes), OCC conflict toast alerts, mobile responsiveness |
 
-## 4. Team Ownership
-
-| Member | Primary Ownership | Main Areas |
-|---|---|---|
-| Person 1 | Event Sourcing & Domain | `events/`, `domain/`, replay, state reconstruction, concurrency later |
-| Person 2 | CQRS, MongoDB & Backend | `config/`, `models/`, `commands/`, `queries/`, Event Store persistence, tests |
-| Person 3 | React Forensic Dashboard | `components/`, `pages/`, `hooks/`, API integration, timeline, visualization |
-
-> Ownership is not isolation. All three members must understand the end-to-end flow well enough to explain it during review.
+---
 
 ## 5. Repository Structure
 
 ```
 audit-trail/
-│
-├── client/                         # React frontend
+├── client/                                  # React 19 Frontend (Vite)
+│   ├── public/                              # Static assets
 │   ├── src/
 │   │   ├── components/
-│   │   │   ├── SearchBar/
-│   │   │   ├── EventTimeline/
-│   │   │   ├── ShipmentState/
-│   │   │   └── LoadingState/
+│   │   │   ├── EventTimeline/               # Vertical chronological event stream
+│   │   │   ├── SearchBar/                   # Shipment ID lookup & filters
+│   │   │   ├── SensorChart/                 # [NEW] Recharts sensor telemetry (temp/humidity)
+│   │   │   ├── ShipmentState/               # Active & reconstructed shipment status
+│   │   │   ├── TimeSlider/                  # [NEW] State scrubbing rewind slider
+│   │   │   └── ui/                          # Alerts, badges, loading skeletons, modal dialogs
+│   │   ├── hooks/                           # Custom React hooks (useShipment, useTimeTravel)
 │   │   ├── pages/
-│   │   │   ├── Dashboard.jsx
-│   │   │   └── ShipmentDetails.jsx
-│   │   ├── hooks/
+│   │   │   ├── Dashboard.jsx                # Main forensic operations center
+│   │   │   └── ShipmentDetails.jsx          # Deep-dive chronological audit view
 │   │   ├── services/
-│   │   │   └── api.js
-│   │   ├── utils/
+│   │   │   └── api.js                       # Axios/fetch service configured via VITE_API_URL
 │   │   ├── App.jsx
 │   │   └── main.jsx
-│   └── package.json
+│   ├── index.html
+│   ├── package.json
+│   ├── vercel.json                          # [NEW] Vercel SPA routing rewrites
+│   └── vite.config.js
 │
-├── server/                         # Node + Express backend
+├── server/                                  # Express Backend & Event Engine
 │   ├── src/
-│   │   ├── config/
-│   │   │   └── db.js
-│   │   ├── models/
-│   │   │   ├── Event.js
-│   │   │   └── ShipmentReadModel.js
-│   │   ├── events/
-│   │   │   ├── eventTypes.js
-│   │   │   ├── eventStore.js
-│   │   │   └── eventHandlers.js
-│   │   ├── domain/
-│   │   │   ├── shipmentAggregate.js
-│   │   │   └── shipmentState.js
-│   │   ├── commands/
+│   │   ├── audit/                           # Immutability audit demo endpoints & scripts
+│   │   ├── commands/                        # CQRS Command layer (Writes only)
 │   │   │   ├── commandController.js
 │   │   │   ├── commandRoutes.js
 │   │   │   └── commandService.js
-│   │   ├── queries/
+│   │   ├── config/
+│   │   │   └── db.js                        # MongoDB Atlas connection
+│   │   ├── domain/                          # Pure business logic & aggregates
+│   │   │   ├── shipmentAggregate.js
+│   │   │   └── shipmentState.js
+│   │   ├── events/                          # Event definitions and repository
+│   │   │   ├── eventHandlers.js
+│   │   │   └── eventStore.js
+│   │   ├── events/eventTypes.js
+│   │   ├── middleware/                      # Immutability guard, error & OCC handlers
+│   │   ├── models/                          # Mongoose schemas
+│   │   │   ├── Event.js                     # Immutable append-only log
+│   │   │   └── ShipmentReadModel.js         # [NEW] Denormalized read-optimized model
+│   │   ├── queries/                         # CQRS Query layer (Reads only)
 │   │   │   ├── queryController.js
 │   │   │   ├── queryRoutes.js
 │   │   │   └── queryService.js
-│   │   ├── middleware/
-│   │   └── app.js
-│   ├── tests/
-│   └── package.json
+│   │   ├── workers/                         # [NEW] Background projection workers
+│   │   │   └── projectionWorker.js          # Consumes events & updates ShipmentReadModel
+│   │   ├── scripts/                         # [NEW] Data seeders & audit verification scripts
+│   │   │   └── seedAuditData.js
+│   │   └── app.js                           # Express app entry point
+│   ├── tests/                               # Node.js native unit & integration test suites
+│   ├── package.json
+│   └── render.yaml                          # [NEW] Render background worker & web service config
 │
-├── docs/
+├── docs/                                    # System documentation
 │   ├── architecture.md
+│   ├── cqRS.md
 │   ├── event-sourcing.md
-│   ├── cqrs.md
-│   └── ai-context.md
+│   └── deployment.md                        # [NEW] Step-by-step production deployment guide
 │
-├── .env.example
 ├── .gitignore
 ├── README.md
-└── package.json
+└── package.json                             # Root monorepo dev orchestrator
 ```
 
-## 6. GitHub Workflow
+---
+
+## 6. Month-Long Development & Commit Plan
+
+### Phase 1: Foundation & Mid-Project Review (Days 1–14) — [COMPLETED ✅]
+
+All 42 commits for Days 1 through 14 have been committed, peer-reviewed, and merged. Key achievements include:
+- **Event Store Model & Immutability:** Strict append-only MongoDB persistence where `PUT`, `PATCH`, and `DELETE` are rejected by middleware and database rules.
+- **CQRS Isolation:** Full segregation between `/api/commands` and `/api/queries`.
+- **Event Replay State Reconstruction:** Verified mathematical folding of events (`CONTAINER_CREATED` $\rightarrow$ `LOADED_ON_SHIP` $\rightarrow$ `TEMPERATURE_SPIKE` $\rightarrow$ `ARRIVED_AT_PORT`) to reconstruct live shipment states.
+- **Mid-Project Review Demonstrations:** Verified using automated audit scripts and interactive UI tests.
+
+---
+
+### Phase 2: Projections & State Scrubbing (Days 15–21 / Week 3) — [ACTIVE]
+
+> **Goal:** High-performance read models to avoid replaying thousands of events on every dashboard page view, paired with a dynamic React Time-Slider to "rewind time" and inspect historical states.
+
+#### Day 15 — Read Model Schema & Event Projection Interface
+- **Person 1 (Domain):** `feat(domain): define projection state contract and event apply interfaces`  
+  Define strict projection reducer mapping for updating read models on each canonical event.
+- **Person 2 (Backend/Worker):** `feat(models): create ShipmentReadModel schema with indexed fields`  
+  Design MongoDB `ShipmentReadModel` collection storing current location, status, temperature, and last applied version.
+- **Person 3 (React):** `feat(ui): scaffold time-travel control bar and temporal view modes`  
+  Build the UI toolbar allowing users to toggle between "Live Current State" and "Historical Inspection Mode".
+
+#### Day 16 — Background Projection Worker
+- **Person 1 (Domain):** `feat(projections): implement pure event projection updater logic`  
+  Implement the stateless transformer that receives an event and mutates a read model snapshot safely.
+- **Person 2 (Backend/Worker):** `feat(workers): implement background Node.js projection worker`  
+  Create worker loop / event hook that detects new events appended to the Event Store and updates `ShipmentReadModel`.
+- **Person 3 (React):** `feat(ui): design state scrubber slider component`  
+  Implement the interactive slider component showing discrete tick marks for each version/event in the shipment lifecycle.
+
+#### Day 17 — Optimized Query Layer (Read Model vs Replay)
+- **Person 1 (Domain):** `feat(replay): implement point-in-time state reconstruction algorithm`  
+  Build `reconstructStateAsOf(aggregateId, targetVersion)` allowing deterministic state folding up to a specific historical event.
+- **Person 2 (Backend/Worker):** `feat(queries): route standard dashboard reads to fast ShipmentReadModel`  
+  Update `GET /api/queries/shipments/:id` to fetch directly from the read model with sub-millisecond response times.
+- **Person 3 (React):** `feat(ui): connect time slider to temporal state updates`  
+  Bind slider adjustments to client-side temporal state rendering with smooth transition animations.
+
+#### Day 18 — Historical "As-Of" API Endpoints
+- **Person 1 (Domain):** `feat(domain): add timestamp-based historical cutoff validation`  
+  Support reconstructing shipment state as of an ISO timestamp or date range (e.g., "3 days ago").
+- **Person 2 (Backend/Worker):** `feat(queries): implement GET /api/queries/shipments/:id/as-of/:target`  
+  Create endpoint serving historical reconstructed state without mutating the live read model.
+- **Person 3 (React):** `feat(ui): add visual historical state diff indicator`  
+  Show clear UI tags comparing the past scrubbed state against the current live state (e.g., "Viewing state at Version 2 of 5").
+
+#### Day 19 — Projection Resiliency & Catch-Up Sync
+- **Person 1 (Domain):** `test(projections): test projection accuracy against full historical replay`  
+  Write automated tests verifying that `ShipmentReadModel` identically matches state generated by replaying the raw event log.
+- **Person 2 (Backend/Worker):** `feat(workers): implement projection catch-up and rebuild script`  
+  Add CLI utility `npm run projections:rebuild` that replays all events from scratch to reconstruct the read model if out of sync.
+- **Person 3 (React):** `feat(ui): add step-by-step playback controls (Play/Pause/Rewind)`  
+  Add automated "playback" controls so logistics managers can click "Play" to watch the shipment evolve over time.
+
+#### Day 20 — Read Model Performance & Load Testing
+- **Person 1 (Domain):** `test(replay): test temporal replay with 100+ sequential logistics events`  
+  Benchmark memory and execution time when reconstructing deep event histories.
+- **Person 2 (Backend/Worker):** `perf(queries): benchmark read model query latency vs raw replay`  
+  Document performance gains: show that querying the read model takes <10ms vs >300ms for raw multi-event replay.
+- **Person 3 (React):** `feat(ui): add timeline event jump interaction`  
+  Enable clicking any event card on the vertical timeline to immediately jump the time slider to that exact moment.
+
+#### Day 21 — Week 3 Milestone Verification & Audit
+- **Person 1 (Domain):** `test(review): verify projection consistency across all event types`  
+  Ensure `CONTAINER_CREATED`, `LOADED_ON_SHIP`, `TEMPERATURE_SPIKE`, and `ARRIVED_AT_PORT` accurately project to read models.
+- **Person 2 (Backend/Worker):** `test(review): verify background worker real-time sync`  
+  Demonstrate that dispatching a new command immediately updates the read model within 200ms.
+- **Person 3 (React):** `feat(review): polish temporal scrubber UI and historical banner`  
+  Ensure scrubbed view displays high-contrast alerts to prevent operators from mistaking past states for live data.
+
+---
+
+### Phase 3: Optimistic Concurrency Control, Recharts & Production Deployment (Days 22–28 / Week 4)
+
+> **Goal:** Enterprise concurrency guarantees (OCC), rich telemetry data visualization using Recharts, stress testing, and public deployment to the cloud.
+
+#### Day 22 — Optimistic Concurrency Control (OCC) Core
+- **Person 1 (Domain):** `feat(domain): implement OCC version checking in ShipmentAggregate`  
+  Validate that commands provide `expectedVersion`. If the database current version $\neq$ `expectedVersion`, reject with a concurrency conflict.
+- **Person 2 (Backend/Worker):** `feat(db): enforce compound unique index on aggregateId and version`  
+  Add MongoDB unique index `{ aggregateId: 1, version: 1 }` ensuring two simultaneous commands cannot write the same version number.
+- **Person 3 (React):** `feat(ui): track aggregate version in React form state`  
+  Capture current loaded version during query fetch and forward it inside subsequent command payloads.
+
+#### Day 23 — Concurrency Conflict Handling & 409 Responses
+- **Person 1 (Domain):** `feat(domain): define domain ConcurrencyException with resolution hints`  
+  Structure rich error objects explaining who modified the resource and which version was expected.
+- **Person 2 (Backend/Worker):** `feat(api): add HTTP 409 Conflict middleware and error response format`  
+  Catch OCC violations in Express and return standardized `409 Conflict` responses with current database version.
+- **Person 3 (React):** `feat(ui): build optimistic concurrency conflict modal`  
+  Display an interactive conflict dialog when a 409 occurs, offering the user a one-click "Refresh with Latest State" action.
+
+#### Day 24 — Recharts Sensor Telemetry Integration
+- **Person 1 (Domain):** `feat(domain): enrich TEMPERATURE_SPIKE events with telemetry metrics`  
+  Add humidity, battery voltage, ambient temp, and GPS coordinates to domain event payloads.
+- **Person 2 (Backend/Worker):** `feat(queries): implement sensor telemetry time-series endpoint`  
+  Create `GET /api/queries/shipments/:id/telemetry` returning structured time-series data optimized for charting.
+- **Person 3 (React):** `feat(viz): integrate Recharts Line/AreaChart for sensor metrics`  
+  Embed an interactive Recharts component plotting temperature and environmental variations across the shipment lifecycle.
+
+#### Day 25 — Sensor Visualization Overlaid on Event Timeline
+- **Person 1 (Domain):** `feat(domain): add automated anomaly threshold detection`  
+  Flag events that exceed safe thresholds (e.g., temperatures above -18°C for frozen cargo).
+- **Person 2 (Backend/Worker):** `feat(queries): correlate sensor anomalies with historical events`  
+  Provide query filters highlighting exactly which event coincided with temperature spikes or physical shocks.
+- **Person 3 (React):** `feat(viz): synchronize Recharts hover tooltip with timeline cards`  
+  Hovering over a sensor spike on the Recharts graph highlights the corresponding `TEMPERATURE_SPIKE` event card.
+
+#### Day 26 — Enterprise Polish, Seeding & UI Feedback
+- **Person 1 (Domain):** `feat(scripts): build comprehensive logistics scenario seed generator`  
+  Create realistic datasets: pharmaceutical cold chain, trans-oceanic container shipping, and hazardous cargo routes.
+- **Person 2 (Backend/Worker):** `perf(api): implement HTTP response caching and compression`  
+  Add compression middleware, CORS hardening, rate limiting, and production environment guards.
+- **Person 3 (React):** `feat(ui): responsive design audit, dark mode accents & keyboard navigation`  
+  Polish typography, mobile layout, accessibility (ARIA), and micro-interactions.
+
+#### Day 27 — Production Cloud Deployment Setup
+- **Person 1 (Domain):** `test(e2e): execute full-system end-to-end integration test suite`  
+  Validate the complete loop: Command $\rightarrow$ OCC check $\rightarrow$ Event append $\rightarrow$ Projection worker $\rightarrow$ Dashboard update.
+- **Person 2 (Backend/Worker):** `chore(deploy): configure backend on Render/Railway and Atlas`  
+  Configure production MongoDB Atlas cluster, environment secrets, and backend web service deployment.
+- **Person 3 (React):** `chore(deploy): configure Vercel frontend deployment and rewrite rules`  
+  Deploy client application to Vercel, connect production API URL, and verify SSL and custom routing.
+
+#### Day 28 — Final Architectural Review & Delivery Sign-Off
+- **Person 1 (Domain):** `docs: finalize domain event catalog and OCC technical documentation`  
+  Document all domain events, invariants, and aggregate lifecycles.
+- **Person 2 (Backend/Worker):** `docs: finalize API reference and projection architecture guide`  
+  Publish complete Swagger/Markdown API specifications and system benchmark figures.
+- **Person 3 (React):** `docs: prepare live demo walkthrough and forensic case study`  
+  Create interactive presentation showing live command dispatch, conflict handling, time-travel scrubbing, and sensor analytics.
+
+---
+
+## 7. Production Deployment Guide: Vercel vs Netlify
+
+### Architectural Evaluation: Where to Deploy?
+
+| Platform | Frontend (React/Vite) | Backend (Express/Node.js) & Background Worker | Recommendation |
+|---|---|---|---|
+| **Vercel** | ⭐ **Best-in-Class:** Native Vite/React support, instant edge propagation, automatic SSL, preview deployments for GitHub PRs. | ⚠️ **Serverless Only:** Vercel functions are stateless and time out after 10–15s. They **cannot run persistent background workers** (like our projection worker). | **Deploy Frontend on Vercel** |
+| **Netlify** | ✅ Good: Supports static SPAs and basic edge functions. | ⚠️ **Serverless Only:** Same limitation as Vercel; cannot run continuous Express servers or persistent database listeners. | Viable frontend alternative |
+| **Render / Railway** | ⚠️ Not optimized for static SPA hosting (slower CDN than Vercel). | ⭐ **Best-in-Class for Backend:** Runs continuous, persistent Docker/Node.js processes, background workers, and persistent MongoDB connections with 0 serverless timeouts. | **Deploy Backend on Render or Railway** |
+
+> ### 💡 Recommended Production Architecture
+> - **Frontend:** Deploy to **Vercel** (Free, ultrafast global CDN, zero-config for Vite).
+> - **Backend & Worker:** Deploy to **Render** (Free Web Service tier, supports persistent Node.js servers).
+> - **Database:** **MongoDB Atlas** (Free M0 shared cluster with global access).
+
+---
+
+### Step-by-Step Deployment Instructions
+
+#### Step 1: Configure MongoDB Atlas
+1. Log in to [MongoDB Atlas](https://www.mongodb.com/cloud/atlas).
+2. Under **Network Access**, add `0.0.0.0/0` (Allow Access from Anywhere) so Render/Vercel can connect.
+3. Under **Database Access**, create a user (e.g., `audit_admin`) with a secure password.
+4. Obtain the connection string:
+   ```
+   mongodb+srv://audit_admin:<password>@cluster0.xxxxx.mongodb.net/audit_trail?retryWrites=true&w=majority
+   ```
+
+#### Step 2: Deploy Backend to Render
+1. Create a free account on [Render](https://render.com).
+2. Click **New +** $\rightarrow$ **Web Service** $\rightarrow$ Connect your GitHub repository `Audit_Trail`.
+3. Configure the service:
+   - **Name:** `audit-trail-backend`
+   - **Root Directory:** `server`
+   - **Environment:** `Node`
+   - **Build Command:** `npm install`
+   - **Start Command:** `node src/app.js`
+4. Add **Environment Variables**:
+   - `PORT`: `5000`
+   - `NODE_ENV`: `production`
+   - `MONGODB_URI`: `<Your MongoDB Atlas Connection String>`
+   - `CORS_ORIGIN`: `https://your-frontend-domain.vercel.app` (or `*` during initial testing)
+5. Click **Deploy Web Service**. Once deployed, copy your backend URL (e.g., `https://audit-trail-backend.onrender.com`).
+6. Verify deployment by visiting `https://audit-trail-backend.onrender.com/health` $\rightarrow$ should return `{"status":"ok"}`.
+
+#### Step 3: Deploy Frontend to Vercel
+1. Create a free account on [Vercel](https://vercel.com).
+2. Click **Add New...** $\rightarrow$ **Project** $\rightarrow$ Import your GitHub repository `Audit_Trail`.
+3. Configure the project settings:
+   - **Framework Preset:** `Vite`
+   - **Root Directory:** Click Edit and select `client`
+   - **Build Command:** `npm run build`
+   - **Output Directory:** `dist`
+   - **Install Command:** `npm install`
+4. Expand **Environment Variables**:
+   - `VITE_API_URL`: `https://audit-trail-backend.onrender.com/api`
+5. Configure client-side routing rewrites:
+   Create a `client/vercel.json` file in the repo to support React Router:
+   ```json
+   {
+     "rewrites": [
+       { "source": "/(.*)", "destination": "/index.html" }
+     ]
+   }
+   ```
+6. Click **Deploy**. Vercel will build and assign a public URL (e.g., `https://audit-trail.vercel.app`).
+
+#### Alternative: Deploying Frontend to Netlify
+If you prefer Netlify:
+1. Connect repository on [Netlify](https://www.netlify.com).
+2. Set **Base directory** to `client`, **Build command** to `npm run build`, and **Publish directory** to `client/dist`.
+3. Add environment variable `VITE_API_URL` pointing to your Render backend.
+4. Add a `client/public/_redirects` file with:
+   ```
+   /*    /index.html   200
+   ```
+
+---
+
+## 8. AI-Assisted Development Protocol
+
+The team leverages AI as an implementation accelerator while maintaining human ownership of architectural correctness.
 
 ```
-main
-  │
-  └── develop
-        ├── feature/person-1-event-sourcing
-        ├── feature/person-2-cqrs-backend
-        └── feature/person-3-dashboard
+Context → Prompt → AI Generation → Critical Code Review → Unit Tests → Git Diff Verification → Commit
 ```
 
-- Pull the latest `develop` before starting the day's work.
-- Work only in the assigned area unless integration requires coordination.
-- Run the application and relevant tests.
-- Inspect `git diff` before committing.
-- Make exactly one meaningful commit for the day's assigned work.
-- Push the branch and open/update a Pull Request.
-- At least one teammate reviews the change before it is merged.
-- Do not directly push unfinished work to `main`.
+### Standard AI Engineering Prompt Format
 
-## 7. AI-Assisted / Vibe Coding Rules
+When collaborating with an AI coding assistant, always provide this structural context:
 
-The entire project may be developed with AI assistance. AI is the implementation accelerator; the team remains responsible for architecture, correctness and verification.
+```markdown
+You are assisting the Audit Trail engineering team.
 
-```
-Context → Prompt → Generate → Understand → Test → Review → Commit
-```
+PROJECT CONTEXT:
+- Architecture: MERN, Event Sourcing, CQRS, Optimistic Concurrency Control (OCC)
+- Source of Truth: Append-only MongoDB Event Store (No UPDATE/DELETE)
+- Read Optimization: Asynchronous MongoDB ShipmentReadModel populated by background worker
+- Visualizations: React 19, Recharts for telemetry, Time-Scrubbing Slider for temporal replay
 
-**Never do this**
+MY ASSIGNED TASK TODAY:
+[PASTE EXACT TASK FROM ROADMAP, e.g., Day 22 OCC version checking]
 
-```
-Prompt → Copy → Commit
-```
-
-**Do this**
-
-```
-Context → Specific task → Existing code → Constraints → AI output → Human review → Tests → Git diff → Commit
+CONSTRAINTS:
+1. Maintain strict CQRS boundaries.
+2. Never introduce direct mutation to historical events.
+3. Validate all inputs with descriptive domain error objects.
+4. Provide unit tests using Node.js native test runner.
 ```
 
-### Standard AI Context
+---
 
-```
-We are building a MERN application called "Audit Trail — Event-Sourced Inventory & Logistics Ledger".
+## 9. Comprehensive Review & Evaluation Rubric
 
-STACK
-- MongoDB + Mongoose
-- Express.js
-- Node.js
-- React.js
-- Recharts later in the project
+### 1. Mid-Project Review (Completed ✅)
+- [x] Append-only Event Store in MongoDB.
+- [x] Immutability Audit: Server prevents `PUT`, `PATCH`, and `DELETE` on historical events.
+- [x] State Reconstruction: Calculating current state by replaying historical events.
+- [x] CQRS route segregation: `/api/commands` vs `/api/queries`.
+- [x] Chronological React timeline rendering.
 
-ARCHITECTURE
-- Event Sourcing
-- CQRS
-- Append-only MongoDB Event Store
-- Shipment Aggregate / Domain Logic
-- Event Replay / State Reconstruction
-- Later: Projection / Read Model
-- Later: Optimistic Concurrency Control
-- Later: React + Recharts forensic analytics
+### 2. Final Project Review Checklist (Target: Day 28)
+- [ ] **Read Model Projections:** `ShipmentReadModel` updated in real time by background worker.
+- [ ] **State Scrubbing:** Working UI slider allowing time-travel through past shipment states.
+- [ ] **Optimistic Concurrency Control:** Concurrency conflicts return `409 Conflict` and prompt UI recovery.
+- [ ] **Sensor Telemetry:** Recharts visualization plotting temperature variations against shipment milestones.
+- [ ] **Production Deployment:** Publicly accessible live URLs on Vercel and Render with zero console/CORS errors.
+- [ ] **Commit Discipline:** Exactly 84 planned commits across all 3 team members.
 
-CORE IDEA
-The Event Store is the source of truth. We do NOT treat a mutable current-state document as the primary source of truth.
-A shipment's current state is reconstructed by replaying its historical events.
+---
 
-EXAMPLE EVENT STREAM
-CONTAINER_CREATED
-→ LOADED_ON_SHIP
-→ TEMPERATURE_SPIKE
-→ ARRIVED_AT_PORT
+## 10. Local Development Setup
 
-EVENT SHAPE
-{
-  aggregateId,
-  eventType,
-  payload,
-  timestamp,
-  version
-}
+### Prerequisites
+- Node.js >= 18.0.0
+- npm >= 9.0.0
+- Local MongoDB or MongoDB Atlas URI
 
-CQRS
-Commands change the system by producing events.
-Queries read/reconstruct state.
-Do not mix command and query responsibilities.
+### Quick Start
+```bash
+# 1. Clone the repository
+git clone https://github.com/Raushan1504/Audit_Trail.git
+cd Audit_Trail
 
-IMMUTABILITY
-Historical events must not be updated or deleted.
-Only append/read behavior is allowed for the historical Event Store.
+# 2. Install dependencies
+npm install
+npm install --prefix server
+npm install --prefix client
 
-CURRENT REPOSITORY STRUCTURE
-[PASTE THE CURRENT TREE HERE]
+# 3. Configure environment variables
+cp server/.env.example server/.env
+# Update MONGODB_URI in server/.env
 
-CURRENT IMPLEMENTATION STATUS
-[PASTE WHAT HAS ALREADY BEEN COMPLETED]
+# 4. Launch both Server and Client concurrently
+npm run dev
 
-TODAY'S ASSIGNED TASK
-[PASTE THE EXACT TASK FROM THE 14-DAY PLAN]
-
-CONSTRAINTS
-- MERN only unless the team explicitly approves another dependency.
-- Do not change the architecture without discussing it with the team.
-- Do not rewrite unrelated files.
-- Do not introduce unnecessary dependencies.
-- Reuse existing naming conventions and modules.
-- Preserve existing working behavior.
-- Prefer small, modular functions.
-- Explain important architectural decisions.
-- Provide tests for meaningful backend logic.
+# 5. Run test suites
+npm test --prefix server
+npm test --prefix client
 ```
 
-### Standard Task Prompt
+---
 
-```
-You are assisting with the Audit Trail MERN project.
-
-PROJECT CONTEXT
-[PASTE THE STANDARD PROJECT CONTEXT ABOVE]
-
-CURRENT CODE
-[PASTE ONLY THE RELEVANT FILES/CODE]
-
-MY TASK TODAY
-[PASTE ONE TASK FROM THE DAILY PLAN]
-
-REQUIREMENTS
-1. First explain the approach in simple terms.
-2. Identify which files should change.
-3. Do not modify unrelated files.
-4. Follow the existing architecture.
-5. Keep Event Sourcing and CQRS boundaries intact.
-6. Do not introduce CRUD updates/deletes to historical events.
-7. Do not invent APIs/models that conflict with the existing code.
-8. After the implementation, provide tests or concrete manual test steps.
-9. Mention important edge cases.
-10. If existing code is wrong or incomplete, point that out before rewriting it.
-
-OUTPUT FORMAT
-A. Approach
-B. Files to change
-C. Implementation
-D. Tests
-E. Edge cases
-F. What I should verify before committing
-```
-
-### AI Code Review Prompt
-
-```
-Review the following AI-generated change as a senior MERN engineer.
-
-PROJECT ARCHITECTURE
-- MongoDB + Express + React + Node.js
-- Event Sourcing
-- CQRS
-- Append-only Event Store
-- Event Replay
-- Shipment Aggregate
-
-CHECK FOR
-- Event Sourcing violations
-- CQRS violations
-- Accidental UPDATE/DELETE of historical events
-- Incorrect event ordering/versioning
-- Race conditions
-- Async/await mistakes
-- MongoDB/Mongoose problems
-- Error handling
-- Security or secret leakage
-- Unnecessary dependencies
-- Duplicate logic
-- Breaking changes to existing modules
-- Missing tests
-- Edge cases
-
-Do not rewrite the code immediately.
-First list issues by severity:
-CRITICAL / HIGH / MEDIUM / LOW
-Then explain the safest fixes.
-```
-
-### Rules for Giving Context
-
-- Give the AI the project architecture before asking for architectural code.
-- Give the current folder tree when asking for new files or modules.
-- Give the existing relevant code when modifying an existing module.
-- State exactly what is allowed to change and what must not change.
-- Ask for the smallest safe change instead of a full rewrite.
-- Ask the AI to explain the approach before complex implementation.
-- Ask for tests and edge cases after implementation.
-- Never paste secrets, passwords, API keys or private credentials into an AI prompt.
-
-### Developer Verification Before Commit
-
-```
-AI-generated code
-      ↓
-Read it
-      ↓
-Explain it
-      ↓
-Run it
-      ↓
-Test normal + edge cases
-      ↓
-git diff
-      ↓
-Check for unrelated changes/secrets
-      ↓
-Commit
-```
-
-## 8. 14-Day Work & Commit Plan
-
-### Day 1 — Foundation
-
-| Person 1 — Event Sourcing | Person 2 — Backend / CQRS | Person 3 — React |
-|---|---|---|
-| `chore(domain): initialize event sourcing domain structure`<br><br>Create `server/src/domain` and `server/src/events`. Define the initial domain boundaries without implementing business logic. | `chore(server): initialize Express backend structure`<br><br>Initialize Node/Express, src structure, `app.js`, middleware placeholder and environment configuration. | `chore(client): initialize React dashboard`<br><br>Create React app, base layout, routing/page placeholders and initial dashboard shell. |
-
-### Day 2 — Database + Domain
-
-| Person 1 — Event Sourcing | Person 2 — Backend / CQRS | Person 3 — React |
-|---|---|---|
-| `feat(domain): define shipment aggregate and state`<br><br>Define shipment aggregate/state concepts: shipmentId, location, status, temperature and version. | `feat(db): configure MongoDB connection`<br><br>Configure MongoDB/Mongoose connection using environment variables. Verify the connection. | `feat(ui): create dashboard layout`<br><br>Create Dashboard, SearchBar and ShipmentDetails component/page structure. |
-
-### Day 3 — Events + CQRS Routes
-
-| Person 1 — Event Sourcing | Person 2 — Backend / CQRS | Person 3 — React |
-|---|---|---|
-| `feat(events): define shipment event types`<br><br>Define canonical events such as CONTAINER_CREATED, LOADED_ON_SHIP, TEMPERATURE_SPIKE and ARRIVED_AT_PORT. | `feat(cqrs): create command and query route structure`<br><br>Create separate `/api/commands` and `/api/queries` route boundaries. | `feat(ui): add shipment search component`<br><br>Build shipment/container ID search input and basic interaction state. |
-
-### Day 4 — Event Store Model
-
-| Person 1 — Event Sourcing | Person 2 — Backend / CQRS | Person 3 — React |
-|---|---|---|
-| `feat(events): implement domain event creation`<br><br>Define the event object shape and event creation logic. | `feat(event-store): create MongoDB event model`<br><br>Create Event Mongoose model with aggregateId, eventType, payload, timestamp and version. | `feat(ui): create shipment details view`<br><br>Display shipment ID, current state placeholders and version information. |
-
-### Day 5 — Command Flow
-
-| Person 1 — Event Sourcing | Person 2 — Backend / CQRS | Person 3 — React |
-|---|---|---|
-| `feat(domain): implement shipment command validation`<br><br>Validate commands before events are generated. Cover valid and invalid state transitions. | `feat(commands): implement shipment command service`<br><br>Implement controller/service flow: HTTP request → command service → domain. | `feat(ui): connect shipment search to API`<br><br>Connect React search to the backend query endpoint/service layer. |
-
-### Day 6 — Persisting Events
-
-| Person 1 — Event Sourcing | Person 2 — Backend / CQRS | Person 3 — React |
-|---|---|---|
-| `feat(event-store): integrate domain events with persistence`<br><br>Connect domain event creation to Event Store persistence. | `feat(event-store): implement append-only event repository`<br><br>Implement `appendEvent` and `getEventsByAggregateId`. Do not implement update/delete operations for historical events. | `feat(timeline): create event timeline component`<br><br>Create the initial vertical timeline component for shipment history. |
-
-### Day 7 — Query Flow
-
-| Person 1 — Event Sourcing | Person 2 — Backend / CQRS | Person 3 — React |
-|---|---|---|
-| `feat(replay): implement event replay reducer`<br><br>Implement the reducer/fold logic that applies events sequentially to a shipment state. | `feat(queries): implement shipment query service`<br><br>Implement the query service and `GET /api/queries/shipment/:id`. | `feat(timeline): render shipment event history`<br><br>Render events chronologically with event type and timestamp. |
-
-### Day 8 — Reconstruction
-
-| Person 1 — Event Sourcing | Person 2 — Backend / CQRS | Person 3 — React |
-|---|---|---|
-| `feat(replay): reconstruct shipment state from events`<br><br>Fetch an aggregate's event stream and reconstruct its current state by replay. | `feat(queries): expose reconstructed shipment state`<br><br>Connect replay logic to the Query API and return the reconstructed state. | `feat(state): display reconstructed shipment state`<br><br>Display the backend-reconstructed state in the React UI. |
-
-### Day 9 — Event Metadata
-
-| Person 1 — Event Sourcing | Person 2 — Backend / CQRS | Person 3 — React |
-|---|---|---|
-| `feat(events): add event versioning and timestamps`<br><br>Ensure every event has aggregateId, eventType, payload, timestamp and version. | `feat(db): add event store indexes`<br><br>Add indexes needed for aggregate/event retrieval and ordering. | `feat(timeline): display event metadata`<br><br>Show event type, timestamp, version and shipment/aggregate ID. |
-
-### Day 10 — Validation + Errors
-
-| Person 1 — Event Sourcing | Person 2 — Backend / CQRS | Person 3 — React |
-|---|---|---|
-| `feat(domain): add invalid command handling`<br><br>Reject invalid commands and impossible state transitions. | `feat(api): add backend validation and error middleware`<br><br>Standardize validation errors, not-found responses and server errors. | `feat(ui): add loading and error states`<br><br>Handle loading, not-found, empty timeline and server-error states. |
-
-### Day 11 — Integration Testing
-
-| Person 1 — Event Sourcing | Person 2 — Backend / CQRS | Person 3 — React |
-|---|---|---|
-| `test(replay): add aggregate reconstruction tests`<br><br>Test multiple event sequences and verify the final reconstructed state. | `test(event-store): add event persistence tests`<br><br>Verify events are appended and retrieved in the correct order. | `test(ui): validate shipment investigation flow`<br><br>Verify search → shipment state → event timeline flow. |
-
-### Day 12 — Immutability
-
-| Person 1 — Event Sourcing | Person 2 — Backend / CQRS | Person 3 — React |
-|---|---|---|
-| `test(events): verify historical events remain unchanged`<br><br>Verify replay and domain logic never mutate historical events. | `feat(event-store): enforce append-only persistence`<br><br>Ensure the Event Store exposes append/read behavior only for historical events; explicitly test that update/delete paths are unavailable or rejected. | `feat(timeline): add immutable event indicators`<br><br>Make the UI clearly distinguish historical immutable events. |
-
-### Day 13 — Full Reconstruction Check
-
-| Person 1 — Event Sourcing | Person 2 — Backend / CQRS | Person 3 — React |
-|---|---|---|
-| `test(replay): validate complete shipment reconstruction`<br><br>Test a complete sequence such as CREATED → LOADED → TEMPERATURE_SPIKE → ARRIVED_AT_PORT and verify the resulting state. | `test(integration): validate command-to-event workflow`<br><br>Verify Command → Domain → Event → MongoDB end-to-end. | `test(integration): validate forensic dashboard workflow`<br><br>Verify Search → API → Events → Timeline → Current State. |
-
-### Day 14 — Mid-Project Review
-
-| Person 1 — Event Sourcing | Person 2 — Backend / CQRS | Person 3 — React |
-|---|---|---|
-| `test(review): complete event sourcing reconstruction audit`<br><br>Prepare the reconstruction demonstration: historical event sequence → replay → current shipment state. | `test(review): complete event store immutability audit`<br><br>Prepare the immutability demonstration: APPEND works; UPDATE/DELETE of historical events are rejected/prevented. | `feat(review): finalize forensic event timeline`<br><br>Polish the timeline and make the review flow easy to demonstrate to the reviewer. |
-
-## 9. Daily Definition of Done
-
-- Assigned task is implemented.
-- Application still runs.
-- Relevant tests or manual verification are completed.
-- No unrelated files were changed.
-- AI-generated code was reviewed by the developer.
-- `git diff` was inspected.
-- No secrets or credentials were committed.
-- One meaningful commit was created.
-- Branch was pushed and the change is ready for review.
-
-## 10. Mid-Project Review — Day 14
-
-The source brief defines two explicit checks for this milestone.
-
-### A. Immutability Audit
-
-```
-APPEND  → ✓
-READ    → ✓
-UPDATE  → ✗
-DELETE  → ✗
-```
-
-- Show the MongoDB Event Store.
-- Show that events contain aggregateId, eventType, payload, timestamp and version.
-- Demonstrate that historical events are not updated.
-- Demonstrate that historical events are not deleted.
-- Explain why append-only storage preserves the audit trail.
-
-### B. Reconstruction Check
-
-```
-Historical Events
-       ↓
-CONTAINER_CREATED
-       ↓
-LOADED_ON_SHIP
-       ↓
-TEMPERATURE_SPIKE
-       ↓
-ARRIVED_AT_PORT
-       ↓
-Event Replay / Fold
-       ↓
-Current Shipment State
-```
-
-- Choose a shipment.
-- Display its historical events in chronological order.
-- Replay those events in the backend.
-- Show the reconstructed current state.
-- Explain that the historical event sequence is the source of truth.
-
-## 11. Review Checklist
-
-**CQRS**
-- [ ] Command and Query routes are separated.
-- [ ] Command flow produces events.
-- [ ] Query flow reads/reconstructs state.
-- [ ] Controllers/services are not one monolithic route.
-
-**Event Store**
-- [ ] MongoDB Event model exists.
-- [ ] aggregateId exists.
-- [ ] eventType exists.
-- [ ] payload exists.
-- [ ] timestamp exists.
-- [ ] version exists.
-- [ ] Historical events cannot be updated/deleted.
-
-**Event Sourcing**
-- [ ] Historical events are the source of truth.
-- [ ] Shipment state can be reconstructed by replay.
-- [ ] Multiple event sequences are tested.
-
-**React**
-- [ ] Shipment search works.
-- [ ] Shipment details work.
-- [ ] Event timeline renders chronologically.
-- [ ] Current reconstructed state is visible.
-- [ ] Loading/error/empty states exist.
-
-**GitHub**
-- [ ] 42 planned meaningful commits.
-- [ ] Branches and PRs are used.
-- [ ] Commit messages are descriptive.
-- [ ] No secrets are committed.
-- [ ] Every member has reviewed the final milestone.
-
-## 12. After Day 14
-
-Do not force Week 3/Week 4 features into the first 14 days. After the Mid-Project Review, continue with the source brief's remaining milestones:
-
-```
-Week 3
-  ├── Projection / Read Model
-  ├── Background Node.js Projection Worker
-  └── React State Scrubbing
-
-Week 4
-  ├── Optimistic Concurrency Control
-  ├── Recharts Sensor Visualization
-  ├── Refinement / Polish
-  └── Final Review
-```
-
-The source brief explicitly assigns projections/read models and state scrubbing to Week 3, and OCC plus sensor visualization to Week 4.
-
-## 13. Team Rules — One Page Summary
-
-1. One person = one meaningful commit per day.
-2. Three people = three meaningful commits per day.
-3. 14 days = 42 planned commits.
-4. AI may generate code; humans own correctness.
-5. Always provide project context + current code + exact task + constraints.
-6. Never ask AI to rewrite the whole project when a small change is enough.
-7. Test AI-generated code before committing.
-8. Inspect `git diff` before every commit.
-9. Never commit secrets.
-10. Keep Event Sourcing and CQRS boundaries intact.
-11. Historical events are append-only.
-12. Day 14 must demonstrate Immutability Audit + Reconstruction Check.
-
-## 14. Source Alignment
-
-This workflow is based on the supplied Audit Trail project brief. The brief describes the project as an Event-Sourced Inventory & Logistics Ledger and identifies MongoDB Event Store, Node.js Event Sourcing Engine, CQRS, and React/Recharts Forensic Dashboard as its key modules.
-
-The brief's Week 1–2 plan covers CQRS, the MongoDB append-only event log, and the React event timeline; its Mid-Project Review requires the Immutability Audit and Reconstruction Check.
+*Audit Trail is developed in alignment with Axlero Solutions Advanced MERN Stack Engineering Specifications.*
