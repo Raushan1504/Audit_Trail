@@ -12,9 +12,9 @@
   flex-wrap: wrap;
   gap: 12px;
   padding: 12px 18px;
-  background: rgba(15, 23, 42, 0.65);
+  background: var(--theme-card-bg, rgba(15, 23, 42, 0.65));
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(56, 189, 248, 0.25);
+  border: 1px solid var(--theme-card-border, rgba(56, 189, 248, 0.25));
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
@@ -29,8 +29,8 @@
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #00f0ff;
-  box-shadow: 0 0 10px #00f0ff, 0 0 20px rgba(0, 240, 255, 0.6);
+  background: var(--theme-accent, #00f0ff);
+  box-shadow: 0 0 10px var(--theme-accent, #00f0ff), 0 0 20px var(--theme-accent-glow, rgba(0, 240, 255, 0.6));
   animation: dot-glow 2s infinite ease-in-out;
 }
 
@@ -38,8 +38,8 @@
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.08em;
-  color: #00f0ff;
-  text-shadow: 0 0 8px rgba(0, 240, 255, 0.4);
+  color: var(--theme-accent, #00f0ff);
+  text-shadow: 0 0 8px var(--theme-accent-glow, rgba(0, 240, 255, 0.4));
 }
 
 .event-fold-indicator {
@@ -48,7 +48,7 @@
 }
 
 .folded-tag {
-  color: #94a3b8;
+  color: var(--theme-text-secondary, #94a3b8);
 }
 
 .replaying-tag {
@@ -69,9 +69,9 @@
 /* 3D Glassmorphic Cards */
 .shipment-card-3d {
   position: relative;
-  background: linear-gradient(145deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.85) 100%);
+  background: var(--theme-card-bg, linear-gradient(145deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.85) 100%));
   backdrop-filter: blur(14px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--theme-card-border, rgba(255, 255, 255, 0.08));
   border-radius: 14px;
   padding: 20px;
   overflow: hidden;
@@ -82,8 +82,8 @@
 
 .shipment-card-3d:hover {
   transform: translateY(-4px) rotateX(4deg) scale(1.02);
-  border-color: rgba(0, 240, 255, 0.35);
-  box-shadow: 0 16px 36px rgba(0, 240, 255, 0.12), 0 4px 16px rgba(0, 0, 0, 0.6);
+  border-color: var(--theme-accent, rgba(0, 240, 255, 0.35));
+  box-shadow: 0 16px 36px var(--theme-accent-glow, rgba(0, 240, 255, 0.12)), 0 4px 16px rgba(0, 0, 0, 0.6);
 }
 
 .shipment-card-3d__glare {
@@ -92,7 +92,8 @@
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+  background: linear-gradient(90deg, transparent, var(--theme-accent, rgba(255, 255, 255, 0.25)), transparent);
+  opacity: 0.4;
 }
 
 .shipment-card-3d__content {
@@ -106,13 +107,13 @@
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.08em;
-  color: #64748b;
+  color: var(--theme-text-muted, #64748b);
   text-transform: uppercase;
 }
 
 .card-sub {
   font-size: 11px;
-  color: #64748b;
+  color: var(--theme-text-muted, #64748b);
   margin-top: auto;
   font-style: italic;
 }
@@ -131,9 +132,9 @@
 }
 
 .status--created {
-  background: rgba(14, 165, 233, 0.15);
-  color: #38bdf8;
-  border: 1px solid rgba(14, 165, 233, 0.35);
+  background: var(--theme-badge-bg, rgba(14, 165, 233, 0.15));
+  color: var(--theme-accent, #38bdf8);
+  border: 1px solid var(--theme-badge-border, rgba(14, 165, 233, 0.35));
 }
 
 .status--loaded {
@@ -156,9 +157,9 @@
 }
 
 .status--unknown {
-  background: rgba(148, 163, 184, 0.15);
-  color: #94a3b8;
-  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: var(--theme-badge-bg, rgba(148, 163, 184, 0.15));
+  color: var(--theme-text-secondary, #94a3b8);
+  border: 1px solid var(--theme-card-border, rgba(148, 163, 184, 0.3));
 }
 
 /* Location Data */
@@ -171,7 +172,7 @@
 .location-name {
   font-size: 16px;
   font-weight: 700;
-  color: #f1f5f9;
+  color: var(--theme-text-primary, #f1f5f9);
 }
 
 .vessel-badge {
@@ -179,12 +180,12 @@
   align-items: center;
   gap: 6px;
   font-size: 12px;
-  color: #93c5fd;
-  background: rgba(59, 130, 246, 0.12);
+  color: var(--theme-accent, #93c5fd);
+  background: var(--theme-badge-bg, rgba(59, 130, 246, 0.12));
   padding: 3px 8px;
   border-radius: 6px;
   width: fit-content;
-  border: 1px solid rgba(59, 130, 246, 0.25);
+  border: 1px solid var(--theme-badge-border, rgba(59, 130, 246, 0.25));
 }
 
 /* Version Display */
@@ -197,9 +198,9 @@
 .version-num {
   font-size: 26px;
   font-weight: 800;
-  color: #00f0ff;
+  color: var(--theme-accent, #00f0ff);
   font-family: monospace;
-  text-shadow: 0 0 12px rgba(0, 240, 255, 0.4);
+  text-shadow: 0 0 12px var(--theme-accent-glow, rgba(0, 240, 255, 0.4));
 }
 
 .block-tag {
@@ -208,9 +209,9 @@
   letter-spacing: 0.05em;
   padding: 2px 7px;
   border-radius: 4px;
-  background: rgba(0, 240, 255, 0.12);
-  color: #38bdf8;
-  border: 1px solid rgba(0, 240, 255, 0.25);
+  background: var(--theme-badge-bg, rgba(0, 240, 255, 0.12));
+  color: var(--theme-accent, #38bdf8);
+  border: 1px solid var(--theme-badge-border, rgba(0, 240, 255, 0.25));
 }
 
 /* Environmental Telemetry */
@@ -235,7 +236,7 @@
 
 .temp-val--na {
   font-size: 14px;
-  color: #64748b;
+  color: var(--theme-text-muted, #64748b);
 }
 
 .temp-badge {
@@ -264,14 +265,15 @@
   align-items: center;
   gap: 6px;
   font-size: 12px;
-  color: #cbd5e1;
-  background: rgba(255, 255, 255, 0.03);
+  color: var(--theme-text-secondary, #cbd5e1);
+  background: var(--theme-badge-bg, rgba(255, 255, 255, 0.03));
   padding: 4px 8px;
   border-radius: 6px;
+  border: 1px solid var(--theme-card-border, transparent);
 }
 
 .cargo-icon {
-  color: #94a3b8;
+  color: var(--theme-text-muted, #94a3b8);
 }
 
 .cargo-text {
