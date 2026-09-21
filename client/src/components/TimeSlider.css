@@ -1,0 +1,409 @@
+.time-travel-bar {
+  position: relative;
+  background: var(--theme-card-bg);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--theme-card-border);
+  border-radius: 14px;
+  padding: 16px 20px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+  margin-bottom: 20px;
+  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  overflow: hidden;
+}
+
+.time-travel-bar--historical {
+  border-color: rgba(245, 158, 11, 0.4);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5), 0 0 16px rgba(245, 158, 11, 0.15);
+}
+
+.time-travel-bar__glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--theme-accent), transparent);
+  opacity: 0.4;
+}
+
+.time-travel-bar--historical .time-travel-bar__glow {
+  background: linear-gradient(90deg, transparent, #f59e0b, transparent);
+  opacity: 0.8;
+}
+
+/* Header & Mode Switcher */
+.time-travel-bar__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.mode-toggle-group {
+  display: inline-flex;
+  align-items: center;
+  background: var(--theme-nav-bg);
+  border: 1px solid var(--theme-card-border);
+  border-radius: 10px;
+  padding: 4px;
+  gap: 4px;
+}
+
+.mode-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--theme-text-secondary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.mode-toggle-btn:hover {
+  color: var(--theme-text-primary);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.mode-toggle-btn--active {
+  background: var(--theme-badge-bg);
+  color: var(--theme-accent);
+  border: 1px solid var(--theme-badge-border);
+  box-shadow: 0 2px 8px var(--theme-accent-glow);
+}
+
+.live-indicator-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+  animation: beacon-pulse 2s infinite ease-in-out;
+}
+
+.history-icon {
+  font-size: 13px;
+  color: #f59e0b;
+}
+
+/* Status Badges */
+.time-travel-bar__status {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.live-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  padding: 4px 10px;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: 8px;
+}
+
+.pulse-beacon {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+}
+
+.badge-title {
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #10b981;
+}
+
+.badge-meta {
+  color: var(--theme-text-muted);
+  font-family: monospace;
+}
+
+.historical-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  padding: 4px 12px;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 8px;
+  flex-wrap: wrap;
+}
+
+.historical-badge .badge-title {
+  color: #f59e0b;
+}
+
+.btn-return-live {
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 6px;
+  background: var(--theme-accent);
+  color: #000000;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-return-live:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 10px var(--theme-accent);
+}
+
+/* Scrubber Drawer */
+.time-travel-bar__scrubber {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--theme-card-border);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: slide-down 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* Transport Controls & Snapshot Card */
+.scrubber-transport {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.transport-nav-buttons {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.transport-btn {
+  background: var(--theme-card-bg);
+  border: 1px solid var(--theme-card-border);
+  color: var(--theme-text-primary);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.transport-btn:hover:not(:disabled) {
+  background: var(--theme-badge-bg);
+  border-color: var(--theme-accent);
+  color: var(--theme-accent);
+  transform: translateY(-2px);
+}
+
+.transport-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.snapshot-meta-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--theme-nav-bg);
+  border: 1px solid var(--theme-card-border);
+  padding: 6px 14px;
+  border-radius: 8px;
+}
+
+.snapshot-version-tag {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.version-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--theme-text-muted);
+}
+
+.version-value {
+  font-size: 16px;
+  font-weight: 800;
+  font-family: monospace;
+  color: var(--theme-accent);
+}
+
+.snapshot-event-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-left: 1px solid var(--theme-card-border);
+  padding-left: 10px;
+}
+
+.event-type-badge {
+  font-size: 11px;
+  font-weight: 700;
+  color: #38bdf8;
+  background: rgba(14, 165, 233, 0.12);
+  padding: 2px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(14, 165, 233, 0.25);
+}
+
+.event-time-stamp {
+  font-size: 11px;
+  font-family: monospace;
+  color: var(--theme-text-muted);
+}
+
+/* Slider Track */
+.slider-track-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 6px;
+}
+
+.slider-ticks-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  font-family: monospace;
+  font-weight: 700;
+  color: var(--theme-text-muted);
+}
+
+.slider-wrapper {
+  position: relative;
+  width: 100%;
+  height: 20px;
+  display: flex;
+  align-items: center;
+}
+
+.slider-progress-fill {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 6px;
+  background: linear-gradient(90deg, #10b981 0%, var(--theme-accent) 100%);
+  border-radius: 4px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.time-scrub-slider {
+  position: relative;
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  outline: none;
+  cursor: pointer;
+  z-index: 2;
+  margin: 0;
+}
+
+.time-scrub-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--theme-accent);
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 12px var(--theme-accent-glow);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.time-scrub-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.3);
+  box-shadow: 0 0 20px var(--theme-accent);
+}
+
+.time-scrub-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--theme-accent);
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 12px var(--theme-accent-glow);
+  cursor: pointer;
+}
+
+/* Discrete Version Ticks */
+.discrete-ticks {
+  display: flex;
+  justify-content: space-between;
+  position: relative;
+  margin-top: 4px;
+}
+
+.tick-point {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  transition: transform 0.2s ease;
+}
+
+.tick-point:hover {
+  transform: translateY(-2px);
+}
+
+.tick-pip {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--theme-card-border);
+  transition: all 0.2s ease;
+}
+
+.tick-point--filled .tick-pip {
+  background: var(--theme-accent);
+  box-shadow: 0 0 6px var(--theme-accent-glow);
+}
+
+.tick-point--active .tick-pip {
+  background: #f59e0b;
+  transform: scale(1.5);
+  box-shadow: 0 0 10px #f59e0b;
+}
+
+.tick-number {
+  font-size: 10px;
+  font-family: monospace;
+  font-weight: 700;
+  color: var(--theme-text-muted);
+}
+
+.tick-point--active .tick-number {
+  color: var(--theme-accent);
+}
+
+@keyframes beacon-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(1.3); }
+}
+
+@keyframes slide-down {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}

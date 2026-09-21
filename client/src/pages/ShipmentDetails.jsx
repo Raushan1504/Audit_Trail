@@ -4,6 +4,7 @@ import { getShipmentState, getShipmentEvents } from '../services/api';
 import EventTimeline from '../components/EventTimeline';
 import ShipmentState from '../components/ShipmentState';
 import LoadingState from '../components/LoadingState';
+import TimeSlider from '../components/TimeSlider';
 import './ShipmentDetails.css';
 
 function getErrorMessage(err) {
@@ -82,6 +83,7 @@ function ShipmentDetails() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [viewMode, setViewMode] = useState('live'); // 'live' | 'historical'
   const [replayStep, setReplayStep] = useState(null); // null = full state
 
   useEffect(() => {
@@ -94,6 +96,7 @@ function ShipmentDetails() {
     setLoading(true);
     setError(null);
     setReplayStep(null);
+    setViewMode('live');
 
     const normId = shipmentId.trim().toUpperCase();
 
@@ -122,8 +125,24 @@ function ShipmentDetails() {
       });
   }, [shipmentId]);
 
+  const handleViewModeChange = (newMode) => {
+    setViewMode(newMode);
+    if (newMode === 'live') {
+      setReplayStep(null);
+    } else if (newMode === 'historical') {
+      // Default to the first step or latest step when entering historical mode
+      setReplayStep(events.length > 0 ? events.length : 1);
+    }
+  };
+
+  const handleStepChange = (step) => {
+    setViewMode('historical');
+    setReplayStep(step);
+  };
+
   // Determine what state data to show: folded replay or backend reconstructed
-  const displayedState = replayStep !== null
+  const isHistoricalActive = viewMode === 'historical' && replayStep !== null;
+  const displayedState = isHistoricalActive
     ? foldEventsUpTo(events, replayStep)
     : shipmentData;
 
@@ -180,12 +199,24 @@ function ShipmentDetails() {
         </div>
       )}
 
+      {/* Day 15: Time-Travel Control Bar & Temporal View Modes */}
+      {!loading && !error && events.length > 0 && (
+        <TimeSlider
+          viewMode={viewMode}
+          onViewModeChange={handleViewModeChange}
+          totalEvents={events.length}
+          currentStep={replayStep || events.length}
+          onStepChange={handleStepChange}
+          events={events}
+        />
+      )}
+
       {/* Main Forensic Content */}
       {!loading && !error && displayedState && (
         <ShipmentState
           data={displayedState}
           eventCount={events.length}
-          isReplaying={replayStep !== null}
+          isReplaying={isHistoricalActive}
           currentStep={replayStep}
         />
       )}
@@ -201,7 +232,7 @@ function ShipmentDetails() {
           <EventTimeline
             events={events}
             currentReplayStep={replayStep}
-            onStepChange={setReplayStep}
+            onStepChange={handleStepChange}
           />
         </div>
       )}
