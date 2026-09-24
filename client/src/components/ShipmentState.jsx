@@ -9,35 +9,70 @@ function getStatusTheme(status) {
   return { label: s || 'UNKNOWN', class: 'status--unknown', icon: '⏱' };
 }
 
-function ShipmentState({ data, eventCount = 0, isReplaying = false, currentStep = null }) {
+function ShipmentState({ data, eventCount = 0, isReplaying = false, currentStep = null, activeEvent = null }) {
   if (!data) return null;
 
   const status = data.status || data.state || 'UNKNOWN';
   const theme = getStatusTheme(status);
   const temp = data.temperature;
   const isHighTemp = temp !== undefined && temp !== null && temp > 8;
+  const stepsBehind = isReplaying && currentStep ? eventCount - currentStep : 0;
 
   return (
-    <div className="shipment-state-3d">
+    <div className={`shipment-state-3d ${isReplaying ? 'shipment-state-3d--temporal' : ''}`}>
       {/* Reconstructed Banner with 3D depth */}
-      <div className="shipment-state-3d__header">
+      <div className={`shipment-state-3d__header ${isReplaying ? 'shipment-state-3d__header--temporal' : ''}`}>
         <div className="reconstruction-pill">
-          <span className="pulse-dot" />
-          <span className="pill-text">STATE RECONSTRUCTED VIA EVENT REPLAY</span>
+          <span className={`pulse-dot ${isReplaying ? 'pulse-dot--rewound' : ''}`} />
+          <span className="pill-text">
+            {isReplaying ? 'HISTORICAL STATE DERIVED VIA POINT-IN-TIME REPLAY' : 'STATE RECONSTRUCTED VIA EVENT REPLAY'}
+          </span>
         </div>
         <div className="event-fold-indicator">
           {isReplaying ? (
-            <span className="replaying-tag">⚡ REPLAY IN PROGRESS: Step {currentStep} of {eventCount}</span>
+            <span className="replaying-tag">
+              ⚡ POINT-IN-TIME: Version {currentStep} of {eventCount}
+              {stepsBehind > 0 ? ` (${stepsBehind} behind head)` : ' (At Head)'}
+            </span>
           ) : (
             <span className="folded-tag">Folded from {eventCount} immutable {eventCount === 1 ? 'event' : 'events'}</span>
           )}
         </div>
       </div>
 
+      {/* Temporal Snapshot Details if Replaying */}
+      {isReplaying && (
+        <div className="temporal-state-banner">
+          <div className="temporal-state-badge">
+            <span className="temporal-state-badge__dot" />
+            <span>POINT-IN-TIME SNAPSHOT: Version {currentStep} of {eventCount}</span>
+            {stepsBehind > 0 ? (
+              <span className="temporal-state-badge__lag">({stepsBehind} behind live head)</span>
+            ) : (
+              <span className="temporal-state-badge__sync">✓ In sync with live head</span>
+            )}
+          </div>
+          {activeEvent && (
+            <div className="temporal-event-indicator">
+              <span className="temporal-event-label">Triggered by:</span>
+              <span className="temporal-event-name">{activeEvent.eventType}</span>
+              {activeEvent.timestamp && (
+                <span className="temporal-event-time">
+                  ⏱ {new Date(activeEvent.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* 3D Main Cards Grid */}
       <div className="shipment-state-3d__grid">
         {/* Status Card */}
-        <div className="shipment-card-3d shipment-card-3d--status">
+        <div
+          key={`status-${data.version}`}
+          className={`shipment-card-3d shipment-card-3d--status ${isReplaying ? 'shipment-card-3d--temporal-active' : ''}`}
+        >
           <div className="shipment-card-3d__glare" />
           <div className="shipment-card-3d__content">
             <span className="card-label">CURRENT OPERATIONAL STATUS</span>
@@ -50,7 +85,10 @@ function ShipmentState({ data, eventCount = 0, isReplaying = false, currentStep 
         </div>
 
         {/* Location & Vessel Card */}
-        <div className="shipment-card-3d">
+        <div
+          key={`loc-${data.version}`}
+          className={`shipment-card-3d ${isReplaying ? 'shipment-card-3d--temporal-active' : ''}`}
+        >
           <div className="shipment-card-3d__glare" />
           <div className="shipment-card-3d__content">
             <span className="card-label">CURRENT LOCATION & VESSEL</span>
@@ -67,7 +105,10 @@ function ShipmentState({ data, eventCount = 0, isReplaying = false, currentStep 
         </div>
 
         {/* Version & Ledger Height Card */}
-        <div className="shipment-card-3d">
+        <div
+          key={`ver-${data.version}`}
+          className={`shipment-card-3d ${isReplaying ? 'shipment-card-3d--temporal-active' : ''}`}
+        >
           <div className="shipment-card-3d__glare" />
           <div className="shipment-card-3d__content">
             <span className="card-label">LEDGER HEIGHT & VERSION</span>
@@ -80,7 +121,10 @@ function ShipmentState({ data, eventCount = 0, isReplaying = false, currentStep 
         </div>
 
         {/* Temperature / Cargo Card */}
-        <div className={`shipment-card-3d ${isHighTemp ? 'shipment-card-3d--temp-spike' : ''}`}>
+        <div
+          key={`temp-${data.version}`}
+          className={`shipment-card-3d ${isHighTemp ? 'shipment-card-3d--temp-spike' : ''} ${isReplaying ? 'shipment-card-3d--temporal-active' : ''}`}
+        >
           <div className="shipment-card-3d__glare" />
           <div className="shipment-card-3d__content">
             <span className="card-label">ENVIRONMENTAL TELEMETRY</span>

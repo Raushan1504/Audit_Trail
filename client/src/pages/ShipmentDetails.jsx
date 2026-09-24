@@ -218,6 +218,7 @@ function ShipmentDetails() {
           eventCount={events.length}
           isReplaying={isHistoricalActive}
           currentStep={replayStep}
+          activeEvent={replayStep && events[replayStep - 1] ? events[replayStep - 1] : null}
         />
       )}
 
