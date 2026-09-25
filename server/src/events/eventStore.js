@@ -1,4 +1,5 @@
 const Event = require('../models/Event');
+const { eventBus, EVENT_HOOKS } = require('./eventHandlers');
 
 async function appendEvent(domainEvent) {
     const persistedEvent = new Event({
@@ -8,7 +9,11 @@ async function appendEvent(domainEvent) {
         timestamp: domainEvent.timestamp,
         version: domainEvent.version
     });
-    return await persistedEvent.save();
+    const saved = await persistedEvent.save();
+    if (eventBus && EVENT_HOOKS && EVENT_HOOKS.EVENT_APPENDED) {
+        eventBus.emit(EVENT_HOOKS.EVENT_APPENDED, saved);
+    }
+    return saved;
 }
 
 async function getEventsByAggregateId(aggregateId) {
