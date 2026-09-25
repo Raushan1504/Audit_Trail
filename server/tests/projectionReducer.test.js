@@ -145,4 +145,80 @@ test('projection state contract', async (t) => {
     );
   });
 
+  // Day 16: Pure projection updater tests
+
+  await t.test('should not mutate the original projection state', () => {
+    const state = {
+      ...createInitialProjectionState('SHIP-001'),
+      status: 'LOADED',
+      location: 'Mumbai Port',
+      vessel: 'MV-AUDIT-01',
+      version: 2
+    };
+
+    const originalState = { ...state };
+
+    const nextState = applyProjectionEvent(
+      state,
+      createEvent(EVENT_TYPES.TEMPERATURE_SPIKE, 3, {
+        temperature: 12
+      })
+    );
+
+    assert.deepStrictEqual(state, originalState);
+    assert.notStrictEqual(nextState, state);
+  });
+
+  await t.test('should produce the same result for the same input', () => {
+    const state = {
+      ...createInitialProjectionState('SHIP-001'),
+      status: 'LOADED',
+      location: 'Mumbai Port',
+      vessel: 'MV-AUDIT-01',
+      version: 2
+    };
+
+    const event = createEvent(
+      EVENT_TYPES.TEMPERATURE_SPIKE,
+      3,
+      {
+        temperature: 12
+      }
+    );
+
+    const firstResult = applyProjectionEvent(state, event);
+    const secondResult = applyProjectionEvent(state, event);
+
+    assert.deepStrictEqual(firstResult, secondResult);
+  });
+
+  await t.test('should preserve unrelated projection fields', () => {
+    const state = {
+      ...createInitialProjectionState('SHIP-001'),
+      status: 'TEMPERATURE_SPIKE',
+      location: 'Mumbai Port',
+      temperature: 12,
+      vessel: 'MV-AUDIT-01',
+      version: 3
+    };
+
+    const nextState = applyProjectionEvent(
+      state,
+      createEvent(EVENT_TYPES.ARRIVED_AT_PORT, 4, {
+        port: 'Chennai Port'
+      })
+    );
+
+    assert.strictEqual(nextState.location, 'Chennai Port');
+    assert.strictEqual(nextState.temperature, 12);
+    assert.strictEqual(nextState.vessel, 'MV-AUDIT-01');
+    assert.strictEqual(nextState.status, 'ARRIVED');
+    assert.strictEqual(nextState.version, 4);
+
+    assert.strictEqual(state.location, 'Mumbai Port');
+    assert.strictEqual(state.temperature, 12);
+    assert.strictEqual(state.vessel, 'MV-AUDIT-01');
+    assert.strictEqual(state.version, 3);
+  });
+
 });
