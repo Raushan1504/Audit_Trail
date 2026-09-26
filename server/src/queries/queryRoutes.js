@@ -20,10 +20,16 @@ const queryController = require('./queryController');
 
 router.get('/shipments', queryController.listShipments);
 
+// Fast O(1) Read Model queries: supports both :id and :shipmentId
+router.get('/shipments/:id', queryController.getShipmentState);
 router.get('/shipments/:shipmentId', queryController.getShipmentState);
 router.get('/shipment/:id', queryController.getShipmentState);
+router.get('/shipment/:shipmentId', queryController.getShipmentState);
 
+// Raw chronological event history queries
+router.get('/shipments/:id/events', queryController.getShipmentEvents);
 router.get('/shipments/:shipmentId/events', queryController.getShipmentEvents);
 router.get('/shipment/:id/events', queryController.getShipmentEvents);
+router.get('/shipment/:shipmentId/events', queryController.getShipmentEvents);
 
 module.exports = router;
