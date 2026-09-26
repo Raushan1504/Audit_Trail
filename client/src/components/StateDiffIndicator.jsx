@@ -16,7 +16,9 @@ export default function StateDiffIndicator({
   activeEvent = null,
   onFastForward,
   onRewind,
-  onStepChange
+  onStepChange,
+  isPlaying = false,
+  onPlayToggle
 }) {
   if (!historicalState || !liveState) return null;
 
@@ -100,6 +102,16 @@ export default function StateDiffIndicator({
             )}
 
             <div className="diff-transport-actions">
+              {onPlayToggle && (
+                <button
+                  type="button"
+                  className={`diff-btn diff-btn--play ${isPlaying ? 'diff-btn--playing' : ''}`}
+                  onClick={onPlayToggle}
+                  title="Toggle automated playback simulation"
+                >
+                  {isPlaying ? '⏸ Pause' : '▶ Play'}
+                </button>
+              )}
               {!isAtHead && onFastForward && (
                 <button
                   type="button"
@@ -193,10 +205,20 @@ export default function StateDiffIndicator({
                 disabled={currentVersion <= 1}
                 onClick={() => onStepChange(currentVersion - 1)}
               >
-                ◀ Previous Version (v{Math.max(1, currentVersion - 1)})
+                ◀ Previous (v{Math.max(1, currentVersion - 1)})
               </button>
+              {onPlayToggle && (
+                <button
+                  type="button"
+                  className={`diff-nav-btn diff-nav-btn--play ${isPlaying ? 'diff-nav-btn--playing' : ''}`}
+                  onClick={onPlayToggle}
+                  title={isPlaying ? 'Pause automated playback' : 'Play automated playback'}
+                >
+                  {isPlaying ? '⏸ Pause' : '▶ Play'}
+                </button>
+              )}
               <span className="diff-nav-counter">
-                Version {currentVersion} of {totalVersions} ({Math.round((currentVersion / totalVersions) * 100)}% Journey Reconstructed)
+                Version {currentVersion} of {totalVersions} ({Math.round((currentVersion / totalVersions) * 100)}% Journey)
               </span>
               <button
                 type="button"
@@ -204,7 +226,7 @@ export default function StateDiffIndicator({
                 disabled={currentVersion >= totalVersions}
                 onClick={() => onStepChange(currentVersion + 1)}
               >
-                Next Version (v{Math.min(totalVersions, currentVersion + 1)}) ▶
+                Next (v{Math.min(totalVersions, currentVersion + 1)}) ▶
               </button>
             </div>
           </div>

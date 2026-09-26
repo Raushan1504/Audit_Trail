@@ -184,6 +184,22 @@
   border: none;
 }
 
+.diff-btn--play {
+  background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+  color: #030712;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.diff-btn--play:hover {
+  filter: brightness(1.15);
+  transform: translateY(-1px);
+}
+
+.diff-btn--playing {
+  background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+}
+
 .diff-btn--fastforward {
   background: linear-gradient(135deg, #0ea5e9 0%, #38bdf8 100%);
   color: #030712;
@@ -434,6 +450,23 @@
 .diff-nav-btn:disabled {
   opacity: 0.35;
   cursor: not-allowed;
+}
+
+.diff-nav-btn--play {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: rgba(16, 185, 129, 0.4);
+  color: #34d399;
+}
+
+.diff-nav-btn--play:hover:not(:disabled) {
+  background: rgba(16, 185, 129, 0.35);
+  color: #ffffff;
+}
+
+.diff-nav-btn--playing {
+  background: rgba(245, 158, 11, 0.25);
+  border-color: rgba(245, 158, 11, 0.5);
+  color: #fbbf24;
 }
 
 .diff-nav-counter {
