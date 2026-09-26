@@ -33,6 +33,14 @@ if (require.main === module) {
 			app.listen(port, () => {
 				console.log(`Audit Trail server listening on port ${port}`);
 			});
+
+			if (process.env.DISABLE_PROJECTION_WORKER !== 'true') {
+				const { startProjectionWorker } = require('./projections/projectionWorker');
+				const worker = startProjectionWorker();
+				worker.on('error', (err) => {
+					console.error('[ProjectionWorker] Background projection error:', err?.message || err);
+				});
+			}
 		})
 		.catch((error) => {
 			console.error('Failed to start the server due to MongoDB connection failure:', error);

@@ -49,7 +49,14 @@ const ShipmentReadModelSchema = new mongoose.Schema(
     cargo: {
       type: String,
       default: null,
-      trim: true
+      trim: true,
+      set: (val) => {
+        if (val === null || val === undefined) return null;
+        if (typeof val === 'object') {
+          return (val.description || val.name || val.type || JSON.stringify(val)).trim();
+        }
+        return String(val).trim();
+      }
     },
     lastEventTimestamp: {
       type: Date,

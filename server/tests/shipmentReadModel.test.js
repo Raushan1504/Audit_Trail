@@ -54,6 +54,12 @@ test('ShipmentReadModel schema path defaults and types', () => {
   assert.strictEqual(doc.vessel, null);
   assert.strictEqual(doc.cargo, null);
   assert.strictEqual(doc.lastEventTimestamp, null);
+
+  const docWithObjCargo = new ShipmentReadModel({
+    shipmentId: 'SHP-002',
+    cargo: { description: 'Dry Goods' }
+  });
+  assert.strictEqual(docWithObjCargo.cargo, 'Dry Goods');
 });
 
 test('ShipmentReadModel validates required fields and acceptable values', async () => {

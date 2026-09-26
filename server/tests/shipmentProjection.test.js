@@ -45,6 +45,25 @@ test('shipmentProjection - pure projectEvent transformer', async (t) => {
     assert.strictEqual(state.lastEventTimestamp.toISOString(), '2026-09-01T10:00:00.000Z');
   });
 
+  await t.test('projects CONTAINER_CREATED with object cargo correctly by normalizing to string', () => {
+    const event = {
+      aggregateId: 'SHP-OBJ-01',
+      eventType: EVENT_TYPES.CONTAINER_CREATED,
+      version: 1,
+      payload: {
+        origin: 'Port of Dubai',
+        destination: 'Port of Rotterdam',
+        cargo: { description: 'Dry Goods' }
+      },
+      timestamp: new Date('2026-09-01T10:00:00Z')
+    };
+
+    const state = projectEvent(null, event);
+
+    assert.strictEqual(state.shipmentId, 'SHP-OBJ-01');
+    assert.strictEqual(state.cargo, 'Dry Goods');
+  });
+
   await t.test('projects LOADED_ON_SHIP into LOADED status with vessel and location', () => {
     const priorState = {
       shipmentId: 'SHP-001',
