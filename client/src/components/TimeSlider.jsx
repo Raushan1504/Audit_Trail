@@ -1,36 +1,146 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { getEventMeta, formatEventName } from '../utils/eventMeta';
 import './TimeSlider.css';
 
+/**
+ * TimeSlider Component (Day 15, Day 16, Day 17, Day 19)
+ *
+ * Provides granular state scrubbing and automated step-by-step playback controls (Play/Pause/Rewind)
+ * allowing logistics analysts to watch historical domain events fold in real time.
+ */
 function TimeSlider({
   viewMode = 'live',
   onViewModeChange,
   totalEvents = 0,
   currentStep = 1,
   onStepChange,
-  events = []
+  events = [],
+  isPlaying: externalIsPlaying,
+  onPlayToggle,
+  playbackSpeed: externalSpeed,
+  onSpeedChange,
+  isLooping: externalLoop,
+  onLoopToggle
 }) {
   const [hoveredStep, setHoveredStep] = useState(null);
+
+  // Internal playback state if not controlled externally
+  const [internalIsPlaying, setInternalIsPlaying] = useState(false);
+  const [internalSpeed, setInternalSpeed] = useState(1);
+  const [internalLoop, setInternalLoop] = useState(false);
+
+  const isPlaying = externalIsPlaying !== undefined ? externalIsPlaying : internalIsPlaying;
+  const playbackSpeed = externalSpeed !== undefined ? externalSpeed : internalSpeed;
+  const isLooping = externalLoop !== undefined ? externalLoop : internalLoop;
+
+  const setIsPlaying = (val) => {
+    if (onPlayToggle) {
+      onPlayToggle(val);
+    } else {
+      setInternalIsPlaying(val);
+    }
+  };
+
+  const setPlaybackSpeed = (val) => {
+    if (onSpeedChange) {
+      onSpeedChange(val);
+    } else {
+      setInternalSpeed(val);
+    }
+  };
+
+  const setIsLooping = (val) => {
+    if (onLoopToggle) {
+      onLoopToggle(val);
+    } else {
+      setInternalLoop(val);
+    }
+  };
 
   const isLive = viewMode === 'live';
   const isHistorical = viewMode === 'historical';
   const maxStep = Math.max(1, totalEvents);
-  const activeEvent = events && events.length > 0 && currentStep >= 1 && currentStep <= events.length
-    ? events[currentStep - 1]
-    : null;
+  const activeEvent =
+    events && events.length > 0 && currentStep >= 1 && currentStep <= events.length
+      ? events[currentStep - 1]
+      : null;
   const activeMeta = getEventMeta(activeEvent);
   const stepsBehind = maxStep - currentStep;
 
+  // Automated Step-by-Step Playback Loop
+  useEffect(() => {
+    if (!isPlaying) return;
+
+    if (viewMode === 'live') {
+      setIsPlaying(false);
+      return;
+    }
+
+    const intervalMs = Math.round(1200 / playbackSpeed);
+    const timer = setInterval(() => {
+      if (currentStep < maxStep) {
+        if (onStepChange) {
+          onStepChange(currentStep + 1);
+        }
+      } else {
+        // Reached terminal version of voyage
+        if (isLooping) {
+          if (onStepChange) {
+            onStepChange(1);
+          }
+        } else {
+          setIsPlaying(false);
+        }
+      }
+    }, intervalMs);
+
+    return () => clearInterval(timer);
+  }, [isPlaying, currentStep, maxStep, playbackSpeed, isLooping, viewMode, onStepChange]);
+
   const handleModeToggle = (targetMode) => {
+    if (isPlaying) {
+      setIsPlaying(false);
+    }
     if (onViewModeChange) {
       onViewModeChange(targetMode);
     }
   };
 
   const handleSliderChange = (e) => {
+    if (isPlaying) {
+      setIsPlaying(false);
+    }
     const val = parseInt(e.target.value, 10);
     if (onStepChange && !isNaN(val)) {
       onStepChange(val);
+    }
+  };
+
+  const handleTogglePlay = () => {
+    if (viewMode === 'live') {
+      if (onViewModeChange) {
+        onViewModeChange('historical');
+      }
+      if (currentStep >= maxStep && onStepChange) {
+        onStepChange(1);
+      }
+      setIsPlaying(true);
+      return;
+    }
+
+    if (isPlaying) {
+      setIsPlaying(false);
+    } else {
+      if (currentStep >= maxStep && onStepChange) {
+        onStepChange(1);
+      }
+      setIsPlaying(true);
+    }
+  };
+
+  const handleRewind = () => {
+    if (onStepChange) {
+      onStepChange(1);
     }
   };
 
@@ -46,28 +156,55 @@ function TimeSlider({
     }
   };
 
+  const handleStepPrevWithPause = () => {
+    setIsPlaying(false);
+    handleStepPrev();
+  };
+
+  const handleStepNextWithPause = () => {
+    setIsPlaying(false);
+    handleStepNext();
+  };
+
   const handleJumpGenesis = () => {
-    if (onStepChange) {
-      onStepChange(1);
-    }
+    setIsPlaying(false);
+    handleRewind();
   };
 
   const handleJumpLatest = () => {
+    setIsPlaying(false);
     if (onStepChange) {
       onStepChange(maxStep);
     }
   };
 
+  const handleSpeedSelect = (speedVal) => {
+    setPlaybackSpeed(speedVal);
+  };
+
+  const handleLoopToggle = () => {
+    setIsLooping(!isLooping);
+  };
+
   const handleKeyDown = (e) => {
-    if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
+    if (e.code === 'Space' || e.key === ' ') {
       e.preventDefault();
-      handleStepPrev();
+      handleTogglePlay();
+    } else if (e.key === 'r' || e.key === 'R') {
+      e.preventDefault();
+      handleRewind();
+    } else if (e.key === 'l' || e.key === 'L') {
+      e.preventDefault();
+      handleLoopToggle();
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      handleStepPrevWithPause();
     } else if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
       e.preventDefault();
-      handleStepNext();
+      handleStepNextWithPause();
     } else if (e.key === 'Home') {
       e.preventDefault();
-      handleJumpGenesis();
+      handleRewind();
     } else if (e.key === 'End') {
       e.preventDefault();
       handleJumpLatest();
@@ -79,10 +216,16 @@ function TimeSlider({
   }
 
   return (
-    <div className={`time-travel-bar ${isHistorical ? 'time-travel-bar--historical' : 'time-travel-bar--live'}`}>
+    <div
+      className={`time-travel-bar ${isHistorical ? 'time-travel-bar--historical' : 'time-travel-bar--live'} ${isPlaying ? 'time-travel-bar--playing' : ''}`}
+      onKeyDown={handleKeyDown}
+      tabIndex={0}
+      role="region"
+      aria-label="Shipment Time Travel & Playback Controls"
+    >
       <div className="time-travel-bar__glow" />
 
-      {/* Top Controls: Mode Switcher & Status Badges */}
+      {/* Top Controls: Mode Switcher, Quick Play & Status Badges */}
       <div className="time-travel-bar__header">
         <div className="mode-toggle-group" role="group" aria-label="Temporal View Modes">
           <button
@@ -106,6 +249,23 @@ function TimeSlider({
           </button>
         </div>
 
+        {/* Quick Play/Pause Header Action */}
+        <div className="time-travel-bar__quick-playback">
+          <button
+            type="button"
+            className={`quick-play-btn ${isPlaying ? 'quick-play-btn--playing' : ''}`}
+            onClick={handleTogglePlay}
+            title={isPlaying ? 'Pause automated playback [Space]' : 'Play step-by-step voyage replay [Space]'}
+          >
+            <span className={`playback-play-icon ${isPlaying ? 'playback-play-icon--pulse' : ''}`}>
+              {isPlaying ? '⏸' : currentStep >= maxStep ? '↺' : '▶'}
+            </span>
+            <span className="quick-play-text">
+              {isPlaying ? 'Pause' : currentStep >= maxStep ? 'Replay' : 'Play Voyage'}
+            </span>
+          </button>
+        </div>
+
         <div className="time-travel-bar__status">
           {isLive ? (
             <div className="live-badge">
@@ -117,7 +277,9 @@ function TimeSlider({
             <div className="historical-badge">
               <span className="warning-icon">⏳</span>
               <span className="badge-title">HISTORICAL SCRUBBER ACTIVE</span>
-              <span className="badge-meta">Inspecting Version {currentStep} of {maxStep}</span>
+              <span className="badge-meta">
+                Inspecting Version {currentStep} of {maxStep}
+              </span>
               {stepsBehind > 0 ? (
                 <span className="lag-indicator">
                   ({stepsBehind} {stepsBehind === 1 ? 'event' : 'events'} behind live)
@@ -138,47 +300,94 @@ function TimeSlider({
         </div>
       </div>
 
-      {/* Day 16: Interactive State Scrubber Slider Drawer */}
+      {/* Day 16 & Day 19: Interactive Scrubber & Step-by-Step Playback Deck */}
       {isHistorical && (
         <div className="time-travel-bar__scrubber">
-          <div className="scrubber-transport">
-            {/* Quick Transport Buttons */}
+          {/* Day 19: Full Playback Transport Control Deck */}
+          <div className="playback-transport-deck">
             <div className="transport-nav-buttons">
+              {/* Rewind */}
               <button
                 type="button"
-                className="transport-btn"
-                onClick={handleJumpGenesis}
-                disabled={currentStep <= 1}
-                title="Rewind to Genesis (Version 1)"
+                className="transport-btn transport-btn--rewind"
+                onClick={handleRewind}
+                title="Rewind to Genesis container creation (Version 1) [R]"
               >
-                ⏮ Genesis
+                ⏮ Rewind
               </button>
+
+              {/* Step Prev */}
               <button
                 type="button"
-                className="transport-btn"
-                onClick={handleStepPrev}
+                className="transport-btn transport-btn--step"
+                onClick={handleStepPrevWithPause}
                 disabled={currentStep <= 1}
-                title="Step backward one event"
+                title="Step backward one event [◀]"
               >
-                ◀ Prev
+                ◀ Step
               </button>
+
+              {/* Master Play / Pause */}
               <button
                 type="button"
-                className="transport-btn"
-                onClick={handleStepNext}
+                className={`transport-btn transport-btn--master-play ${isPlaying ? 'transport-btn--playing' : ''}`}
+                onClick={handleTogglePlay}
+                title={isPlaying ? 'Pause automated playback [Space]' : 'Play step-by-step playback [Space]'}
+              >
+                <span className={`master-play-icon ${isPlaying ? 'master-play-icon--pulse' : ''}`}>
+                  {isPlaying ? '⏸' : currentStep >= maxStep ? '↺' : '▶'}
+                </span>
+                <span>{isPlaying ? 'Pause' : currentStep >= maxStep ? 'Replay' : 'Play'}</span>
+              </button>
+
+              {/* Step Next */}
+              <button
+                type="button"
+                className="transport-btn transport-btn--step"
+                onClick={handleStepNextWithPause}
                 disabled={currentStep >= maxStep}
-                title="Step forward one event"
+                title="Step forward one event [▶]"
               >
-                Next ▶
+                Step ▶
               </button>
+
+              {/* Latest */}
               <button
                 type="button"
-                className="transport-btn"
+                className="transport-btn transport-btn--latest"
                 onClick={handleJumpLatest}
                 disabled={currentStep >= maxStep}
-                title="Fast-forward to latest state"
+                title="Fast-forward to latest state [End]"
               >
                 Latest ⏭
+              </button>
+            </div>
+
+            {/* Playback Configuration: Speed Selector & Loop Toggle */}
+            <div className="playback-config-group">
+              <div className="playback-speed-selector" role="group" aria-label="Playback Speed">
+                <span className="config-label">SPEED:</span>
+                {[0.5, 1, 2].map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    className={`speed-btn ${playbackSpeed === s ? 'speed-btn--active' : ''}`}
+                    onClick={() => handleSpeedSelect(s)}
+                    title={`Set playback speed to ${s}x`}
+                  >
+                    {s}x
+                  </button>
+                ))}
+              </div>
+
+              <button
+                type="button"
+                className={`loop-toggle-btn ${isLooping ? 'loop-toggle-btn--active' : ''}`}
+                onClick={handleLoopToggle}
+                title="Toggle continuous playback loop [L]"
+              >
+                <span className="loop-icon">🔁</span>
+                <span>Loop {isLooping ? 'ON' : 'OFF'}</span>
               </button>
             </div>
 
@@ -196,12 +405,30 @@ function TimeSlider({
                 <span className="event-snippet">{activeMeta.snippet}</span>
                 {activeEvent?.timestamp && (
                   <span className="event-time-stamp">
-                    {new Date(activeEvent.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                    {new Date(activeEvent.timestamp).toLocaleTimeString([], {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      second: '2-digit'
+                    })}
                   </span>
                 )}
               </div>
             </div>
           </div>
+
+          {/* Active Automated Playback Ticker Banner */}
+          {isPlaying && (
+            <div className="playback-active-ticker">
+              <div className="ticker-pulse-group">
+                <span className="ticker-pulse-dot" />
+                <span className="ticker-title">AUTOMATED VOYAGE PLAYBACK ACTIVE</span>
+              </div>
+              <span className="ticker-status">
+                Simulating event stream · Version {currentStep} of {maxStep} ({playbackSpeed}x Speed)
+              </span>
+              <span className="ticker-hint">Press Space or click Pause to freeze</span>
+            </div>
+          )}
 
           {/* Interactive Range Slider with Discrete Event Ticks */}
           <div className="slider-track-container">
@@ -223,7 +450,6 @@ function TimeSlider({
                 step="1"
                 value={currentStep}
                 onChange={handleSliderChange}
-                onKeyDown={handleKeyDown}
                 aria-label="Shipment Version Scrubbing Slider"
                 aria-valuemin="1"
                 aria-valuemax={maxStep}
@@ -233,7 +459,8 @@ function TimeSlider({
               <div
                 className="slider-progress-fill"
                 style={{
-                  width: maxStep > 1 ? `${((currentStep - 1) / (maxStep - 1)) * 100}%` : '100%'
+                  width:
+                    maxStep > 1 ? `${((currentStep - 1) / (maxStep - 1)) * 100}%` : '100%'
                 }}
               />
             </div>
@@ -266,7 +493,11 @@ function TimeSlider({
                         <span className="tooltip-snippet">{meta.snippet}</span>
                         {stepEvent?.timestamp && (
                           <span className="tooltip-time">
-                            {new Date(stepEvent.timestamp).toLocaleDateString()} {new Date(stepEvent.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            {new Date(stepEvent.timestamp).toLocaleDateString()}{' '}
+                            {new Date(stepEvent.timestamp).toLocaleTimeString([], {
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
                           </span>
                         )}
                         <span className="tooltip-arrow" />
@@ -276,7 +507,10 @@ function TimeSlider({
                     <button
                       type="button"
                       className={`tick-point ${isCurrent ? 'tick-point--active' : ''} ${isPast ? 'tick-point--filled' : ''} ${meta.typeClass}`}
-                      onClick={() => onStepChange && onStepChange(stepNum)}
+                      onClick={() => {
+                        setIsPlaying(false);
+                        if (onStepChange) onStepChange(stepNum);
+                      }}
                       title={`Jump to Version ${stepNum} (${meta.label})`}
                       aria-label={`Jump to Version ${stepNum}: ${meta.label}`}
                     >

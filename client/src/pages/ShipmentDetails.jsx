@@ -87,6 +87,9 @@ function ShipmentDetails() {
   const [error, setError] = useState(null);
   const [viewMode, setViewMode] = useState('live'); // 'live' | 'historical'
   const [replayStep, setReplayStep] = useState(null); // null = full state
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  const [isLooping, setIsLooping] = useState(false);
 
   useEffect(() => {
     if (!shipmentId) {
@@ -99,6 +102,7 @@ function ShipmentDetails() {
     setError(null);
     setReplayStep(null);
     setViewMode('live');
+    setIsPlaying(false);
 
     const normId = shipmentId.trim().toUpperCase();
 
@@ -130,6 +134,7 @@ function ShipmentDetails() {
   const handleViewModeChange = (newMode) => {
     setViewMode(newMode);
     if (newMode === 'live') {
+      setIsPlaying(false);
       setReplayStep(null);
     } else if (newMode === 'historical') {
       // Default to the first step or latest step when entering historical mode
@@ -140,6 +145,31 @@ function ShipmentDetails() {
   const handleStepChange = (step) => {
     setViewMode('historical');
     setReplayStep(step);
+  };
+
+  const handlePlayToggle = (overrideVal) => {
+    if (viewMode === 'live') {
+      setViewMode('historical');
+      if ((!replayStep || replayStep >= events.length) && events.length > 0) {
+        setReplayStep(1);
+      }
+      setIsPlaying(true);
+      return;
+    }
+
+    if (typeof overrideVal === 'boolean') {
+      setIsPlaying(overrideVal);
+      return;
+    }
+
+    if (isPlaying) {
+      setIsPlaying(false);
+    } else {
+      if (replayStep >= events.length && events.length > 0) {
+        setReplayStep(1);
+      }
+      setIsPlaying(true);
+    }
   };
 
   // Determine what state data to show: folded replay or backend reconstructed
@@ -201,7 +231,7 @@ function ShipmentDetails() {
         </div>
       )}
 
-      {/* Day 15: Time-Travel Control Bar & Temporal View Modes */}
+      {/* Day 15 & Day 19: Time-Travel Control Bar & Automated Playback Controls */}
       {!loading && !error && events.length > 0 && (
         <TimeSlider
           viewMode={viewMode}
@@ -210,10 +240,16 @@ function ShipmentDetails() {
           currentStep={replayStep || events.length}
           onStepChange={handleStepChange}
           events={events}
+          isPlaying={isPlaying}
+          onPlayToggle={handlePlayToggle}
+          playbackSpeed={playbackSpeed}
+          onSpeedChange={setPlaybackSpeed}
+          isLooping={isLooping}
+          onLoopToggle={() => setIsLooping(!isLooping)}
         />
       )}
 
-      {/* Day 18: Visual Historical State Diff Indicator */}
+      {/* Day 18 & Day 19: Visual Historical State Diff Indicator & Simulation Controls */}
       {!loading && !error && displayedState && shipmentData && isHistoricalActive && (
         <StateDiffIndicator
           historicalState={displayedState}
@@ -224,6 +260,8 @@ function ShipmentDetails() {
           onFastForward={() => handleViewModeChange('live')}
           onRewind={() => handleStepChange(1)}
           onStepChange={handleStepChange}
+          isPlaying={isPlaying}
+          onPlayToggle={handlePlayToggle}
         />
       )}
 
