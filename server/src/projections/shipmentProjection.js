@@ -3,15 +3,6 @@ const ShipmentReadModel = require('../models/ShipmentReadModel');
 const { EVENT_TYPES } = require('../events/eventTypes');
 
 /**
- * Pure stateless projection updater.
- * Receives the current read model state (or null) and a canonical domain event,
- * and returns the updated read model state snapshot.
- *
- * @param {Object|null} current - Current read model snapshot
- * @param {Object} event - Domain event to project
- * @returns {Object} Updated read model state
- */
-/**
  * Normalizes cargo data into a string format suitable for ShipmentReadModel.
  * Accepts strings or objects (e.g., { description: '...' }, { name: '...' }).
  */
@@ -24,7 +15,14 @@ function normalizeCargo(cargoVal) {
   return String(cargoVal).trim();
 }
 
-function projectEvent(current, event) {
+/**
+ * Pure state transformer projecting a single domain event into the shipment read model state.
+ *
+ * @param {Object|null} priorState - The existing snapshot of the shipment read model
+ * @param {Object} event - The domain event to project
+ * @returns {Object} Updated read model state
+ */
+function projectEvent(priorState, event) {
   if (!event || typeof event !== 'object') {
     throw new Error('event is required');
   }
@@ -37,18 +35,18 @@ function projectEvent(current, event) {
     throw new Error('aggregateId is required');
   }
 
+  const timestamp = event.timestamp ? new Date(event.timestamp) : new Date();
+
   const base = {
     shipmentId: event.aggregateId,
-    status: current?.status ?? 'CREATED',
-    currentLocation: current?.currentLocation ?? current?.location ?? null,
-    temperature: current?.temperature ?? null,
-    lastAppliedVersion: current?.lastAppliedVersion ?? current?.version ?? 0,
-    vessel: current?.vessel ?? null,
-    cargo: normalizeCargo(current?.cargo),
-    lastEventTimestamp: current?.lastEventTimestamp ?? null
+    status: priorState?.status ?? 'CREATED',
+    currentLocation: priorState?.currentLocation ?? priorState?.location ?? null,
+    temperature: priorState?.temperature ?? null,
+    lastAppliedVersion: priorState?.lastAppliedVersion ?? priorState?.version ?? 0,
+    vessel: priorState?.vessel ?? null,
+    cargo: normalizeCargo(priorState?.cargo),
+    lastEventTimestamp: priorState?.lastEventTimestamp ?? null
   };
-
-  const eventTimestamp = event.timestamp ? new Date(event.timestamp) : new Date();
 
   switch (event.eventType) {
     case EVENT_TYPES.CONTAINER_CREATED:
@@ -64,7 +62,7 @@ function projectEvent(current, event) {
         temperature: null,
         vessel: null,
         lastAppliedVersion: event.version ?? 1,
-        lastEventTimestamp: eventTimestamp
+        lastEventTimestamp: timestamp
       };
 
     case EVENT_TYPES.LOADED_ON_SHIP:
@@ -72,12 +70,12 @@ function projectEvent(current, event) {
         ...base,
         status: 'LOADED',
         currentLocation:
-          event.payload?.location ??
           event.payload?.port ??
+          event.payload?.location ??
           base.currentLocation,
         vessel: event.payload?.vessel ?? base.vessel,
         lastAppliedVersion: event.version ?? base.lastAppliedVersion + 1,
-        lastEventTimestamp: eventTimestamp
+        lastEventTimestamp: timestamp
       };
 
     case EVENT_TYPES.TEMPERATURE_SPIKE:
@@ -87,7 +85,7 @@ function projectEvent(current, event) {
         temperature:
           event.payload?.temperature ?? base.temperature,
         lastAppliedVersion: event.version ?? base.lastAppliedVersion + 1,
-        lastEventTimestamp: eventTimestamp
+        lastEventTimestamp: timestamp
       };
 
     case EVENT_TYPES.ARRIVED_AT_PORT:
@@ -95,11 +93,11 @@ function projectEvent(current, event) {
         ...base,
         status: 'ARRIVED',
         currentLocation:
-          event.payload?.location ??
           event.payload?.port ??
+          event.payload?.location ??
           base.currentLocation,
         lastAppliedVersion: event.version ?? base.lastAppliedVersion + 1,
-        lastEventTimestamp: eventTimestamp
+        lastEventTimestamp: timestamp
       };
 
     default:
@@ -108,12 +106,11 @@ function projectEvent(current, event) {
 }
 
 /**
- * Persists an event projection to MongoDB ShipmentReadModel collection.
- * Enforces idempotency (ignores already-applied versions) and catches up
- * version gaps if out-of-order events occur.
+ * Idempotently applies a domain event to the persistent ShipmentReadModel.
+ * Enforces idempotency and catches up version gaps if out-of-order events occur.
  *
- * @param {Object} event - Domain event (plain object or Mongoose document)
- * @returns {Promise<{ applied: boolean, reason: string, shipmentId: string, version: number, readModel: Object }>}
+ * @param {Object} event - The domain event to apply
+ * @returns {Promise<{ applied: boolean, reason: string, version: number, shipmentId: string, readModel: Object }>}
  */
 async function applyEventToReadModel(event) {
   if (!event || !event.aggregateId || !event.eventType) {
@@ -128,8 +125,8 @@ async function applyEventToReadModel(event) {
     return {
       applied: false,
       reason: 'ALREADY_APPLIED',
-      shipmentId,
       version: readModel.lastAppliedVersion,
+      shipmentId,
       readModel
     };
   }
@@ -149,8 +146,8 @@ async function applyEventToReadModel(event) {
       return {
         applied: true,
         reason: 'CAUGHT_UP_AND_APPLIED',
-        shipmentId,
         version: readModel.lastAppliedVersion,
+        shipmentId,
         readModel
       };
     }
@@ -162,8 +159,8 @@ async function applyEventToReadModel(event) {
   return {
     applied: true,
     reason: 'APPLIED',
-    shipmentId,
     version: readModel.lastAppliedVersion,
+    shipmentId,
     readModel
   };
 }
@@ -179,7 +176,6 @@ async function applySingleEvent(readModel, event) {
   const nextSnapshot = projectEvent(currentSnapshot, event);
 
   if (!readModel) {
-    // Check if created concurrently in DB
     const existing = await ShipmentReadModel.findOne({ shipmentId: event.aggregateId });
     if (existing) {
       if (existing.lastAppliedVersion >= event.version) {
@@ -197,17 +193,21 @@ async function applySingleEvent(readModel, event) {
 }
 
 /**
- * Rebuilds the read model for a single shipment from its complete event log history.
+ * Replays all historical events for a shipmentId from scratch and rebuilds its read model.
  *
  * @param {string} shipmentId - Shipment aggregate ID
- * @returns {Promise<Object|null>}
+ * @returns {Promise<Object|null>} Rebuilt read model document
  */
 async function rebuildShipmentReadModel(shipmentId) {
   if (!shipmentId) {
     throw new Error('shipmentId is required');
   }
 
-  const events = await Event.find({ aggregateId: shipmentId }).sort({ version: 1 });
+  const eventsQuery = Event.find({ aggregateId: shipmentId });
+  const events = typeof eventsQuery.sort === 'function'
+    ? await eventsQuery.sort({ version: 1 })
+    : await eventsQuery;
+
   if (!events || events.length === 0) {
     return null;
   }

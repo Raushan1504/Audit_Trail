@@ -5,6 +5,8 @@ import EventTimeline from '../components/EventTimeline';
 import ShipmentState from '../components/ShipmentState';
 import LoadingState from '../components/LoadingState';
 import TimeSlider from '../components/TimeSlider';
+import StateDiffIndicator from '../components/StateDiffIndicator';
+import ShipmentMap from '../components/ShipmentMap';
 import './ShipmentDetails.css';
 
 function getErrorMessage(err) {
@@ -211,6 +213,20 @@ function ShipmentDetails() {
         />
       )}
 
+      {/* Day 18: Visual Historical State Diff Indicator */}
+      {!loading && !error && displayedState && shipmentData && isHistoricalActive && (
+        <StateDiffIndicator
+          historicalState={displayedState}
+          liveState={shipmentData}
+          currentVersion={replayStep || events.length}
+          totalVersions={events.length}
+          activeEvent={replayStep && events[replayStep - 1] ? events[replayStep - 1] : null}
+          onFastForward={() => handleViewModeChange('live')}
+          onRewind={() => handleStepChange(1)}
+          onStepChange={handleStepChange}
+        />
+      )}
+
       {/* Main Forensic Content */}
       {!loading && !error && displayedState && (
         <ShipmentState
@@ -219,6 +235,17 @@ function ShipmentDetails() {
           isReplaying={isHistoricalActive}
           currentStep={replayStep}
           activeEvent={replayStep && events[replayStep - 1] ? events[replayStep - 1] : null}
+        />
+      )}
+
+      {/* Day 18: Global Maritime Route & Live Location Radar Map */}
+      {!loading && !error && displayedState && (
+        <ShipmentMap
+          shipment={shipmentId}
+          activeState={displayedState}
+          events={events}
+          currentStep={replayStep || events.length}
+          totalEvents={events.length}
         />
       )}
 

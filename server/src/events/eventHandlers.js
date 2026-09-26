@@ -5,7 +5,7 @@ const EventEmitter = require('node:events');
  * Decouples the append-only Event Store persistence from asynchronous
  * read-model projection consumers and worker hooks.
  */
-class EventBus extends EventEmitter {}
+class EventBus extends EventEmitter { }
 
 const eventBus = new EventBus();
 

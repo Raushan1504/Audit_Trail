@@ -1,0 +1,443 @@
+/* State Diff Indicator Styles (Day 18) */
+
+.state-diff-container {
+  margin: 1.5rem 0;
+  position: relative;
+  z-index: 10;
+  animation: diffFadeIn 0.3s ease-out;
+}
+
+@keyframes diffFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.state-diff-glass-card {
+  background: var(--bg-card, rgba(16, 22, 34, 0.85));
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-color, rgba(56, 189, 248, 0.25));
+  border-radius: 14px;
+  padding: 1.5rem;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.state-diff-container--diverged .state-diff-glass-card {
+  border-color: rgba(245, 158, 11, 0.4);
+  box-shadow: 0 10px 30px -10px rgba(245, 158, 11, 0.15), inset 0 1px 0 rgba(245, 158, 11, 0.2);
+}
+
+.state-diff-container--synced .state-diff-glass-card {
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+/* Header & Banner */
+.state-diff-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.state-diff-header__main {
+  flex: 1;
+  min-width: 260px;
+}
+
+.diff-badge-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.75rem;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 9999px;
+  margin-bottom: 0.5rem;
+}
+
+.state-diff-container--synced .diff-badge-indicator {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.diff-radar-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  position: relative;
+}
+
+.diff-radar-dot--amber {
+  background: #f59e0b;
+  box-shadow: 0 0 10px #f59e0b;
+  animation: radarPulseAmber 1.8s infinite;
+}
+
+.diff-radar-dot--green {
+  background: #10b981;
+  box-shadow: 0 0 10px #10b981;
+}
+
+@keyframes radarPulseAmber {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7);
+  }
+  70% {
+    transform: scale(1.15);
+    box-shadow: 0 0 0 8px rgba(245, 158, 11, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+  }
+}
+
+.diff-version-tag {
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text-primary, #f1f5f9);
+}
+
+.diff-headline h3 {
+  margin: 0.25rem 0 0.15rem 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-primary, #ffffff);
+}
+
+.diff-headline p {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--text-secondary, #94a3b8);
+}
+
+/* Header Metrics & Actions */
+.state-diff-header__metrics {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.diff-metric {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: 8px;
+}
+
+.diff-metric--lag {
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+.diff-metric--synced {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.metric-icon {
+  font-size: 1.1rem;
+}
+
+.metric-val {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-primary, #f8fafc);
+  letter-spacing: 0.03em;
+}
+
+.metric-sub {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--text-secondary, #94a3b8);
+}
+
+.diff-transport-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.diff-btn {
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.45rem 0.9rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border: none;
+}
+
+.diff-btn--fastforward {
+  background: linear-gradient(135deg, #0ea5e9 0%, #38bdf8 100%);
+  color: #030712;
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+}
+
+.diff-btn--fastforward:hover {
+  filter: brightness(1.15);
+  transform: translateY(-1px);
+}
+
+.diff-btn--rewind {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary, #e2e8f0);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.diff-btn--rewind:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+/* Event Context Bar */
+.diff-event-context {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 0.4rem 0.75rem;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  font-size: 0.78rem;
+}
+
+.context-label {
+  color: var(--text-secondary, #94a3b8);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.context-type {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-weight: 700;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.1);
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+}
+
+.context-version {
+  color: var(--text-secondary, #cbd5e1);
+}
+
+.context-timestamp {
+  color: var(--text-secondary, #94a3b8);
+  margin-left: auto;
+}
+
+/* Diff Matrix Grid */
+.state-diff-matrix {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.diff-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.diff-card--modified {
+  border-color: rgba(245, 158, 11, 0.35);
+  background: rgba(245, 158, 11, 0.04);
+}
+
+.diff-card--identical {
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+.diff-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.65rem;
+}
+
+.diff-card__title {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.field-icon {
+  font-size: 0.95rem;
+}
+
+.field-name {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary, #94a3b8);
+}
+
+.diff-pill {
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+  letter-spacing: 0.04em;
+}
+
+.diff-pill--modified {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+.diff-pill--identical {
+  background: rgba(148, 163, 184, 0.12);
+  color: #94a3b8;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+/* Comparison View */
+.diff-card__comparison {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.diff-value-box {
+  flex: 1;
+  padding: 0.5rem 0.65rem;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  min-width: 0;
+}
+
+.box-label {
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--text-secondary, #94a3b8);
+  margin-bottom: 0.2rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.box-value {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-primary, #f1f5f9);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.diff-value-box--past .box-value {
+  color: #fbbf24;
+}
+
+.diff-value-box--live .box-value {
+  color: #38bdf8;
+}
+
+.diff-arrow-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+}
+
+.diff-arrow {
+  color: rgba(255, 255, 255, 0.2);
+  font-size: 0.9rem;
+  transition: color 0.2s ease;
+}
+
+.diff-arrow--active {
+  color: #f59e0b;
+  animation: pulseArrow 1.5s infinite;
+}
+
+@keyframes pulseArrow {
+  0%, 100% {
+    transform: translateX(0);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translateX(3px);
+    opacity: 1;
+  }
+}
+
+/* Footer Navigator */
+.diff-nav-footer {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.diff-progress-bar-wrapper {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 0.85rem;
+}
+
+.diff-progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #f59e0b, #38bdf8);
+  transition: width 0.3s ease;
+}
+
+.diff-nav-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.diff-nav-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text-primary, #e2e8f0);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.diff-nav-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+}
+
+.diff-nav-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.diff-nav-counter {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-secondary, #94a3b8);
+}
