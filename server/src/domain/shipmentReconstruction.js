@@ -50,7 +50,8 @@ function reconstructStateAsOf(shipmentId, events, targetVersion) {
     );
   }
 
-  const lastEvent = historicalEvents[historicalEvents.length - 1];
+  const lastEvent =
+    historicalEvents[historicalEvents.length - 1];
 
   if (lastEvent.version !== targetVersion) {
     throw new Error(
@@ -64,7 +65,56 @@ function reconstructStateAsOf(shipmentId, events, targetVersion) {
   );
 }
 
+function reconstructStateAsOfTimestamp(
+  shipmentId,
+  events,
+  targetTimestamp
+) {
+  if (!shipmentId) {
+    throw new Error('shipmentId is required');
+  }
+
+  if (!Array.isArray(events)) {
+    throw new Error('events must be an array');
+  }
+
+  const targetDate = new Date(targetTimestamp);
+
+  if (
+    typeof targetTimestamp !== 'string' ||
+    Number.isNaN(targetDate.getTime())
+  ) {
+    throw new Error(
+      'targetTimestamp must be a valid ISO timestamp'
+    );
+  }
+
+  const historicalEvents = events.filter((event) => {
+    if (!event.timestamp) {
+      throw new Error(
+        `event timestamp is required for version ${event.version}`
+      );
+    }
+
+    const eventDate = new Date(event.timestamp);
+
+    if (Number.isNaN(eventDate.getTime())) {
+      throw new Error(
+        `invalid event timestamp for version ${event.version}`
+      );
+    }
+
+    return eventDate <= targetDate;
+  });
+
+  return replayShipmentEvents(
+    shipmentId,
+    historicalEvents
+  );
+}
+
 module.exports = {
   reconstructShipmentState,
-  reconstructStateAsOf
+  reconstructStateAsOf,
+  reconstructStateAsOfTimestamp
 };
