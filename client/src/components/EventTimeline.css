@@ -390,3 +390,122 @@
   color: var(--theme-text-primary, #cbd5e1);
   font-family: monospace;
 }
+
+/* Day 20: Timeline Event Jump Interaction Styles */
+
+/* Jump Toast Notification */
+.timeline-jump-toast {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
+  background: linear-gradient(90deg, rgba(14, 165, 233, 0.2) 0%, rgba(56, 189, 248, 0.1) 100%);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(14, 165, 233, 0.2);
+  margin-bottom: 4px;
+  animation: jumpToastIn 0.25s ease-out;
+}
+
+@keyframes jumpToastIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.toast-radar-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #38bdf8;
+  box-shadow: 0 0 8px #38bdf8;
+  animation: beacon-pulse 1.2s infinite ease-in-out;
+}
+
+.toast-text {
+  font-size: 12px;
+  font-weight: 700;
+  color: #38bdf8;
+  letter-spacing: 0.02em;
+}
+
+/* Dedicated Jump Button on Event Card */
+.timeline-jump-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: #38bdf8;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.timeline-jump-btn:hover {
+  background: rgba(56, 189, 248, 0.28);
+  border-color: #38bdf8;
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(56, 189, 248, 0.35);
+}
+
+.timeline-jump-btn--active {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.25) 0%, rgba(52, 211, 153, 0.3) 100%);
+  border-color: #10b981;
+  color: #34d399;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.3);
+}
+
+.jump-icon {
+  font-size: 11px;
+}
+
+.jump-label {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  letter-spacing: 0.02em;
+}
+
+/* Active Scrubber Moment Badge */
+.badge-pill--scrubber-active {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.45);
+  font-weight: 800;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.25);
+  animation: activeMomentPulse 2s infinite ease-in-out;
+}
+
+@keyframes activeMomentPulse {
+  0%, 100% { opacity: 0.9; }
+  50% { opacity: 1; box-shadow: 0 0 14px rgba(16, 185, 129, 0.45); }
+}
+
+/* Just Jumped Flash Ripple */
+.timeline-item-3d--just-jumped .timeline-item-3d__card {
+  animation: cardJumpFlash 0.7s ease-out;
+}
+
+@keyframes cardJumpFlash {
+  0% {
+    transform: scale(0.98) translateX(10px);
+    box-shadow: 0 0 30px rgba(56, 189, 248, 0.6);
+    border-color: #38bdf8;
+  }
+  100% {
+    transform: translateX(8px);
+    box-shadow: 0 0 24px var(--theme-accent-glow, rgba(0, 240, 255, 0.25)), 0 8px 24px rgba(0, 0, 0, 0.5);
+  }
+}
+
+/* Keyboard Focus Accessibility */
+.timeline-item-3d:focus-visible {
+  outline: none;
+}
+
+.timeline-item-3d:focus-visible .timeline-item-3d__card {
+  border-color: var(--theme-accent, #38bdf8);
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.4), 0 8px 24px rgba(0, 0, 0, 0.5);
+}
