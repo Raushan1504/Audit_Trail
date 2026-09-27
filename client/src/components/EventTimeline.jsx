@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import './EventTimeline.css';
 
 function formatEventType(eventType) {
@@ -14,12 +14,30 @@ function formatPayload(payload) {
     .join(' · ');
 }
 
+/**
+ * EventTimeline Component (Day 20)
+ *
+ * Renders the vertical chronological event stream with interactive timeline event jump interactions.
+ * Users can click any event card or jump button to immediately jump the time scrubber to that exact point in time.
+ */
 function EventTimeline({ events = [], onStepChange, currentReplayStep }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [activeStep, setActiveStep] = useState(null); // null means showing full latest state
+  const [justJumpedStep, setJustJumpedStep] = useState(null);
+  const [jumpFeedbackMessage, setJumpFeedbackMessage] = useState(null);
+  const feedbackTimeoutRef = useRef(null);
 
   // Sync with prop if provided
-  const effectiveStep = currentReplayStep !== undefined ? currentReplayStep : activeStep;
+  const effectiveStep = currentReplayStep !== undefined && currentReplayStep !== null ? currentReplayStep : activeStep;
+
+  // Clear timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (feedbackTimeoutRef.current) {
+        clearTimeout(feedbackTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Auto-replay timer
   useEffect(() => {
@@ -38,6 +56,27 @@ function EventTimeline({ events = [], onStepChange, currentReplayStep }) {
     }
     return () => clearInterval(timer);
   }, [isPlaying, events.length, onStepChange]);
+
+  const handleJumpToEvent = (stepNumber, eventType) => {
+    setIsPlaying(false);
+    setActiveStep(stepNumber);
+    setJustJumpedStep(stepNumber);
+
+    const typeLabel = formatEventType(eventType);
+    setJumpFeedbackMessage(`⚡ Time scrubber jumped to Version ${stepNumber} (${typeLabel})`);
+
+    if (feedbackTimeoutRef.current) {
+      clearTimeout(feedbackTimeoutRef.current);
+    }
+    feedbackTimeoutRef.current = setTimeout(() => {
+      setJustJumpedStep(null);
+      setJumpFeedbackMessage(null);
+    }, 2400);
+
+    if (onStepChange) {
+      onStepChange(stepNumber);
+    }
+  };
 
   const handlePlayToggle = () => {
     if (isPlaying) {
@@ -70,7 +109,15 @@ function EventTimeline({ events = [], onStepChange, currentReplayStep }) {
   const handleReset = () => {
     setIsPlaying(false);
     setActiveStep(null);
-    if (onStepChange) onStepChange(null);
+    setJumpFeedbackMessage('↺ Reset state scrubber to Live Head');
+    if (feedbackTimeoutRef.current) {
+      clearTimeout(feedbackTimeoutRef.current);
+    }
+    feedbackTimeoutRef.current = setTimeout(() => {
+      setJumpFeedbackMessage(null);
+    }, 2000);
+
+    if (onStepChange) onStepChange(events.length);
   };
 
   if (!events || events.length === 0) {
@@ -90,7 +137,9 @@ function EventTimeline({ events = [], onStepChange, currentReplayStep }) {
           <span className="lock-icon">🔒</span>
           <div>
             <span className="timeline-info-title">IMMUTABLE EVENT STREAM</span>
-            <span className="timeline-info-sub">{events.length} Historical Blocks · Tamper-Proof</span>
+            <span className="timeline-info-sub">
+              {events.length} Historical Blocks · Click any card to jump scrubber
+            </span>
           </div>
         </div>
 
@@ -119,7 +168,7 @@ function EventTimeline({ events = [], onStepChange, currentReplayStep }) {
               type="button"
               className="replay-btn"
               onClick={handleStepNext}
-              disabled={effectiveStep === events.length || effectiveStep === null}
+              disabled={effectiveStep === events.length}
               title="Step forward in event history"
             >
               Step ⏭
@@ -128,9 +177,9 @@ function EventTimeline({ events = [], onStepChange, currentReplayStep }) {
               type="button"
               className="replay-btn replay-btn--reset"
               onClick={handleReset}
-              title="Reset to current final state"
+              title="Reset to confirmed live head"
             >
-              ↺ Full State
+              ↺ Live Head
             </button>
           </div>
           {effectiveStep !== null && (
@@ -141,8 +190,16 @@ function EventTimeline({ events = [], onStepChange, currentReplayStep }) {
         </div>
       </div>
 
+      {/* Jump Interaction Toast Notification */}
+      {jumpFeedbackMessage && (
+        <div className="timeline-jump-toast" role="status" aria-live="polite">
+          <span className="toast-radar-dot" />
+          <span className="toast-text">{jumpFeedbackMessage}</span>
+        </div>
+      )}
+
       {/* Stream List */}
-      <div className="event-timeline-3d__stream">
+      <div className="event-timeline-3d__stream" role="feed" aria-label="Chronological events list">
         {events.map((event, index) => {
           const stepNumber = index + 1;
           const isTempSpike = event.eventType === 'TEMPERATURE_SPIKE';
@@ -151,6 +208,7 @@ function EventTimeline({ events = [], onStepChange, currentReplayStep }) {
           const isCurrentReplayPoint = effectiveStep === stepNumber;
           const isPastReplayPoint = effectiveStep !== null && stepNumber <= effectiveStep;
           const isFutureReplayPoint = effectiveStep !== null && stepNumber > effectiveStep;
+          const isJustJumped = justJumpedStep === stepNumber;
 
           return (
             <div
@@ -158,20 +216,33 @@ function EventTimeline({ events = [], onStepChange, currentReplayStep }) {
                 ${isTempSpike ? 'timeline-item-3d--anomaly' : ''} 
                 ${isCurrentReplayPoint ? 'timeline-item-3d--active-step' : ''}
                 ${isFutureReplayPoint ? 'timeline-item-3d--future' : ''}
+                ${isJustJumped ? 'timeline-item-3d--just-jumped' : ''}
               `}
               key={event._id || index}
-              onClick={() => {
-                setActiveStep(stepNumber);
-                if (onStepChange) onStepChange(stepNumber);
+              onClick={() => handleJumpToEvent(stepNumber, event.eventType)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleJumpToEvent(stepNumber, event.eventType);
+                }
               }}
+              tabIndex={0}
+              role="button"
+              aria-label={`Jump time scrubber to Version ${event.version ?? stepNumber}: ${formatEventType(event.eventType)}`}
+              aria-pressed={isCurrentReplayPoint}
+              title="Click to jump time slider to this event snapshot"
             >
               {/* 3D Connecting Line */}
               {index !== events.length - 1 && (
-                <div className={`timeline-item-3d__line ${isPastReplayPoint ? 'timeline-item-3d__line--active' : ''}`} />
+                <div
+                  className={`timeline-item-3d__line ${isPastReplayPoint ? 'timeline-item-3d__line--active' : ''}`}
+                />
               )}
 
               {/* Glowing Marker */}
-              <div className={`timeline-item-3d__marker ${isCurrentReplayPoint ? 'marker--pulsing' : ''}`}>
+              <div
+                className={`timeline-item-3d__marker ${isCurrentReplayPoint ? 'marker--pulsing' : ''}`}
+              >
                 <span className="marker-inner">{event.version ?? stepNumber}</span>
               </div>
 
@@ -193,9 +264,30 @@ function EventTimeline({ events = [], onStepChange, currentReplayStep }) {
                     {isTerminal && (
                       <span className="badge-pill badge-pill--terminal">🏁 Final Destination</span>
                     )}
+                    {isCurrentReplayPoint && (
+                      <span className="badge-pill badge-pill--scrubber-active">
+                        📍 ACTIVE SCRUBBER MOMENT
+                      </span>
+                    )}
                   </div>
 
                   <div className="timeline-card__tags">
+                    {/* Day 20: Dedicated Jump Interaction Trigger */}
+                    <button
+                      type="button"
+                      className={`timeline-jump-btn ${isCurrentReplayPoint ? 'timeline-jump-btn--active' : ''}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleJumpToEvent(stepNumber, event.eventType);
+                      }}
+                      title={`Jump time slider to Version ${event.version ?? stepNumber}`}
+                    >
+                      <span className="jump-icon">{isCurrentReplayPoint ? '✓' : '⚡'}</span>
+                      <span className="jump-label">
+                        {isCurrentReplayPoint ? 'Active Point' : `Jump to v${event.version ?? stepNumber}`}
+                      </span>
+                    </button>
+
                     <span className="immutable-tag" title="Immutable append-only ledger record">
                       <span>🔒</span> Immutable
                     </span>

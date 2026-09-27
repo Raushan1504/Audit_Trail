@@ -4,6 +4,8 @@ const cors = require('cors');
 const { connectDB } = require('./config/db');
 const commandRoutes = require('./commands/commandRoutes');
 const queryRoutes = require('./queries/queryRoutes');
+const auditRoutes = require('./audit/auditRoutes');
+const { notFoundHandler, errorHandler, immutabilityGuard } = require('./middleware');
 const app = express();
 const port = Number(process.env.PORT) || 5000;
 app.use(cors());
@@ -12,21 +14,33 @@ app.use(express.urlencoded({ extended: true }));
 app.get('/health', (_request, response) => {
 	response.status(200).json({ status: 'ok' });
 });
+
+// Guard all mutating HTTP verbs (PUT, PATCH, DELETE) against the event log
+app.use(['/api/events', '/api/commands', '/api/queries', '/api/audit'], immutabilityGuard);
+
 app.use('/api/commands', commandRoutes);
 app.use('/api/queries', queryRoutes);
-app.use((error, _request, response, _next) => {
-  console.error(error);
+app.use('/api/audit', auditRoutes);
 
-  response.status(error.status || 400).json({
-    error: error.message || 'Bad request'
-  });
-});
+// Catch-all 404 handler for unmatched routes
+app.use(notFoundHandler);
+
+// Centralized error-handling middleware
+app.use(errorHandler);
 if (require.main === module) {
 	connectDB()
 		.then(() => {
 			app.listen(port, () => {
 				console.log(`Audit Trail server listening on port ${port}`);
 			});
+
+			if (process.env.DISABLE_PROJECTION_WORKER !== 'true') {
+				const { startProjectionWorker } = require('./projections/projectionWorker');
+				const worker = startProjectionWorker();
+				worker.on('error', (err) => {
+					console.error('[ProjectionWorker] Background projection error:', err?.message || err);
+				});
+			}
 		})
 		.catch((error) => {
 			console.error('Failed to start the server due to MongoDB connection failure:', error);

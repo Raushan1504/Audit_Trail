@@ -10,14 +10,18 @@
 const queryService = require('./queryService');
 
 /**
+ * GET /api/queries/shipments/:id
  * GET /api/queries/shipments/:shipmentId
- * Returns the reconstructed current state of a shipment by replaying its events.
+ * Returns the current state of a shipment directly from the high-speed ShipmentReadModel.
  */
 const getShipmentState = async (request, response, next) => {
 	try {
-		const shipmentId = request.params.shipmentId || request.params.id;
+		const shipmentId = request.params.id || request.params.shipmentId;
 
+		const startHrTime = process.hrtime();
 		const shipmentState = await queryService.getShipmentState(shipmentId);
+		const [seconds, nanoseconds] = process.hrtime(startHrTime);
+		const durationMs = (seconds * 1000 + nanoseconds / 1e6).toFixed(3);
 
 		if (!shipmentState) {
 			return response.status(404).json({
@@ -25,6 +29,9 @@ const getShipmentState = async (request, response, next) => {
 				message: `Shipment '${shipmentId}' not found.`,
 			});
 		}
+
+		response.setHeader('X-Query-Source', shipmentState._source || 'ShipmentReadModel');
+		response.setHeader('X-Response-Time-Ms', durationMs);
 
 		return response.status(200).json({
 			success: true,

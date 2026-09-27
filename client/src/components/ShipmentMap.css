@@ -1,0 +1,451 @@
+/* Shipment Map Styles (Day 18) */
+
+.shipment-map-card {
+  position: relative;
+  background: var(--bg-card, rgba(16, 22, 34, 0.85));
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-color, rgba(56, 189, 248, 0.25));
+  border-radius: 14px;
+  overflow: hidden;
+  margin: 1.5rem 0;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.shipment-map-glow {
+  position: absolute;
+  top: -100px;
+  right: -100px;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.15) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* Header & Controls */
+.shipment-map-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.map-header-left {
+  flex: 1;
+  min-width: 250px;
+}
+
+.map-live-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.65rem;
+  background: rgba(56, 189, 248, 0.1);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 9999px;
+  margin-bottom: 0.4rem;
+}
+
+.map-radar-pulse {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #38bdf8;
+  box-shadow: 0 0 8px #38bdf8;
+  animation: radarBlip 1.6s infinite;
+}
+
+.map-radar-pulse--alert {
+  background: #ef4444;
+  box-shadow: 0 0 10px #ef4444;
+  animation: radarBlipAlert 1.2s infinite;
+}
+
+@keyframes radarBlip {
+  0% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.7); }
+  70% { transform: scale(1.2); box-shadow: 0 0 0 6px rgba(56, 189, 248, 0); }
+  100% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(56, 189, 248, 0); }
+}
+
+@keyframes radarBlipAlert {
+  0% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.8); }
+  70% { transform: scale(1.25); box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+  100% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+.map-live-text {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--text-primary, #e2e8f0);
+}
+
+.map-title {
+  margin: 0.25rem 0 0.15rem 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-primary, #ffffff);
+}
+
+.map-subtitle {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--text-secondary, #94a3b8);
+}
+
+.map-header-controls {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.map-control-btn {
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text-secondary, #cbd5e1);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.map-control-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+.map-control-btn--active {
+  background: rgba(56, 189, 248, 0.18);
+  border-color: rgba(56, 189, 248, 0.4);
+  color: #38bdf8;
+}
+
+/* Viewport & SVG */
+.shipment-map-viewport {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2 / 1;
+  background: #060913;
+  overflow: hidden;
+}
+
+.shipment-map-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Ocean & Landmasses */
+.map-ocean {
+  fill: #060b18;
+}
+
+.map-landmasses path {
+  fill: #141f36;
+  stroke: #1e2e4f;
+  stroke-width: 0.8;
+  transition: fill 0.3s ease;
+}
+
+.map-landmasses circle {
+  fill: #1e2e4f;
+}
+
+.map-grid-layer {
+  color: #38bdf8;
+}
+
+.grid-label {
+  fill: #475569;
+  font-size: 10px;
+  font-family: monospace;
+}
+
+/* Shipping Lanes & Route */
+.route-pulse-dash {
+  animation: dashAnimation 20s linear infinite;
+}
+
+@keyframes dashAnimation {
+  to {
+    stroke-dashoffset: -200;
+  }
+}
+
+/* Port Pins */
+.port-marker {
+  cursor: pointer;
+}
+
+.port-ping {
+  fill: none;
+  stroke-width: 1.5;
+  animation: portPingAnim 2s infinite ease-out;
+}
+
+.port-ping--origin {
+  stroke: #10b981;
+}
+
+.port-ping--dest {
+  stroke: #818cf8;
+}
+
+@keyframes portPingAnim {
+  0% { r: 6; opacity: 1; }
+  100% { r: 24; opacity: 0; }
+}
+
+.port-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  paint-order: stroke;
+  stroke: #030712;
+  stroke-width: 3px;
+  stroke-linecap: butt;
+  stroke-linejoin: miter;
+}
+
+.port-label--origin {
+  fill: #34d399;
+}
+
+.port-label--dest {
+  fill: #a5b4fc;
+}
+
+.port-marker-passive {
+  cursor: pointer;
+}
+
+.port-tag-text {
+  font-size: 9px;
+  fill: #94a3b8;
+  font-family: monospace;
+  opacity: 0.8;
+  paint-order: stroke;
+  stroke: #030712;
+  stroke-width: 2px;
+}
+
+/* Vessel Marker & Sweeper */
+.vessel-radar-halo {
+  fill: none;
+  stroke: #38bdf8;
+  stroke-width: 1.5;
+  animation: vesselSweep 2s infinite ease-out;
+}
+
+.vessel-radar-halo--alert {
+  stroke: #ef4444;
+  animation: vesselSweepAlert 1.2s infinite ease-out;
+}
+
+@keyframes vesselSweep {
+  0% { r: 10; opacity: 1; stroke-width: 2; }
+  100% { r: 35; opacity: 0; stroke-width: 0.5; }
+}
+
+@keyframes vesselSweepAlert {
+  0% { r: 10; opacity: 1; stroke-width: 2.5; }
+  100% { r: 40; opacity: 0; stroke-width: 0.5; }
+}
+
+.vessel-tag-bg {
+  fill: rgba(3, 7, 18, 0.85);
+  stroke: #38bdf8;
+  stroke-width: 1;
+}
+
+.vessel-tag-bg--alert {
+  stroke: #ef4444;
+}
+
+.vessel-tag-text {
+  font-size: 9px;
+  font-weight: 700;
+  fill: #f8fafc;
+  letter-spacing: 0.03em;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* Hover Tooltip */
+.map-port-tooltip {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: rgba(15, 23, 42, 0.92);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  border-radius: 8px;
+  padding: 0.65rem 0.85rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  pointer-events: none;
+  animation: tooltipIn 0.2s ease-out;
+}
+
+@keyframes tooltipIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.tooltip-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #38bdf8;
+}
+
+.tooltip-country {
+  font-size: 0.72rem;
+  color: #cbd5e1;
+}
+
+.tooltip-coords {
+  font-size: 0.68rem;
+  font-family: monospace;
+  color: #94a3b8;
+}
+
+/* Telemetry HUD Footer */
+.shipment-map-hud {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.hud-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.hud-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary, #94a3b8);
+}
+
+.hud-value-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.hud-coords-value {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-primary, #f1f5f9);
+}
+
+.hud-heading-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+.hud-split-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.hud-progress-val {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #38bdf8;
+}
+
+.hud-bar-track {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.hud-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #10b981 0%, #38bdf8 100%);
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hud-bar-fill--alert {
+  background: linear-gradient(90deg, #f59e0b 0%, #ef4444 100%);
+}
+
+.hud-meta-text {
+  font-size: 0.72rem;
+  color: var(--text-secondary, #94a3b8);
+}
+
+.hud-status-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.hud-status-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: 6px;
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+.hud-temp-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: 6px;
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.hud-temp-badge--alert {
+  background: rgba(239, 68, 68, 0.18);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .shipment-map-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .map-header-controls {
+    justify-content: flex-end;
+  }
+  .shipment-map-viewport {
+    aspect-ratio: 16 / 10;
+  }
+  .shipment-map-hud {
+    grid-template-columns: 1fr;
+  }
+}

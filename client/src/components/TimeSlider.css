@@ -92,6 +92,54 @@
   color: #f59e0b;
 }
 
+/* Quick Play/Pause Header Action (Day 19) */
+.time-travel-bar__quick-playback {
+  display: flex;
+  align-items: center;
+}
+
+.quick-play-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #030712;
+  background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(16, 185, 129, 0.3);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.quick-play-btn:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.45);
+}
+
+.quick-play-btn--playing {
+  background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+  border-color: rgba(245, 158, 11, 0.5);
+  box-shadow: 0 2px 10px rgba(245, 158, 11, 0.4);
+}
+
+.quick-play-btn--playing:hover {
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.55);
+}
+
+.playback-play-icon--pulse {
+  display: inline-block;
+  animation: playIconPulse 1.2s infinite ease-in-out;
+}
+
+@keyframes playIconPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+
 /* Status Badges */
 .time-travel-bar__status {
   display: flex;
@@ -187,8 +235,8 @@
   animation: slide-down 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-/* Transport Controls & Snapshot Card */
-.scrubber-transport {
+/* Day 19: Playback Transport Deck */
+.playback-transport-deck {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -198,6 +246,7 @@
 
 .transport-nav-buttons {
   display: flex;
+  align-items: center;
   gap: 6px;
   flex-wrap: wrap;
 }
@@ -208,7 +257,7 @@
   color: var(--theme-text-primary);
   font-size: 12px;
   font-weight: 600;
-  padding: 5px 12px;
+  padding: 6px 12px;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -218,12 +267,196 @@
   background: var(--theme-badge-bg);
   border-color: var(--theme-accent);
   color: var(--theme-accent);
-  transform: translateY(-2px);
+  transform: translateY(-1px);
 }
 
 .transport-btn:disabled {
   opacity: 0.35;
   cursor: not-allowed;
+}
+
+.transport-btn--rewind {
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.transport-btn--rewind:hover:not(:disabled) {
+  border-color: #f59e0b;
+  color: #fbbf24;
+}
+
+/* Master Play / Pause Button */
+.transport-btn--master-play {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(52, 211, 153, 0.25) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.5);
+  color: #34d399;
+  font-weight: 700;
+  padding: 6px 16px;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+}
+
+.transport-btn--master-play:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.35) 0%, rgba(52, 211, 153, 0.4) 100%);
+  border-color: #34d399;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+}
+
+.transport-btn--playing {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.25) 0%, rgba(251, 191, 36, 0.3) 100%);
+  border-color: rgba(245, 158, 11, 0.6);
+  color: #fbbf24;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.35);
+  animation: playingGlow 1.8s infinite;
+}
+
+@keyframes playingGlow {
+  0%, 100% { box-shadow: 0 0 8px rgba(245, 158, 11, 0.3); }
+  50% { box-shadow: 0 0 16px rgba(245, 158, 11, 0.6); }
+}
+
+.master-play-icon {
+  margin-right: 4px;
+}
+
+.master-play-icon--pulse {
+  display: inline-block;
+  animation: playIconPulse 1.2s infinite ease-in-out;
+}
+
+/* Playback Config Group */
+.playback-config-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.playback-speed-selector {
+  display: inline-flex;
+  align-items: center;
+  background: var(--theme-nav-bg);
+  border: 1px solid var(--theme-card-border);
+  border-radius: 8px;
+  padding: 2px 6px;
+  gap: 4px;
+}
+
+.config-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--theme-text-muted);
+  margin-right: 4px;
+}
+
+.speed-btn {
+  background: transparent;
+  border: none;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: monospace;
+  color: var(--theme-text-secondary);
+  padding: 3px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.speed-btn:hover {
+  color: var(--theme-text-primary);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.speed-btn--active {
+  background: var(--theme-badge-bg);
+  color: var(--theme-accent);
+  font-weight: 800;
+}
+
+.loop-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--theme-card-bg);
+  border: 1px solid var(--theme-card-border);
+  color: var(--theme-text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.loop-toggle-btn:hover {
+  color: var(--theme-text-primary);
+  border-color: var(--theme-accent);
+}
+
+.loop-toggle-btn--active {
+  background: rgba(56, 189, 248, 0.15);
+  border-color: rgba(56, 189, 248, 0.4);
+  color: #38bdf8;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.25);
+}
+
+/* Active Playback Ticker Banner (Day 19) */
+.playback-active-ticker {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 14px;
+  background: linear-gradient(90deg, rgba(245, 158, 11, 0.15) 0%, rgba(56, 189, 248, 0.1) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(245, 158, 11, 0.15);
+  animation: tickerIn 0.3s ease-out;
+}
+
+@keyframes tickerIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.ticker-pulse-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ticker-pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #f59e0b;
+  box-shadow: 0 0 8px #f59e0b;
+  animation: tickerDotPulse 1s infinite alternate;
+}
+
+@keyframes tickerDotPulse {
+  from { opacity: 0.6; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1.2); }
+}
+
+.ticker-title {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #fbbf24;
+}
+
+.ticker-status {
+  font-size: 11px;
+  color: var(--theme-text-primary);
+  font-family: monospace;
+}
+
+.ticker-hint {
+  font-size: 10px;
+  color: var(--theme-text-muted);
+  font-style: italic;
 }
 
 .snapshot-meta-card {

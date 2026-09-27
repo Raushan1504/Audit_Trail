@@ -1,4 +1,5 @@
 const Event = require('../models/Event');
+const { eventBus, EVENT_HOOKS } = require('./eventHandlers');
 
 async function appendEvent(domainEvent) {
     const persistedEvent = new Event({
@@ -8,7 +9,17 @@ async function appendEvent(domainEvent) {
         timestamp: domainEvent.timestamp,
         version: domainEvent.version
     });
-    return await persistedEvent.save();
+    const saved = await persistedEvent.save();
+
+    // Trigger registered event hooks (e.g. projection worker)
+    try {
+        eventBus.emit(EVENT_HOOKS.EVENT_APPENDED, saved);
+    } catch (err) {
+        // Non-blocking: ensure hook handler errors do not disrupt persistence
+        console.error('Error in eventAppended hook listener:', err);
+    }
+
+    return saved;
 }
 
 async function getEventsByAggregateId(aggregateId) {
