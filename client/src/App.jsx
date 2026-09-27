@@ -1,10 +1,21 @@
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ThemeProvider } from "./context/ThemeContext";
+import Navbar from "./components/Navbar";
+import Dashboard from "./pages/Dashboard";
+import ShipmentDetails from "./pages/ShipmentDetails";
+
 function App() {
   return (
-    
-      <div className="bg-red-900 text-3xl font-bold underline">
-        Audit Trail
-      </div>
-  )
+    <ThemeProvider>
+      <BrowserRouter>
+        <Navbar />
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/shipment/:shipmentId" element={<ShipmentDetails />} />
+        </Routes>
+      </BrowserRouter>
+    </ThemeProvider>
+  );
 }
 
 export default App;

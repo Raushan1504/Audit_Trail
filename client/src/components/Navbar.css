@@ -1,0 +1,91 @@
+.top-navbar {
+  width: 100%;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--theme-nav-bg, rgba(15, 23, 42, 0.85));
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--theme-card-border, rgba(255, 255, 255, 0.08));
+  transition: all 0.3s ease;
+}
+
+.top-navbar__inner {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.top-navbar__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.brand-icon {
+  font-size: 20px;
+}
+
+.brand-text {
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: var(--theme-text-primary, #f8fafc);
+}
+
+.brand-accent {
+  color: var(--theme-accent, #00f0ff);
+  margin-left: 1px;
+}
+
+.brand-badge {
+  font-size: 10px;
+  font-family: monospace;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: var(--theme-badge-bg, rgba(0, 240, 255, 0.1));
+  color: var(--theme-accent, #00f0ff);
+  border: 1px solid var(--theme-badge-border, rgba(0, 240, 255, 0.25));
+}
+
+.top-navbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.navbar-status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+  animation: pulse-ring 2s infinite ease-in-out;
+}
+
+.status-text {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #10b981;
+}
+
+@media (max-width: 640px) {
+  .navbar-status-indicator {
+    display: none;
+  }
+}
