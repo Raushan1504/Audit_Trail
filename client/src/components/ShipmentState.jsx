@@ -1,3 +1,4 @@
+import { getPastValueBadge } from '../utils/historicalAlerts';
 import './ShipmentState.css';
 
 function getStatusTheme(status) {
@@ -9,7 +10,14 @@ function getStatusTheme(status) {
   return { label: s || 'UNKNOWN', class: 'status--unknown', icon: '⏱' };
 }
 
-function ShipmentState({ data, eventCount = 0, isReplaying = false, currentStep = null, activeEvent = null }) {
+function ShipmentState({
+  data,
+  eventCount = 0,
+  isReplaying = false,
+  currentStep = null,
+  activeEvent = null,
+  onReturnToLive = null
+}) {
   if (!data) return null;
 
   const status = data.status || data.state || 'UNKNOWN';
@@ -18,8 +26,14 @@ function ShipmentState({ data, eventCount = 0, isReplaying = false, currentStep 
   const isHighTemp = temp !== undefined && temp !== null && temp > 8;
   const stepsBehind = isReplaying && currentStep ? eventCount - currentStep : 0;
 
+  // Resolve card past value badges
+  const statusBadge = getPastValueBadge('status', status, isReplaying, { version: data.version });
+  const locationBadge = getPastValueBadge('location', data.location, isReplaying, { version: data.version });
+  const versionBadge = getPastValueBadge('version', data.version, isReplaying, { version: data.version });
+  const tempBadge = getPastValueBadge('temperature', temp, isReplaying, { isHighTemp, version: data.version });
+
   return (
-    <div className={`shipment-state-3d ${isReplaying ? 'shipment-state-3d--temporal' : ''}`}>
+    <div className={`shipment-state-3d ${isReplaying ? 'shipment-state-3d--temporal shipment-state-3d--historical-active' : ''}`}>
       {/* Reconstructed Banner with 3D depth */}
       <div className={`shipment-state-3d__header ${isReplaying ? 'shipment-state-3d__header--temporal' : ''}`}>
         <div className="reconstruction-pill">
@@ -39,6 +53,35 @@ function ShipmentState({ data, eventCount = 0, isReplaying = false, currentStep 
           )}
         </div>
       </div>
+
+      {/* High-Contrast Historical Caution Ribbon */}
+      {isReplaying && (
+        <div className="historical-state-alert-ribbon" role="alert">
+          <div className="ribbon-indicator">
+            <span className="ribbon-icon">⚠</span>
+            <span className="ribbon-tag">HISTORICAL RECORD</span>
+          </div>
+          <div className="ribbon-text">
+            <strong>CAUTION:</strong> Viewing frozen historical state at <strong>Sequence #{data.version}</strong>.
+            Sensor metrics, port status, and maritime coordinates reflect past recorded logs.
+            {stepsBehind > 0 ? (
+              <span className="ribbon-lag"> ({stepsBehind} versions behind confirmed live head)</span>
+            ) : (
+              <span className="ribbon-sync"> (In sync with live head)</span>
+            )}
+          </div>
+          {onReturnToLive && (
+            <button
+              type="button"
+              className="ribbon-return-btn"
+              onClick={onReturnToLive}
+              title="Return to live state"
+            >
+              Return to Live ⚡
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Temporal Snapshot Details if Replaying */}
       {isReplaying && (
@@ -71,27 +114,47 @@ function ShipmentState({ data, eventCount = 0, isReplaying = false, currentStep 
         {/* Status Card */}
         <div
           key={`status-${data.version}`}
-          className={`shipment-card-3d shipment-card-3d--status ${isReplaying ? 'shipment-card-3d--temporal-active' : ''}`}
+          className={`shipment-card-3d shipment-card-3d--status ${isReplaying ? 'shipment-card-3d--temporal-active shipment-card-3d--historical-card' : ''}`}
         >
           <div className="shipment-card-3d__glare" />
           <div className="shipment-card-3d__content">
-            <span className="card-label">CURRENT OPERATIONAL STATUS</span>
+            <div className="card-top-row">
+              <span className="card-label">
+                {isReplaying ? `RECORDED STATUS (v${data.version})` : 'CURRENT OPERATIONAL STATUS'}
+              </span>
+              {statusBadge.showBadge && (
+                <span className={`past-value-badge ${statusBadge.badgeClass}`}>
+                  {statusBadge.badgeText}
+                </span>
+              )}
+            </div>
             <div className={`status-pill ${theme.class}`}>
               <span className="status-icon">{theme.icon}</span>
               <span className="status-text">{theme.label}</span>
             </div>
-            <span className="card-sub">Calculated via chronological event fold</span>
+            <span className="card-sub">
+              {isReplaying ? 'Historical point-in-time calculation' : 'Calculated via chronological event fold'}
+            </span>
           </div>
         </div>
 
         {/* Location & Vessel Card */}
         <div
           key={`loc-${data.version}`}
-          className={`shipment-card-3d ${isReplaying ? 'shipment-card-3d--temporal-active' : ''}`}
+          className={`shipment-card-3d ${isReplaying ? 'shipment-card-3d--temporal-active shipment-card-3d--historical-card' : ''}`}
         >
           <div className="shipment-card-3d__glare" />
           <div className="shipment-card-3d__content">
-            <span className="card-label">CURRENT LOCATION & VESSEL</span>
+            <div className="card-top-row">
+              <span className="card-label">
+                {isReplaying ? `RECORDED LOCATION & VESSEL (v${data.version})` : 'CURRENT LOCATION & VESSEL'}
+              </span>
+              {locationBadge.showBadge && (
+                <span className={`past-value-badge ${locationBadge.badgeClass}`}>
+                  {locationBadge.badgeText}
+                </span>
+              )}
+            </div>
             <div className="location-data">
               <span className="location-name">{data.location || 'In Transit'}</span>
               {data.vessel && (
@@ -100,34 +163,54 @@ function ShipmentState({ data, eventCount = 0, isReplaying = false, currentStep 
                 </span>
               )}
             </div>
-            <span className="card-sub">Last reported position milestone</span>
+            <span className="card-sub">
+              {isReplaying ? 'Historical recorded position milestone' : 'Last reported position milestone'}
+            </span>
           </div>
         </div>
 
         {/* Version & Ledger Height Card */}
         <div
           key={`ver-${data.version}`}
-          className={`shipment-card-3d ${isReplaying ? 'shipment-card-3d--temporal-active' : ''}`}
+          className={`shipment-card-3d ${isReplaying ? 'shipment-card-3d--temporal-active shipment-card-3d--historical-card' : ''}`}
         >
           <div className="shipment-card-3d__glare" />
           <div className="shipment-card-3d__content">
-            <span className="card-label">LEDGER HEIGHT & VERSION</span>
+            <div className="card-top-row">
+              <span className="card-label">LEDGER HEIGHT & VERSION</span>
+              {versionBadge.showBadge && (
+                <span className={`past-value-badge ${versionBadge.badgeClass}`}>
+                  {versionBadge.badgeText}
+                </span>
+              )}
+            </div>
             <div className="version-display">
               <span className="version-num">v{data.version ?? 'N/A'}</span>
               <span className="block-tag">SEQUENCE #{data.version ?? 0}</span>
             </div>
-            <span className="card-sub">Immutable sequence verified</span>
+            <span className="card-sub">
+              {isReplaying ? `Rewound to snapshot v${data.version}` : 'Immutable sequence verified'}
+            </span>
           </div>
         </div>
 
         {/* Temperature / Cargo Card */}
         <div
           key={`temp-${data.version}`}
-          className={`shipment-card-3d ${isHighTemp ? 'shipment-card-3d--temp-spike' : ''} ${isReplaying ? 'shipment-card-3d--temporal-active' : ''}`}
+          className={`shipment-card-3d ${isHighTemp ? 'shipment-card-3d--temp-spike' : ''} ${isReplaying ? 'shipment-card-3d--temporal-active shipment-card-3d--historical-card' : ''}`}
         >
           <div className="shipment-card-3d__glare" />
           <div className="shipment-card-3d__content">
-            <span className="card-label">ENVIRONMENTAL TELEMETRY</span>
+            <div className="card-top-row">
+              <span className="card-label">
+                {isReplaying ? `ENVIRONMENTAL TELEMETRY (v${data.version})` : 'ENVIRONMENTAL TELEMETRY'}
+              </span>
+              {tempBadge.showBadge && (
+                <span className={`past-value-badge ${tempBadge.badgeClass}`}>
+                  {tempBadge.badgeText}
+                </span>
+              )}
+            </div>
             <div className="temp-display">
               {temp !== undefined && temp !== null ? (
                 <>
@@ -135,7 +218,7 @@ function ShipmentState({ data, eventCount = 0, isReplaying = false, currentStep 
                     {temp}°C
                   </span>
                   <span className={`temp-badge ${isHighTemp ? 'temp-badge--alert' : 'temp-badge--safe'}`}>
-                    {isHighTemp ? '⚠ THRESHOLD EXCEEDED' : '✓ TEMPERATURE NOMINAL'}
+                    {isHighTemp ? (isReplaying ? '⚠ HISTORICAL EXCURSION' : '⚠ THRESHOLD EXCEEDED') : '✓ TEMPERATURE NOMINAL'}
                   </span>
                 </>
               ) : (
@@ -146,6 +229,12 @@ function ShipmentState({ data, eventCount = 0, isReplaying = false, currentStep 
               <div className="cargo-line">
                 <span className="cargo-icon">🏷 Cargo:</span>
                 <span className="cargo-text">{data.cargo}</span>
+              </div>
+            )}
+            {isReplaying && isHighTemp && (
+              <div className="historical-alarm-disclaimer">
+                <span className="disclaimer-icon">ℹ</span>
+                <span>Past thermal anomaly record — check live head for active vessel temperature.</span>
               </div>
             )}
           </div>

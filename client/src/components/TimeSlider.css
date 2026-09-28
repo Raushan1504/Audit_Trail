@@ -208,20 +208,37 @@
 }
 
 .btn-return-live {
-  padding: 3px 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 800;
   border-radius: 6px;
-  background: var(--theme-accent);
-  color: #000000;
-  border: none;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #0f172a;
+  border: 1px solid #fbbf24;
   cursor: pointer;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .btn-return-live:hover {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
   transform: translateY(-1px);
-  box-shadow: 0 0 10px var(--theme-accent);
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.6);
+}
+
+.btn-return-live .btn-kbd {
+  display: inline-block;
+  padding: 1px 4px;
+  font-size: 9px;
+  font-family: monospace;
+  font-weight: 800;
+  color: #18181b;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
 }
 
 /* Scrubber Drawer */
@@ -820,3 +837,102 @@
   from { opacity: 0; transform: translate(-50%, 6px); }
   to { opacity: 1; transform: translate(-50%, 0); }
 }
+
+/* Day 21: High-Contrast Slider Hazard Track & Live Head Tick Styles */
+.slider-wrapper--hazard {
+  background: repeating-linear-gradient(
+    -45deg,
+    rgba(245, 158, 11, 0.08),
+    rgba(245, 158, 11, 0.08) 8px,
+    transparent 8px,
+    transparent 16px
+  );
+  border-radius: 6px;
+  padding: 0 4px;
+}
+
+.time-scrub-slider--historical::-webkit-slider-thumb {
+  background: #f59e0b;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 16px #f59e0b, 0 0 24px rgba(245, 158, 11, 0.6);
+}
+
+.time-scrub-slider--historical::-moz-range-thumb {
+  background: #f59e0b;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 16px #f59e0b;
+}
+
+.slider-progress-fill--historical {
+  background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%);
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.4);
+}
+
+.tick-point-wrapper--head {
+  position: relative;
+}
+
+.tick-point--head .tick-pip {
+  border-color: #10b981;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.6);
+}
+
+.tick-point--head .tick-pip-inner {
+  background: #10b981;
+}
+
+.tick-point--head:hover .tick-pip {
+  transform: scale(1.3);
+  box-shadow: 0 0 16px #10b981;
+}
+
+.tick-head-pill {
+  font-size: 8px;
+  font-weight: 900;
+  font-family: monospace;
+  background: #10b981;
+  color: #022c22;
+  padding: 1px 4px;
+  border-radius: 3px;
+  letter-spacing: 0.05em;
+  margin-top: 1px;
+}
+
+.tick-point--scrubbed-past .tick-pip {
+  border-color: #f59e0b;
+  box-shadow: 0 0 14px #f59e0b;
+}
+
+.tooltip-status-tag {
+  font-size: 9px;
+  font-weight: 800;
+  font-family: monospace;
+  padding: 1px 5px;
+  border-radius: 4px;
+  letter-spacing: 0.04em;
+  margin-left: auto;
+}
+
+.tooltip-status-tag--head {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+.tooltip-status-tag--past {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+.tooltip-lag-note {
+  font-size: 10px;
+  font-family: monospace;
+  font-weight: 700;
+  color: #f87171;
+  background: rgba(239, 68, 68, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-top: 2px;
+}
+

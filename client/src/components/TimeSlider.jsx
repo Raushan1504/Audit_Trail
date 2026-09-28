@@ -208,6 +208,9 @@ function TimeSlider({
     } else if (e.key === 'End') {
       e.preventDefault();
       handleJumpLatest();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      handleModeToggle('live');
     }
   };
 
@@ -291,9 +294,10 @@ function TimeSlider({
                 type="button"
                 className="btn-return-live"
                 onClick={() => handleModeToggle('live')}
-                title="Return to live state"
+                title="Return to live state [Esc]"
               >
-                Return to Live ⚡
+                <span>Return to Live ⚡</span>
+                <kbd className="btn-kbd">Esc</kbd>
               </button>
             </div>
           )}
@@ -441,10 +445,10 @@ function TimeSlider({
               </span>
             </div>
 
-            <div className="slider-wrapper">
+            <div className={`slider-wrapper ${isHistorical && currentStep < maxStep ? 'slider-wrapper--hazard' : ''}`}>
               <input
                 type="range"
-                className="time-scrub-slider"
+                className={`time-scrub-slider ${isHistorical ? 'time-scrub-slider--historical' : ''}`}
                 min="1"
                 max={maxStep}
                 step="1"
@@ -457,7 +461,7 @@ function TimeSlider({
                 aria-valuetext={`Version ${currentStep}: ${activeMeta.label}`}
               />
               <div
-                className="slider-progress-fill"
+                className={`slider-progress-fill ${isHistorical && currentStep < maxStep ? 'slider-progress-fill--historical' : ''}`}
                 style={{
                   width:
                     maxStep > 1 ? `${((currentStep - 1) / (maxStep - 1)) * 100}%` : '100%'
@@ -471,6 +475,7 @@ function TimeSlider({
                 const stepNum = idx + 1;
                 const isCurrent = stepNum === currentStep;
                 const isPast = stepNum <= currentStep;
+                const isHead = stepNum === maxStep;
                 const stepEvent = events && events[idx];
                 const meta = getEventMeta(stepEvent);
                 const isHovered = hoveredStep === stepNum;
@@ -478,7 +483,7 @@ function TimeSlider({
                 return (
                   <div
                     key={stepNum}
-                    className={`tick-point-wrapper ${isCurrent ? 'tick-point-wrapper--active' : ''}`}
+                    className={`tick-point-wrapper ${isCurrent ? 'tick-point-wrapper--active' : ''} ${isHead ? 'tick-point-wrapper--head' : ''}`}
                     onMouseEnter={() => setHoveredStep(stepNum)}
                     onMouseLeave={() => setHoveredStep(null)}
                   >
@@ -488,6 +493,11 @@ function TimeSlider({
                         <div className="tooltip-top">
                           <span className="tooltip-icon">{meta.icon}</span>
                           <span className="tooltip-version">Version {stepNum}</span>
+                          {isHead ? (
+                            <span className="tooltip-status-tag tooltip-status-tag--head">LIVE HEAD</span>
+                          ) : (
+                            <span className="tooltip-status-tag tooltip-status-tag--past">PAST STATE</span>
+                          )}
                         </div>
                         <span className="tooltip-title">{meta.label}</span>
                         <span className="tooltip-snippet">{meta.snippet}</span>
@@ -500,13 +510,18 @@ function TimeSlider({
                             })}
                           </span>
                         )}
+                        {!isHead && (
+                          <span className="tooltip-lag-note">
+                            ⚠ Rewound: {maxStep - stepNum} {maxStep - stepNum === 1 ? 'version' : 'versions'} behind live
+                          </span>
+                        )}
                         <span className="tooltip-arrow" />
                       </div>
                     )}
 
                     <button
                       type="button"
-                      className={`tick-point ${isCurrent ? 'tick-point--active' : ''} ${isPast ? 'tick-point--filled' : ''} ${meta.typeClass}`}
+                      className={`tick-point ${isCurrent ? 'tick-point--active' : ''} ${isPast ? 'tick-point--filled' : ''} ${isHead ? 'tick-point--head' : ''} ${isCurrent && !isHead ? 'tick-point--scrubbed-past' : ''} ${meta.typeClass}`}
                       onClick={() => {
                         setIsPlaying(false);
                         if (onStepChange) onStepChange(stepNum);
@@ -520,6 +535,7 @@ function TimeSlider({
                       <div className="tick-meta-col">
                         <span className="tick-icon-mini">{meta.icon}</span>
                         <span className="tick-number">v{stepNum}</span>
+                        {isHead && <span className="tick-head-pill">HEAD</span>}
                       </div>
                     </button>
                   </div>
