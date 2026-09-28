@@ -449,3 +449,111 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Day 21: High-Contrast Historical AIS Watermark & Map Overlay */
+.shipment-map-card--historical {
+  border-color: rgba(245, 158, 11, 0.35);
+  box-shadow: 0 0 24px rgba(245, 158, 11, 0.08), 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.map-live-pill--historical {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+.map-live-pill--historical .map-live-text {
+  color: #fbbf24;
+}
+
+[data-theme="light"] .map-live-pill--historical .map-live-text {
+  color: #b45309;
+}
+
+.map-radar-pulse--historical {
+  background: #f59e0b;
+  box-shadow: 0 0 8px #f59e0b;
+}
+
+.map-historical-watermark {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: rgba(20, 14, 4, 0.88);
+  backdrop-filter: blur(12px);
+  border: 1.5px solid #f59e0b;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6), 0 0 14px rgba(245, 158, 11, 0.3);
+  z-index: 10;
+  pointer-events: none;
+  animation: watermark-slide 0.3s ease-out;
+}
+
+[data-theme="light"] .map-historical-watermark {
+  background: rgba(254, 243, 199, 0.95);
+  border-color: #d97706;
+}
+
+.watermark-icon {
+  font-size: 18px;
+  color: #fbbf24;
+}
+
+[data-theme="light"] .watermark-icon {
+  color: #b45309;
+}
+
+.watermark-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.watermark-title {
+  font-size: 11px;
+  font-weight: 900;
+  font-family: monospace;
+  letter-spacing: 0.05em;
+  color: #fef08a;
+  text-transform: uppercase;
+}
+
+[data-theme="light"] .watermark-title {
+  color: #78350f;
+}
+
+.watermark-sub {
+  font-size: 10px;
+  color: #cbd5e1;
+}
+
+[data-theme="light"] .watermark-sub {
+  color: #92400e;
+}
+
+.hud-historical-tag {
+  font-size: 9px;
+  font-weight: 900;
+  font-family: monospace;
+  background: #f59e0b;
+  color: #0f172a;
+  padding: 1px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+@keyframes watermark-slide {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+

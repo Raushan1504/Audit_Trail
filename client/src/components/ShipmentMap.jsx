@@ -6,14 +6,16 @@ import {
   interpolateVesselPosition,
   formatNauticalCoordinates
 } from '../utils/geoCoordinates';
+import { shouldShowHistoricalWatermark } from '../utils/historicalAlerts';
 import './ShipmentMap.css';
 
 /**
- * Interactive Live Location / Maritime Voyage Route Map (Day 18)
+ * Interactive Live Location / Maritime Voyage Route Map (Day 18, Day 21)
  *
  * Renders an offline-capable, high-precision SVG vector map of global maritime shipping lanes.
  * Features:
  *  - Interpolated vessel positioning aligned with event time-scrubbing
+ *  - High-contrast historical AIS watermark to prevent mistaking past positions for live AIS data
  *  - Thermal anomaly radar beacon
  *  - Dynamic route Great-Circle arc
  *  - Port waypoints with interactive telemetry HUD
@@ -24,7 +26,8 @@ export default function ShipmentMap({
   activeState,
   events = [],
   currentStep = null,
-  totalEvents = 0
+  totalEvents = 0,
+  isHistorical = false
 }) {
   const [hoveredPort, setHoveredPort] = useState(null);
   const [showGrid, setShowGrid] = useState(true);
@@ -89,20 +92,31 @@ export default function ShipmentMap({
   // Format progress percentage
   const progressPercent = Math.round(progressRatio * 100);
 
+  // Day 21: Determine whether historical watermark should be displayed
+  const isHistoricalReplay = shouldShowHistoricalWatermark(step, total, isHistorical);
+
   return (
-    <div className="shipment-map-card">
+    <div className={`shipment-map-card ${isHistoricalReplay ? 'shipment-map-card--historical' : ''}`}>
       {/* Ambient Radial Glow */}
       <div className="shipment-map-glow" />
 
       {/* Map Header & Controls */}
       <div className="shipment-map-header">
         <div className="map-header-left">
-          <div className="map-live-pill">
-            <span className={`map-radar-pulse ${hasTempAnomaly ? 'map-radar-pulse--alert' : ''}`} />
-            <span className="map-live-text">GLOBAL MARITIME RADAR · AIS LIVE TRACKING</span>
+          <div className={`map-live-pill ${isHistoricalReplay ? 'map-live-pill--historical' : ''}`}>
+            <span className={`map-radar-pulse ${hasTempAnomaly ? 'map-radar-pulse--alert' : ''} ${isHistoricalReplay ? 'map-radar-pulse--historical' : ''}`} />
+            <span className="map-live-text">
+              {isHistoricalReplay
+                ? `HISTORICAL AIS REPLAY · POINT-IN-TIME TRACK (v${step})`
+                : 'GLOBAL MARITIME RADAR · AIS LIVE TRACKING'}
+            </span>
           </div>
           <h3 className="map-title">Voyage Telemetry & Vessel Geolocation</h3>
-          <p className="map-subtitle">Real-time GPS/AIS corridor projection linked to cryptographic event versions</p>
+          <p className="map-subtitle">
+            {isHistoricalReplay
+              ? `Reconstructing historical ocean coordinates at sequence version ${step} of ${total}`
+              : 'Real-time GPS/AIS corridor projection linked to cryptographic event versions'}
+          </p>
         </div>
 
         <div className="map-header-controls">
@@ -127,6 +141,17 @@ export default function ShipmentMap({
 
       {/* Main Vector Map Canvas */}
       <div className="shipment-map-viewport">
+        {/* Day 21: High-Contrast Historical AIS Watermark Alert */}
+        {isHistoricalReplay && (
+          <div className="map-historical-watermark" role="status" aria-live="polite">
+            <span className="watermark-icon">⚠</span>
+            <div className="watermark-body">
+              <span className="watermark-title">HISTORICAL AIS POSITION (v{step}/{total})</span>
+              <span className="watermark-sub">Point-in-time replay · Not live vessel location</span>
+            </div>
+          </div>
+        )}
+
         <svg
           viewBox="0 0 1000 500"
           className="shipment-map-svg"
@@ -342,7 +367,14 @@ export default function ShipmentMap({
       <div className="shipment-map-hud">
         {/* Vessel Position Card */}
         <div className="hud-cell">
-          <span className="hud-label">LIVE AIS VESSEL POSITION</span>
+          <div className="hud-split-header">
+            <span className="hud-label">
+              {isHistoricalReplay ? 'RECORDED AIS POSITION' : 'LIVE AIS VESSEL POSITION'}
+            </span>
+            {isHistoricalReplay && (
+              <span className="hud-historical-tag">HISTORICAL (v{step})</span>
+            )}
+          </div>
           <div className="hud-value-row">
             <span className="hud-coords-value">{formatNauticalCoordinates(vesselGeo.lat, vesselGeo.lon)}</span>
             <span className="hud-heading-badge">{vesselGeo.heading}° HEADING</span>

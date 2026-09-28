@@ -7,6 +7,7 @@ import LoadingState from '../components/LoadingState';
 import TimeSlider from '../components/TimeSlider';
 import StateDiffIndicator from '../components/StateDiffIndicator';
 import ShipmentMap from '../components/ShipmentMap';
+import HistoricalWarningBanner from '../components/HistoricalWarningBanner';
 import './ShipmentDetails.css';
 
 function getErrorMessage(err) {
@@ -178,6 +179,18 @@ function ShipmentDetails() {
     ? foldEventsUpTo(events, replayStep)
     : shipmentData;
 
+  // Day 21: Global keyboard shortcut (Escape key returns to live confirmed head)
+  useEffect(() => {
+    const handleGlobalKeyDown = (e) => {
+      if (e.key === 'Escape' && isHistoricalActive) {
+        e.preventDefault();
+        handleViewModeChange('live');
+      }
+    };
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+  }, [isHistoricalActive]);
+
   return (
     <div className="shipment-details-cinematic">
       {/* 3D Ambient Lighting */}
@@ -249,6 +262,18 @@ function ShipmentDetails() {
         />
       )}
 
+      {/* Day 21: High-Contrast Historical Warning Banner */}
+      {!loading && !error && isHistoricalActive && (
+        <HistoricalWarningBanner
+          currentVersion={replayStep || events.length}
+          totalVersions={events.length}
+          activeEvent={replayStep && events[replayStep - 1] ? events[replayStep - 1] : null}
+          onReturnToLive={() => handleViewModeChange('live')}
+          isPlaying={isPlaying}
+          onPlayToggle={handlePlayToggle}
+        />
+      )}
+
       {/* Day 18 & Day 19: Visual Historical State Diff Indicator & Simulation Controls */}
       {!loading && !error && displayedState && shipmentData && isHistoricalActive && (
         <StateDiffIndicator
@@ -273,10 +298,11 @@ function ShipmentDetails() {
           isReplaying={isHistoricalActive}
           currentStep={replayStep}
           activeEvent={replayStep && events[replayStep - 1] ? events[replayStep - 1] : null}
+          onReturnToLive={() => handleViewModeChange('live')}
         />
       )}
 
-      {/* Day 18: Global Maritime Route & Live Location Radar Map */}
+      {/* Day 18 & Day 21: Global Maritime Route & Live Location Radar Map */}
       {!loading && !error && displayedState && (
         <ShipmentMap
           shipment={shipmentId}
@@ -284,6 +310,7 @@ function ShipmentDetails() {
           events={events}
           currentStep={replayStep || events.length}
           totalEvents={events.length}
+          isHistorical={isHistoricalActive}
         />
       )}
 
