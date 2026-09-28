@@ -9,6 +9,7 @@ const {
 const { EVENT_TYPES } = require('../src/events/eventTypes');
 const Event = require('../src/models/Event');
 const ShipmentReadModel = require('../src/models/ShipmentReadModel');
+const { reconstructShipmentState } = require('../src/domain/shipmentReconstruction');
 
 test('shipmentProjection - pure projectEvent transformer', async (t) => {
   await t.test('throws error if event is missing or invalid', () => {
@@ -292,5 +293,83 @@ test('shipmentProjection - applyEventToReadModel persistence & idempotency', asy
     assert.strictEqual(saved.currentLocation, 'Nhava Sheva');
     assert.strictEqual(saved.cargo, 'Spices');
     assert.strictEqual(saved.lastAppliedVersion, 2);
+  });
+  await t.test('matches full historical replay state', async () => {
+    const shipmentId = 'SHIP-REPLAY-001';
+
+    const events = [
+      {
+        aggregateId: shipmentId,
+        eventType: EVENT_TYPES.CONTAINER_CREATED,
+        version: 1,
+        timestamp: '2026-08-01T10:00:00.000Z',
+        payload: {
+          origin: 'Mumbai Port',
+          cargo: 'Pharmaceutical Vaccines'
+        }
+      },
+      {
+        aggregateId: shipmentId,
+        eventType: EVENT_TYPES.LOADED_ON_SHIP,
+        version: 2,
+        timestamp: '2026-08-01T12:00:00.000Z',
+        payload: {
+          port: 'Mumbai Port',
+          vessel: 'MV-AUDIT-01'
+        }
+      },
+      {
+        aggregateId: shipmentId,
+        eventType: EVENT_TYPES.TEMPERATURE_SPIKE,
+        version: 3,
+        timestamp: '2026-08-01T15:00:00.000Z',
+        payload: {
+          temperature: 12
+        }
+      },
+      {
+        aggregateId: shipmentId,
+        eventType: EVENT_TYPES.ARRIVED_AT_PORT,
+        version: 4,
+        timestamp: '2026-08-01T18:00:00.000Z',
+        payload: {
+          port: 'Chennai Port'
+        }
+      }
+    ];
+
+    // Build the read model by projecting every event in order.
+    let projectedState = null;
+
+    for (const event of events) {
+      projectedState = projectEvent(projectedState, event);
+    }
+
+    // Reconstruct the same shipment from the canonical event history.
+    const replayedState = reconstructShipmentState(shipmentId, events);
+
+    // Compare only the fields represented by both state models.
+    const comparableProjectionState = {
+      shipmentId: projectedState.shipmentId,
+      status: projectedState.status,
+      location: projectedState.currentLocation,
+      temperature: projectedState.temperature,
+      vessel: projectedState.vessel,
+      version: projectedState.lastAppliedVersion
+    };
+
+    const comparableReplayedState = {
+      shipmentId: replayedState.shipmentId,
+      status: replayedState.status,
+      location: replayedState.location,
+      temperature: replayedState.temperature,
+      vessel: replayedState.vessel,
+      version: replayedState.version
+    };
+
+    assert.deepStrictEqual(
+      comparableProjectionState,
+      comparableReplayedState
+    );
   });
 });
