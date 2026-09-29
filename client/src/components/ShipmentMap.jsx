@@ -4,7 +4,10 @@ import {
   resolvePortLocation,
   latLonToSvg,
   interpolateVesselPosition,
-  formatNauticalCoordinates
+  formatNauticalCoordinates,
+  getRouteCorridorLocations,
+  resolveVesselCurrentLocationName,
+  CORRIDOR_WAYPOINTS
 } from '../utils/geoCoordinates';
 import { shouldShowHistoricalWatermark } from '../utils/historicalAlerts';
 import './ShipmentMap.css';
@@ -32,6 +35,7 @@ export default function ShipmentMap({
   const [hoveredPort, setHoveredPort] = useState(null);
   const [showGrid, setShowGrid] = useState(true);
   const [showAllPorts, setShowAllPorts] = useState(false);
+  const [showLocationNames, setShowLocationNames] = useState(true);
 
   // Extract origin, destination, cargo, vessel, temperature from activeState or events
   const genesisEvent = events && events.length > 0 ? events[0] : null;
@@ -53,6 +57,16 @@ export default function ShipmentMap({
   const step = currentStep !== null ? currentStep : total;
   const progressRatio = total > 1 ? Math.min(1, Math.max(0, (step - 1) / (total - 1))) : 1;
 
+  // Key corridor locations along the voyage (Origin, Waypoints, Destination)
+  const corridorLocations = useMemo(() => {
+    return getRouteCorridorLocations(originPort, destPort);
+  }, [originPort, destPort]);
+
+  // Intermediate route waypoints
+  const routeWaypoints = useMemo(() => {
+    return corridorLocations.filter((loc) => loc.type === 'WAYPOINT');
+  }, [corridorLocations]);
+
   // Compute live vessel coordinates
   const vesselGeo = useMemo(() => {
     // If state location is explicitly a known port, center there
@@ -68,6 +82,11 @@ export default function ShipmentMap({
     }
     return interpolateVesselPosition(originPort, destPort, progressRatio);
   }, [originPort, destPort, progressRatio, activeState?.location, step, total]);
+
+  // Human-readable current location name and maritime sector
+  const vesselLocationName = useMemo(() => {
+    return resolveVesselCurrentLocationName(vesselGeo, originPort, destPort, progressRatio, activeState);
+  }, [vesselGeo, originPort, destPort, progressRatio, activeState]);
 
   // Project coordinates to SVG space (1000 x 500)
   const originSvg = useMemo(() => latLonToSvg(originPort.lat, originPort.lon), [originPort]);
@@ -120,6 +139,14 @@ export default function ShipmentMap({
         </div>
 
         <div className="map-header-controls">
+          <button
+            type="button"
+            className={`map-control-btn ${showLocationNames ? 'map-control-btn--active' : ''}`}
+            onClick={() => setShowLocationNames(!showLocationNames)}
+            title="Toggle Route Location Names & Labels"
+          >
+            🏷️ Locations {showLocationNames ? 'ON' : 'OFF'}
+          </button>
           <button
             type="button"
             className={`map-control-btn ${showGrid ? 'map-control-btn--active' : ''}`}
@@ -284,6 +311,38 @@ export default function ShipmentMap({
             </g>
           )}
 
+          {/* Intermediate Route Waypoints & Geographic Locations */}
+          {routeWaypoints.map((wp) => {
+            const pt = latLonToSvg(wp.lat, wp.lon);
+            return (
+              <g
+                key={wp.id}
+                className="waypoint-marker"
+                transform={`translate(${pt.x}, ${pt.y})`}
+                onMouseEnter={() => setHoveredPort(wp)}
+                onMouseLeave={() => setHoveredPort(null)}
+              >
+                <circle r="3.5" fill="#38bdf8" stroke="#0369a1" strokeWidth="1.5" />
+                <circle r="7" className="waypoint-ping" />
+                {showLocationNames && (
+                  <g transform="translate(0, -9)" className="map-location-tag">
+                    <rect
+                      x="-55"
+                      y="-10"
+                      width="110"
+                      height="15"
+                      rx="3"
+                      className="map-location-tag__bg"
+                    />
+                    <text x="0" y="1" textAnchor="middle" className="map-location-tag__text">
+                      📍 {wp.shortName}
+                    </text>
+                  </g>
+                )}
+              </g>
+            );
+          })}
+
           {/* Origin Port Pin & Radar Ring */}
           <g
             className="port-marker port-marker--origin"
@@ -293,9 +352,21 @@ export default function ShipmentMap({
           >
             <circle r="12" className="port-ping port-ping--origin" />
             <circle r="6" fill="#10b981" stroke="#047857" strokeWidth="2" />
-            <text y="-14" textAnchor="middle" className="port-label port-label--origin">
-              ⚓ ORIGIN: {originPort.name}
-            </text>
+            {showLocationNames && (
+              <g transform="translate(0, -16)" className="map-location-tag map-location-tag--origin">
+                <rect
+                  x="-75"
+                  y="-12"
+                  width="150"
+                  height="18"
+                  rx="4"
+                  className="map-location-tag__bg map-location-tag__bg--origin"
+                />
+                <text x="0" y="1" textAnchor="middle" className="port-label port-label--origin">
+                  ⚓ ORIGIN: {originPort.name}
+                </text>
+              </g>
+            )}
           </g>
 
           {/* Destination Port Pin & Radar Ring */}
@@ -307,9 +378,21 @@ export default function ShipmentMap({
           >
             <circle r="12" className="port-ping port-ping--dest" />
             <circle r="6" fill="#818cf8" stroke="#4f46e5" strokeWidth="2" />
-            <text y="-14" textAnchor="middle" className="port-label port-label--dest">
-              🏁 DEST: {destPort.name}
-            </text>
+            {showLocationNames && (
+              <g transform="translate(0, -16)" className="map-location-tag map-location-tag--dest">
+                <rect
+                  x="-80"
+                  y="-12"
+                  width="160"
+                  height="18"
+                  rx="4"
+                  className="map-location-tag__bg map-location-tag__bg--dest"
+                />
+                <text x="0" y="1" textAnchor="middle" className="port-label port-label--dest">
+                  🏁 DEST: {destPort.name}
+                </text>
+              </g>
+            )}
           </g>
 
           {/* Dynamic Live Vessel Marker */}
@@ -336,18 +419,18 @@ export default function ShipmentMap({
               transform={`rotate(${vesselGeo.heading})`}
             />
 
-            {/* Live Vessel Tag */}
+            {/* Live Vessel Tag with Vessel Name & Location Sector */}
             <g transform="translate(0, 22)">
               <rect
-                x="-65"
+                x="-95"
                 y="-10"
-                width="130"
+                width="190"
                 height="20"
                 rx="10"
                 className={`vessel-tag-bg ${hasTempAnomaly ? 'vessel-tag-bg--alert' : ''}`}
               />
               <text x="0" y="3.5" textAnchor="middle" className="vessel-tag-text">
-                🚢 {vesselName.substring(0, 16)}
+                🚢 {vesselName.substring(0, 14)} · 📍 {vesselLocationName.substring(0, 18)}
               </text>
             </g>
           </g>
@@ -361,6 +444,64 @@ export default function ShipmentMap({
             <span className="tooltip-coords">{formatNauticalCoordinates(hoveredPort.lat, hoveredPort.lon)}</span>
           </div>
         )}
+      </div>
+
+      {/* Voyage Route Locations & Waypoints Strip */}
+      <div className="map-locations-strip">
+        <div className="locations-strip__header">
+          <div className="strip-header-left">
+            <span className="strip-title">NAUTICAL ROUTE LOCATIONS & WAYPOINTS</span>
+            <span className="strip-subtitle">
+              Verified AIS corridors · Sequence progression synced with forensic event log
+            </span>
+          </div>
+          <div className="strip-vessel-badge">
+            <span className="vessel-dot" />
+            <span>Active Sector: <strong>{vesselLocationName}</strong></span>
+          </div>
+        </div>
+
+        <div className="locations-strip__track">
+          {corridorLocations.map((loc, idx) => {
+            const isPassed =
+              loc.type === 'ORIGIN'
+                ? true
+                : loc.type === 'DESTINATION'
+                ? progressRatio >= 0.98
+                : (idx / (corridorLocations.length - 1)) <= progressRatio;
+
+            const isCurrent =
+              loc.type === 'ORIGIN'
+                ? progressRatio <= 0.05
+                : loc.type === 'DESTINATION'
+                ? progressRatio >= 0.95
+                : Math.abs((idx / (corridorLocations.length - 1)) - progressRatio) < 0.15;
+
+            return (
+              <div
+                key={loc.id}
+                className={`location-chip location-chip--${loc.type.toLowerCase()} ${
+                  isCurrent ? 'location-chip--current' : isPassed ? 'location-chip--passed' : 'location-chip--upcoming'
+                }`}
+                onMouseEnter={() => setHoveredPort(loc)}
+                onMouseLeave={() => setHoveredPort(null)}
+                title={`${loc.name} (${loc.country}) · ${formatNauticalCoordinates(loc.lat, loc.lon)}`}
+              >
+                <div className="location-chip__top">
+                  <span className="chip-badge">
+                    {loc.type === 'ORIGIN' ? '⚓ Origin' : loc.type === 'DESTINATION' ? '🏁 Destination' : `📍 WP ${idx}`}
+                  </span>
+                  <span className="chip-status-dot" />
+                </div>
+                <div className="chip-name">{loc.name}</div>
+                <div className="chip-coords">{formatNauticalCoordinates(loc.lat, loc.lon)}</div>
+                <div className="chip-state-label">
+                  {isCurrent ? 'Current Sector' : isPassed ? 'Cleared' : 'Pending Waypoint'}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {/* Live Nautical Telemetry HUD Footer */}

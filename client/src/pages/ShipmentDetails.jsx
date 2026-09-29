@@ -221,7 +221,7 @@ function ShipmentDetails() {
 
       {/* Top Navigation & Breadcrumbs */}
       <div className="details-nav">
-        <Link to="/" className="details-nav__back">
+        <Link to="/dashboard" className="details-nav__back">
           <span className="back-arrow">←</span>
           <span>Back to Console</span>
         </Link>

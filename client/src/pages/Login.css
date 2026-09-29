@@ -1,0 +1,396 @@
+/* Login Page Styles (Theme-Compliant) */
+
+.login-container {
+  position: relative;
+  min-height: calc(100vh - 70px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 1.5rem;
+  overflow: hidden;
+}
+
+/* Ambient 3D Glows */
+.login-glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.45;
+}
+
+.login-glow--primary {
+  width: 450px;
+  height: 450px;
+  top: 10%;
+  left: 15%;
+  background: var(--theme-accent-glow, rgba(56, 189, 248, 0.25));
+}
+
+.login-glow--accent {
+  width: 400px;
+  height: 400px;
+  bottom: 10%;
+  right: 15%;
+  background: rgba(99, 102, 241, 0.2);
+}
+
+/* Glassmorphic Terminal Card */
+.login-card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 540px;
+  background: var(--theme-card-bg, rgba(15, 23, 42, 0.85));
+  border: 1px solid var(--theme-card-border, rgba(255, 255, 255, 0.1));
+  border-radius: 20px;
+  padding: 2.5rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  animation: cardFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes cardFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+[data-theme="light"] .login-card {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+}
+
+/* Header */
+.login-card__header {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.login-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.85rem;
+  background: var(--theme-badge-bg, rgba(56, 189, 248, 0.1));
+  border: 1px solid var(--theme-badge-border, rgba(56, 189, 248, 0.25));
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--theme-accent, #38bdf8);
+  margin-bottom: 1rem;
+}
+
+.login-badge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--theme-accent, #38bdf8);
+  box-shadow: 0 0 8px var(--theme-accent, #38bdf8);
+  animation: radarBlip 1.6s infinite;
+}
+
+.login-title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--theme-text-primary, #ffffff);
+  margin: 0 0 0.5rem 0;
+}
+
+.login-title-accent {
+  background: linear-gradient(135deg, var(--theme-accent, #38bdf8) 0%, #818cf8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.login-subtitle {
+  font-size: 0.85rem;
+  color: var(--theme-text-secondary, #94a3b8);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Demo Presets */
+.login-presets {
+  margin-bottom: 1.75rem;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+}
+
+[data-theme="light"] .login-presets {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+.login-presets__label {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--theme-text-muted, #64748b);
+  margin-bottom: 0.65rem;
+}
+
+.login-presets__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.login-preset-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.3rem;
+  padding: 0.6rem 0.4rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.login-preset-btn:hover {
+  background: rgba(56, 189, 248, 0.1);
+  border-color: rgba(56, 189, 248, 0.3);
+  transform: translateY(-2px);
+}
+
+.login-preset-btn--active {
+  background: rgba(56, 189, 248, 0.15);
+  border-color: var(--theme-accent, #38bdf8);
+}
+
+.preset-avatar {
+  font-size: 1.3rem;
+}
+
+.preset-info {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  max-width: 100%;
+}
+
+.preset-name {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--theme-text-primary, #ffffff);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.preset-role {
+  font-size: 0.62rem;
+  color: var(--theme-text-muted, #94a3b8);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Form */
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.form-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--theme-text-secondary, #cbd5e1);
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  left: 1rem;
+  font-size: 1rem;
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 2.75rem;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  color: var(--theme-text-primary, #ffffff);
+  font-size: 0.9rem;
+  font-family: inherit;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+[data-theme="light"] .form-input {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+.form-input:focus {
+  border-color: var(--theme-accent, #38bdf8);
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+}
+
+.form-select {
+  appearance: none;
+  cursor: pointer;
+}
+
+/* Checkbox */
+.form-checkbox-group {
+  margin-top: 0.25rem;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkbox-input {
+  margin-top: 0.2rem;
+  accent-color: var(--theme-accent, #38bdf8);
+}
+
+.checkbox-text {
+  font-size: 0.75rem;
+  color: var(--theme-text-secondary, #94a3b8);
+  line-height: 1.4;
+}
+
+/* Alerts */
+.login-alert {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  animation: fadeIn 0.2s ease;
+}
+
+.login-alert--error {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+}
+
+.login-alert--success {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #6ee7b7;
+}
+
+/* Submit Button */
+.login-submit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.85rem 1.5rem;
+  background: var(--theme-accent, #38bdf8);
+  color: #030712;
+  font-size: 0.9rem;
+  font-weight: 700;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 0 4px 15px var(--theme-accent-glow, rgba(56, 189, 248, 0.3));
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-top: 0.5rem;
+}
+
+.login-submit-btn:hover:not(:disabled) {
+  background: var(--theme-accent-hover, #7dd3fc);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px var(--theme-accent-glow, rgba(56, 189, 248, 0.45));
+}
+
+.login-submit-btn:disabled {
+  opacity: 0.75;
+  cursor: not-allowed;
+}
+
+.btn-arrow {
+  transition: transform 0.2s ease;
+}
+
+.login-submit-btn:hover .btn-arrow {
+  transform: translateX(4px);
+}
+
+/* Footer */
+.login-card__footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 2rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="light"] .login-card__footer {
+  border-top-color: rgba(0, 0, 0, 0.08);
+}
+
+.back-link {
+  font-size: 0.8rem;
+  color: var(--theme-accent, #38bdf8);
+  text-decoration: none;
+  font-weight: 600;
+  transition: opacity 0.2s ease;
+}
+
+.back-link:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
+.security-notice {
+  font-size: 0.7rem;
+  color: var(--theme-text-muted, #64748b);
+  text-align: center;
+}
+
+@media (max-width: 640px) {
+  .login-card {
+    padding: 1.75rem 1.25rem;
+  }
+  .login-presets__grid {
+    grid-template-columns: 1fr;
+  }
+}

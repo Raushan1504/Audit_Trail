@@ -240,3 +240,180 @@ export function formatNauticalCoordinates(lat, lon) {
 
   return `${latDeg}°${latMin.toString().padStart(2, '0')}' ${latDir}, ${lonDeg}°${lonMin.toString().padStart(2, '0')}' ${lonDir}`;
 }
+
+/**
+ * Global Maritime Corridor Transit Waypoints & Chokepoints
+ */
+export const CORRIDOR_WAYPOINTS = [
+  {
+    id: 'WP_MALACCA',
+    name: 'Strait of Malacca Waypoint',
+    shortName: 'Strait of Malacca',
+    lat: 2.5,
+    lon: 101.5,
+    region: 'Southeast Asia',
+    type: 'WAYPOINT'
+  },
+  {
+    id: 'WP_COLOMBO',
+    name: 'Port of Colombo Hub',
+    shortName: 'Colombo Hub',
+    lat: 6.9271,
+    lon: 79.8612,
+    region: 'South Asia',
+    type: 'WAYPOINT'
+  },
+  {
+    id: 'WP_BAB_EL_MANDEB',
+    name: 'Bab-el-Mandeb Strait',
+    shortName: 'Bab-el-Mandeb',
+    lat: 12.58,
+    lon: 43.33,
+    region: 'Red Sea Gate',
+    type: 'WAYPOINT'
+  },
+  {
+    id: 'WP_SUEZ',
+    name: 'Suez Canal Transit Corridor',
+    shortName: 'Suez Canal',
+    lat: 29.97,
+    lon: 32.55,
+    region: 'Middle East',
+    type: 'WAYPOINT'
+  },
+  {
+    id: 'WP_GIBRALTAR',
+    name: 'Strait of Gibraltar Gateway',
+    shortName: 'Strait of Gibraltar',
+    lat: 35.95,
+    lon: -5.6,
+    region: 'Mediterranean Gate',
+    type: 'WAYPOINT'
+  },
+  {
+    id: 'WP_ENGLISH_CHANNEL',
+    name: 'English Channel Approaches',
+    shortName: 'English Channel',
+    lat: 49.8,
+    lon: -2.5,
+    region: 'Northern Europe',
+    type: 'WAYPOINT'
+  }
+];
+
+/**
+ * Returns key named locations and waypoints along the route between origin and destination.
+ *
+ * @param {Object} originPort - Starting port object
+ * @param {Object} destPort - Terminating port object
+ * @returns {Array<Object>} Ordered list of locations (Origin, Waypoints, Destination)
+ */
+export function getRouteCorridorLocations(originPort, destPort) {
+  const origin = originPort || MAJOR_PORTS.SHANGHAI;
+  const dest = destPort || MAJOR_PORTS.ROTTERDAM;
+
+  const locations = [
+    {
+      id: `ORIGIN_${origin.id}`,
+      name: origin.name,
+      shortName: origin.name.replace(/^Port of\s+/i, ''),
+      country: origin.country || 'Origin Hub',
+      lat: origin.lat,
+      lon: origin.lon,
+      type: 'ORIGIN'
+    }
+  ];
+
+  // If sailing between East Asia / South Asia and Europe / West, insert relevant corridor waypoints
+  const isAsiaToEurope = (origin.lon > 60 && dest.lon < 20) || (origin.lon < 20 && dest.lon > 60);
+
+  if (isAsiaToEurope) {
+    CORRIDOR_WAYPOINTS.forEach((wp) => {
+      locations.push({
+        id: wp.id,
+        name: wp.name,
+        shortName: wp.shortName,
+        country: wp.region,
+        lat: wp.lat,
+        lon: wp.lon,
+        type: 'WAYPOINT'
+      });
+    });
+  } else {
+    // Generate synthetic mid-route waypoints based on interpolation
+    const mid1 = interpolateVesselPosition(origin, dest, 0.33);
+    const mid2 = interpolateVesselPosition(origin, dest, 0.67);
+    locations.push({
+      id: 'WP_MID_ALPHA',
+      name: 'Transit Waypoint Alpha',
+      shortName: 'Waypoint Alpha',
+      country: 'International Waters',
+      lat: mid1.lat,
+      lon: mid1.lon,
+      type: 'WAYPOINT'
+    });
+    locations.push({
+      id: 'WP_MID_BETA',
+      name: 'Transit Waypoint Beta',
+      shortName: 'Waypoint Beta',
+      country: 'High Seas Corridor',
+      lat: mid2.lat,
+      lon: mid2.lon,
+      type: 'WAYPOINT'
+    });
+  }
+
+  locations.push({
+    id: `DEST_${dest.id}`,
+    name: dest.name,
+    shortName: dest.name.replace(/^Port of\s+/i, ''),
+    country: dest.country || 'Destination Port',
+    lat: dest.lat,
+    lon: dest.lon,
+    type: 'DESTINATION'
+  });
+
+  return locations;
+}
+
+/**
+ * Resolves a human-readable location and sector name for the vessel's current position.
+ *
+ * @param {Object} vesselGeo - Current coordinates { lat, lon }
+ * @param {Object} originPort - Starting port
+ * @param {Object} destPort - Destination port
+ * @param {number} progressRatio - 0.0 to 1.0
+ * @param {Object} activeState - Current state from event fold
+ * @returns {string} Human-readable current location name
+ */
+export function resolveVesselCurrentLocationName(vesselGeo, originPort, destPort, progressRatio, activeState) {
+  if (activeState?.status === 'CREATED' || progressRatio <= 0.02) {
+    return `${originPort?.name || 'Origin Port'} (Berthed)`;
+  }
+  if (activeState?.status === 'ARRIVED' || progressRatio >= 0.98) {
+    return `${destPort?.name || 'Destination Port'} (Discharged)`;
+  }
+
+  // Check proximity to any corridor waypoint (within ~15 degrees)
+  for (const wp of CORRIDOR_WAYPOINTS) {
+    const dLat = Math.abs(vesselGeo.lat - wp.lat);
+    const dLon = Math.abs(vesselGeo.lon - wp.lon);
+    if (dLat < 6 && dLon < 10) {
+      return `Near ${wp.name}`;
+    }
+  }
+
+  // Geographic sector determination
+  const { lat, lon } = vesselGeo;
+  if (lon > 100 && lat > 10) return 'East China Sea / South China Sea';
+  if (lon > 90 && lat <= 15) return 'Strait of Malacca Approach';
+  if (lon > 60 && lon <= 90 && lat < 25) return 'Indian Ocean Oceanic Corridor';
+  if (lon > 40 && lon <= 60 && lat > 10) return 'Arabian Sea / Gulf of Aden';
+  if (lon > 30 && lon <= 45 && lat > 15 && lat < 30) return 'Red Sea Shipping Lane';
+  if (lon > 10 && lon <= 35 && lat > 30) return 'Mediterranean Sea Transit Basin';
+  if (lon >= -10 && lon <= 10 && lat > 30 && lat < 45) return 'Strait of Gibraltar / Iberian Coast';
+  if (lat >= 45 && lon >= -5 && lon <= 10) return 'English Channel & North Sea Approaches';
+
+  return `Oceanic Corridor (${formatNauticalCoordinates(lat, lon)})`;
+}
+
