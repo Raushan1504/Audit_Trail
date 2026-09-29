@@ -2,6 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert');
 
 const {
+  reconstructShipmentState,
   reconstructStateAsOf,
   reconstructStateAsOfTimestamp
 } = require('../src/domain/shipmentReconstruction');
@@ -462,5 +463,185 @@ test('reconstructStateAsOfTimestamp', async (t) => {
         /invalid event timestamp for version 3/
       );
     }
+  );
+});
+test('temporal replay with 100+ sequential logistics events', () => {
+  const shipmentId = 'SHIP-STRESS-001';
+  const events = [];
+
+  const startTime = Date.parse('2026-08-01T10:00:00.000Z');
+
+  // Version 1: shipment creation
+  events.push(
+    createEvent(
+      shipmentId,
+      EVENT_TYPES.CONTAINER_CREATED,
+      1,
+      new Date(startTime).toISOString()
+    )
+  );
+
+  // Version 2: shipment loaded
+  events.push(
+    createEvent(
+      shipmentId,
+      EVENT_TYPES.LOADED_ON_SHIP,
+      2,
+      new Date(startTime + 60_000).toISOString(),
+      {
+        port: 'Mumbai Port',
+        vessel: 'MV-AUDIT-01'
+      }
+    )
+  );
+
+  // Versions 3-119: repeated telemetry events
+  for (let version = 3; version <= 119; version++) {
+    events.push(
+      createEvent(
+        shipmentId,
+        EVENT_TYPES.TEMPERATURE_SPIKE,
+        version,
+        new Date(
+          startTime + (version - 1) * 60_000
+        ).toISOString(),
+        {
+          temperature: 8 + (version % 5)
+        }
+      )
+    );
+  }
+
+  // Version 120: shipment arrives at destination
+  events.push(
+    createEvent(
+      shipmentId,
+      EVENT_TYPES.ARRIVED_AT_PORT,
+      120,
+      new Date(
+        startTime + 119 * 60_000
+      ).toISOString(),
+      {
+        port: 'Chennai Port'
+      }
+    )
+  );
+
+  assert.strictEqual(events.length, 120);
+
+  // ---------------------------------------------------------
+  // Full replay benchmark
+  // ---------------------------------------------------------
+
+  const heapBefore = process.memoryUsage().heapUsed;
+  const start = process.hrtime.bigint();
+
+  const finalState = reconstructShipmentState(
+    shipmentId,
+    events
+  );
+
+  const durationMs =
+    Number(process.hrtime.bigint() - start) / 1_000_000;
+
+  const heapAfter = process.memoryUsage().heapUsed;
+  const heapDeltaKb =
+    (heapAfter - heapBefore) / 1024;
+
+  // ---------------------------------------------------------
+  // Verify final reconstructed state
+  // ---------------------------------------------------------
+
+  assert.strictEqual(finalState.shipmentId, shipmentId);
+  assert.strictEqual(finalState.version, 120);
+  assert.strictEqual(finalState.status, 'ARRIVED');
+  assert.strictEqual(
+    finalState.location,
+    'Chennai Port'
+  );
+  assert.strictEqual(
+    finalState.vessel,
+    'MV-AUDIT-01'
+  );
+
+  // Version 119 is the final temperature event.
+  assert.strictEqual(
+    finalState.temperature,
+    8 + (119 % 5)
+  );
+
+  // ---------------------------------------------------------
+  // Verify historical reconstruction in the middle
+  // ---------------------------------------------------------
+
+  const historicalState = reconstructStateAsOf(
+    shipmentId,
+    events,
+    60
+  );
+
+  assert.strictEqual(
+    historicalState.version,
+    60
+  );
+
+  assert.strictEqual(
+    historicalState.status,
+    'TEMPERATURE_SPIKE'
+  );
+
+  assert.strictEqual(
+    historicalState.location,
+    'Mumbai Port'
+  );
+
+  assert.strictEqual(
+    historicalState.vessel,
+    'MV-AUDIT-01'
+  );
+
+  // Version 60 temperature must come from event 60.
+  assert.strictEqual(
+    historicalState.temperature,
+    8 + (60 % 5)
+  );
+
+  // ---------------------------------------------------------
+  // Verify timestamp-based reconstruction
+  // ---------------------------------------------------------
+
+  const timestampState =
+    reconstructStateAsOfTimestamp(
+      shipmentId,
+      events,
+      new Date(
+        startTime + 59 * 60_000
+      ).toISOString()
+    );
+
+  assert.strictEqual(
+    timestampState.version,
+    60
+  );
+
+  assert.strictEqual(
+    timestampState.status,
+    'TEMPERATURE_SPIKE'
+  );
+
+  // ---------------------------------------------------------
+  // Benchmark output
+  // ---------------------------------------------------------
+
+  console.log(
+    `\n[Day 20] Replayed ${events.length} events`
+  );
+
+  console.log(
+    `[Day 20] Replay time: ${durationMs.toFixed(3)} ms`
+  );
+
+  console.log(
+    `[Day 20] Heap delta: ${heapDeltaKb.toFixed(2)} KB`
   );
 });
