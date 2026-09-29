@@ -160,10 +160,11 @@
 }
 
 .presets-header {
-  text-align: center;
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
 .presets-tag {
@@ -178,6 +179,30 @@
   font-weight: 800;
   color: var(--theme-text-primary, #f1f5f9);
   margin: 0;
+}
+
+.btn-create-genesis {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.2) 0%, rgba(2, 132, 199, 0.3) 100%);
+  border: 1px solid var(--theme-card-border, rgba(56, 189, 248, 0.4));
+  color: var(--theme-accent, #38bdf8);
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+}
+
+.btn-create-genesis:hover {
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.35) 0%, rgba(2, 132, 199, 0.5) 100%);
+  border-color: var(--theme-accent, #00f0ff);
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px var(--theme-accent-glow, rgba(0, 240, 255, 0.3));
 }
 
 /* 3D Presets Grid */

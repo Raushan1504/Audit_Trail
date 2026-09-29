@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SearchBar from '../components/SearchBar';
+import CreateShipmentModal from '../components/CreateShipmentModal';
 import './Dashboard.css';
 
 const DEMO_PRESETS = [
@@ -31,6 +33,7 @@ const DEMO_PRESETS = [
 
 function Dashboard() {
   const navigate = useNavigate();
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
 
   const handleSearch = (shipmentId) => {
     if (!shipmentId || shipmentId.trim() === '') return;
@@ -94,8 +97,18 @@ function Dashboard() {
       {/* Tracked Shipment Presets */}
       <section className="dashboard-presets">
         <div className="presets-header">
-          <span className="presets-tag">ACTIVE SHIPMENT LEDGERS</span>
-          <h2>Quick Access Shipments</h2>
+          <div>
+            <span className="presets-tag">ACTIVE SHIPMENT LEDGERS</span>
+            <h2>Quick Access Shipments</h2>
+          </div>
+          <button
+            type="button"
+            className="btn-create-genesis"
+            onClick={() => setIsCreateOpen(true)}
+          >
+            <span className="btn-icon">⚡</span>
+            <span>Initialize New Shipment (OCC v0)</span>
+          </button>
         </div>
 
         <div className="presets-grid">
@@ -120,6 +133,12 @@ function Dashboard() {
           ))}
         </div>
       </section>
+
+      {/* Day 22: OCC Genesis Shipment Modal */}
+      <CreateShipmentModal
+        isOpen={isCreateOpen}
+        onClose={() => setIsCreateOpen(false)}
+      />
     </div>
   );
 }

@@ -8,6 +8,7 @@ import TimeSlider from '../components/TimeSlider';
 import StateDiffIndicator from '../components/StateDiffIndicator';
 import ShipmentMap from '../components/ShipmentMap';
 import HistoricalWarningBanner from '../components/HistoricalWarningBanner';
+import CommandPanel from '../components/CommandPanel';
 import './ShipmentDetails.css';
 
 function getErrorMessage(err) {
@@ -84,6 +85,7 @@ function ShipmentDetails() {
   const { shipmentId } = useParams();
   const [shipmentData, setShipmentData] = useState(null);
   const [events, setEvents] = useState([]);
+  const [aggregateVersion, setAggregateVersion] = useState(0); // Day 22: Track loaded aggregate version for OCC
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [viewMode, setViewMode] = useState('live'); // 'live' | 'historical'
@@ -91,6 +93,24 @@ function ShipmentDetails() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [isLooping, setIsLooping] = useState(false);
+
+  const refreshShipmentData = () => {
+    if (!shipmentId) return Promise.resolve();
+    const normId = shipmentId.trim().toUpperCase();
+
+    return Promise.all([
+      getShipmentState(normId),
+      getShipmentEvents(normId),
+    ])
+      .then(([stateData, eventsData]) => {
+        setShipmentData(stateData);
+        setAggregateVersion(stateData?.version ?? 0);
+        setEvents(Array.isArray(eventsData) ? eventsData : []);
+      })
+      .catch((err) => {
+        console.warn('Could not refresh shipment data:', err);
+      });
+  };
 
   useEffect(() => {
     if (!shipmentId) {
@@ -113,6 +133,7 @@ function ShipmentDetails() {
     ])
       .then(([stateData, eventsData]) => {
         setShipmentData(stateData);
+        setAggregateVersion(stateData?.version ?? 0);
         setEvents(Array.isArray(eventsData) ? eventsData : []);
       })
       .catch((err) => {
@@ -121,6 +142,7 @@ function ShipmentDetails() {
         if (fallback && fallback.length > 0) {
           const reconstructed = foldEventsUpTo(fallback, null);
           setShipmentData(reconstructed);
+          setAggregateVersion(reconstructed?.version ?? 0);
           setEvents(fallback);
           setError(null);
         } else {
@@ -311,6 +333,18 @@ function ShipmentDetails() {
           currentStep={replayStep || events.length}
           totalEvents={events.length}
           isHistorical={isHistoricalActive}
+        />
+      )}
+
+      {/* Day 22: Optimistic Concurrency Control (OCC) Command Panel */}
+      {!loading && !error && shipmentData && (
+        <CommandPanel
+          shipmentId={shipmentId}
+          currentStatus={shipmentData?.status}
+          loadedVersion={aggregateVersion || shipmentData?.version || 0}
+          isHistoricalActive={isHistoricalActive}
+          onJumpToLive={() => handleViewModeChange('live')}
+          onCommandSuccess={refreshShipmentData}
         />
       )}
 
