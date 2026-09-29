@@ -62,6 +62,27 @@ function errorHandler(err, req, res, next) { // eslint-disable-line no-unused-va
     message = 'Resource already exists with conflicting unique field';
   }
 
+  // Handle Domain Command & State Transition Errors (operational client errors)
+  if (err.message && (
+    err.message.startsWith('Invalid command') ||
+    err.message.includes('must be created first') ||
+    err.message.includes('already created') ||
+    err.message.includes('Unknown shipment status') ||
+    err.message.includes('is required') ||
+    err.message.includes('targetVersion')
+  )) {
+    statusCode = err.statusCode || err.status || 400;
+    code = err.code || 'INVALID_COMMAND';
+    message = err.message;
+  }
+
+  // Handle MongoDB Connection / Server Selection Errors gracefully
+  if (err.name === 'MongoServerSelectionError' || err.name === 'MongoNetworkError') {
+    statusCode = 503;
+    code = 'DATABASE_UNAVAILABLE';
+    message = 'Database connection temporarily unavailable. Please check connectivity and retry.';
+  }
+
   // Fallback for default Error instances with message indicating bad request / validation
   if (statusCode === 500 && !err.isOperational && process.env.NODE_ENV !== 'test') {
     console.error('Unhandled Server Error:', err);

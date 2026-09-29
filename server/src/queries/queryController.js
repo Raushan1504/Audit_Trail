@@ -78,8 +78,44 @@ const listShipments = async (request, response, next) => {
 	}
 };
 
+/**
+ * GET /api/queries/shipments/:id/as-of/:target
+ * GET /api/queries/shipments/:shipmentId/as-of/:target
+ * Returns the historical reconstructed state of a shipment as of a target version or timestamp
+ * without mutating the live ShipmentReadModel.
+ */
+const getShipmentStateAsOf = async (request, response, next) => {
+	try {
+		const shipmentId = request.params.id || request.params.shipmentId;
+		const target = request.params.target;
+
+		const startHrTime = process.hrtime();
+		const shipmentState = await queryService.getShipmentStateAsOf(shipmentId, target);
+		const [seconds, nanoseconds] = process.hrtime(startHrTime);
+		const durationMs = (seconds * 1000 + nanoseconds / 1e6).toFixed(3);
+
+		if (!shipmentState) {
+			return response.status(404).json({
+				success: false,
+				message: `Shipment '${shipmentId}' not found.`,
+			});
+		}
+
+		response.setHeader('X-Query-Source', shipmentState._source || 'historical_reconstruction');
+		response.setHeader('X-Response-Time-Ms', durationMs);
+
+		return response.status(200).json({
+			success: true,
+			data: shipmentState,
+		});
+	} catch (error) {
+		next(error);
+	}
+};
+
 module.exports = {
 	getShipmentState,
+	getShipmentStateAsOf,
 	getShipmentEvents,
 	listShipments,
 };

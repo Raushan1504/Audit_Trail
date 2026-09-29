@@ -1,11 +1,13 @@
 const mongoose = require('mongoose');
 const dns = require('dns');
 
-// Configure fallback DNS for environments requiring Google DNS
-try {
-  dns.setServers(['8.8.8.8', '1.1.1.1']);
-} catch {
-  // Ignore if custom DNS cannot be set
+// Only configure custom DNS servers if explicitly enabled via environment variable
+if (process.env.USE_CUSTOM_DNS === 'true') {
+  try {
+    dns.setServers(['8.8.8.8', '1.1.1.1']);
+  } catch {
+    // Ignore if custom DNS cannot be set
+  }
 }
 
 const { seedDefaultEvents } = require('./seedEvents');

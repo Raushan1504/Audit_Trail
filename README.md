@@ -254,7 +254,7 @@ All 42 commits for Days 1 through 14 have been committed, peer-reviewed, and mer
 - **Person 1 (Domain):** `test(replay): test temporal replay with 100+ sequential logistics events`  
   Benchmark memory and execution time when reconstructing deep event histories.
 - **Person 2 (Backend/Worker):** `perf(queries): benchmark read model query latency vs raw replay`  
-  Document performance gains: show that querying the read model takes <10ms vs >300ms for raw multi-event replay.
+  Document performance gains: show that querying the read model takes <10ms vs >300ms for raw multi-event replay. *(See [Benchmark Report](docs/BENCHMARK_READ_MODEL_VS_REPLAY.md) & run `npm run benchmark:queries`)*
 - **Person 3 (React):** `feat(ui): add timeline event jump interaction`  
   Enable clicking any event card on the vertical timeline to immediately jump the time slider to that exact moment.
 

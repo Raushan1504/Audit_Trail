@@ -6,6 +6,8 @@
     "scripts": {
         "test": "node --test tests/*.test.js",
         "audit:immutability": "node scripts/immutabilityAuditDemo.js",
+        "projections:rebuild": "node scripts/rebuildProjections.js",
+        "benchmark:queries": "node scripts/benchmarkReadModelVsReplay.js",
         "worker": "node src/projections/projectionWorker.js",
         "dev": "nodemon src/app.js"
     },

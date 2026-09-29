@@ -71,6 +71,14 @@ export default function CommandPanel({
     e.preventDefault();
     if (!activeCommand || !shipmentId || isHistoricalActive) return;
 
+    if (allowedCommands.length > 0 && !allowedCommands.includes(activeCommand)) {
+      setFeedback({
+        type: 'error',
+        message: `Invalid command: Cannot execute '${activeCommand}' when shipment is already in '${currentStatus}' status.`
+      });
+      return;
+    }
+
     setSubmitting(true);
     setFeedback(null);
 

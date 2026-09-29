@@ -26,6 +26,12 @@ router.get('/shipments/:shipmentId', queryController.getShipmentState);
 router.get('/shipment/:id', queryController.getShipmentState);
 router.get('/shipment/:shipmentId', queryController.getShipmentState);
 
+// Historical "As-Of" point-in-time state reconstruction (version or ISO timestamp)
+router.get('/shipments/:id/as-of/:target', queryController.getShipmentStateAsOf);
+router.get('/shipments/:shipmentId/as-of/:target', queryController.getShipmentStateAsOf);
+router.get('/shipment/:id/as-of/:target', queryController.getShipmentStateAsOf);
+router.get('/shipment/:shipmentId/as-of/:target', queryController.getShipmentStateAsOf);
+
 // Raw chronological event history queries
 router.get('/shipments/:id/events', queryController.getShipmentEvents);
 router.get('/shipments/:shipmentId/events', queryController.getShipmentEvents);

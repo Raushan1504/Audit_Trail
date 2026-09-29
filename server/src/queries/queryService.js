@@ -1,7 +1,12 @@
-const { reconstructShipmentState } = require('../domain/shipmentReconstruction');
+const {
+	reconstructShipmentState,
+	reconstructStateAsOf,
+	reconstructStateAsOfTimestamp
+} = require('../domain/shipmentReconstruction');
 const eventStore = require('../events/eventStore');
 const Event = require('../models/Event');
 const ShipmentReadModel = require('../models/ShipmentReadModel');
+const { BadRequestError } = require('../utils/errors');
 
 /**
  * Fast O(1) read model query for shipment state.
@@ -113,8 +118,112 @@ const listShipments = async () => {
 	return shipments;
 };
 
+/**
+ * Reconstruct historical shipment state as of a target version or timestamp.
+ * Reads solely from the immutable Event Store without mutating the live ShipmentReadModel.
+ *
+ * @param {string} shipmentId - The aggregate ID of the shipment.
+ * @param {string|number} target - The target version (e.g. 2, "2", "v2") or ISO timestamp.
+ * @returns {Promise<Object|null>} The historical reconstructed shipment state.
+ */
+const getShipmentStateAsOf = async (shipmentId, target) => {
+	if (!shipmentId || typeof shipmentId !== 'string') {
+		return null;
+	}
+
+	if (target === undefined || target === null || String(target).trim() === '') {
+		throw new BadRequestError('Target parameter is required (version or ISO timestamp)');
+	}
+
+	const normalizedId = shipmentId.trim();
+	const targetStr = String(target).trim();
+
+	// Fetch raw immutable events from EventStore
+	const events = await eventStore.getEventsByAggregateId(normalizedId);
+	if (!events || events.length === 0) {
+		return null;
+	}
+
+	// Ensure plain objects and sort sequentially by version
+	const sortedEvents = events
+		.map((e) => (typeof e.toObject === 'function' ? e.toObject() : e))
+		.sort((a, b) => a.version - b.version);
+
+	let historicalState;
+	let asOfType;
+	let targetVersionNum;
+	let targetTimestampIso;
+
+	// Check if target is a version (e.g. "2", "0", "v2")
+	const isVersionPattern = /^v?([0-9]+)$/i;
+	const versionMatch = targetStr.match(isVersionPattern);
+
+	if (versionMatch) {
+		asOfType = 'version';
+		targetVersionNum = parseInt(versionMatch[1], 10);
+
+		try {
+			historicalState = reconstructStateAsOf(normalizedId, sortedEvents, targetVersionNum);
+		} catch (err) {
+			throw new BadRequestError(err.message);
+		}
+	} else {
+		// Attempt timestamp-based historical cutoff
+		const parsedDate = new Date(targetStr);
+		if (Number.isNaN(parsedDate.getTime())) {
+			throw new BadRequestError(
+				`Invalid target '${targetStr}': must be a non-negative integer version (e.g. 2) or a valid ISO timestamp (e.g. 2026-08-01T14:00:00.000Z)`
+			);
+		}
+
+		asOfType = 'timestamp';
+		targetTimestampIso = parsedDate.toISOString();
+
+		try {
+			historicalState = reconstructStateAsOfTimestamp(normalizedId, sortedEvents, targetTimestampIso);
+		} catch (err) {
+			throw new BadRequestError(err.message);
+		}
+	}
+
+	const effectiveVersion = historicalState.version ?? 0;
+	const effectiveEvents = sortedEvents.filter((e) => e.version <= effectiveVersion);
+	const lastHistoricalEvent = effectiveEvents[effectiveEvents.length - 1] || null;
+
+	const creationEvent = effectiveEvents.find((e) => e.eventType === 'CONTAINER_CREATED');
+	const cargo = creationEvent?.payload?.cargo
+		? (typeof creationEvent.payload.cargo === 'object'
+			? (creationEvent.payload.cargo.description || creationEvent.payload.cargo.name || JSON.stringify(creationEvent.payload.cargo))
+			: String(creationEvent.payload.cargo))
+		: null;
+
+	return {
+		shipmentId: normalizedId,
+		status: historicalState.status,
+		currentLocation: historicalState.location ?? creationEvent?.payload?.origin ?? null,
+		location: historicalState.location ?? creationEvent?.payload?.origin ?? null,
+		temperature: historicalState.temperature ?? null,
+		version: effectiveVersion,
+		lastAppliedVersion: effectiveVersion,
+		vessel: historicalState.vessel ?? null,
+		cargo: cargo,
+		lastEventTimestamp: lastHistoricalEvent?.timestamp ?? null,
+		_source: 'historical_reconstruction',
+		asOf: {
+			target: targetStr,
+			type: asOfType,
+			targetVersion: asOfType === 'version' ? targetVersionNum : undefined,
+			targetTimestamp: asOfType === 'timestamp' ? targetTimestampIso : undefined,
+			effectiveVersion: effectiveVersion,
+			totalHistoricalEvents: effectiveEvents.length,
+			totalAvailableEvents: sortedEvents.length
+		}
+	};
+};
+
 module.exports = {
 	getShipmentState,
+	getShipmentStateAsOf,
 	getShipmentEvents,
 	listShipments,
 };

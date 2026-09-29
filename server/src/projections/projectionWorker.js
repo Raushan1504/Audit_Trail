@@ -1,4 +1,5 @@
 const EventEmitter = require('node:events');
+const mongoose = require('mongoose');
 const Event = require('../models/Event');
 const ShipmentReadModel = require('../models/ShipmentReadModel');
 const { applyEventToReadModel } = require('./shipmentProjection');
@@ -59,15 +60,15 @@ class ProjectionWorker extends EventEmitter {
 
     // 2. Perform initial catch-up poll immediately if autoPoll enabled
     if (this.autoPoll) {
-      this.pollOnce().catch((err) => {
-        this.emit('error', err);
+      this.pollOnce().catch(() => {
+        // Error already emitted by pollOnce()
       });
 
       // 3. Start recurring polling interval for background catch-up
       this.timer = setInterval(() => {
         if (this.isRunning) {
-          this.pollOnce().catch((err) => {
-            this.emit('error', err);
+          this.pollOnce().catch(() => {
+            // Error already emitted by pollOnce()
           });
         }
       }, this.intervalMs);

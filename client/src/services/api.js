@@ -25,6 +25,11 @@ export async function getShipmentEvents(shipmentId) {
   return handleResponse(response);
 }
 
+export async function getShipmentStateAsOf(shipmentId, target) {
+  const response = await fetch(`${BASE_URL}/queries/shipments/${encodeURIComponent(shipmentId)}/as-of/${encodeURIComponent(target)}`);
+  return handleResponse(response);
+}
+
 // --- Command Functions (CQRS Write Side with OCC expectedVersion) ---
 
 async function sendCommand(endpoint, payload) {

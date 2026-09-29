@@ -229,23 +229,64 @@ async function rebuildShipmentReadModel(shipmentId) {
 
 /**
  * Rebuilds read models for all shipments stored in the Event Store.
+ * Replays all canonical domain events sequentially to restore read model consistency.
  *
- * @returns {Promise<{ totalShipments: number, rebuiltCount: number, shipments: Array }>}
+ * @param {Object} [options]
+ * @param {boolean} [options.clean=false] - Whether to wipe the read model collection before replay
+ * @param {string} [options.shipmentId] - If provided, rebuilds only this specific shipment
+ * @param {boolean} [options.dryRun=false] - If true, computes projection without saving to DB
+ * @returns {Promise<{ totalShipments: number, rebuiltCount: number, totalEventsReplayed: number, shipments: Array }>}
  */
-async function rebuildAllReadModels() {
-  const aggregateIds = await Event.distinct('aggregateId');
+async function rebuildAllReadModels(options = {}) {
+  if (options.clean && !options.dryRun) {
+    await ShipmentReadModel.deleteMany({});
+  }
+
+  let aggregateIds;
+  if (options.shipmentId) {
+    aggregateIds = [options.shipmentId.trim()];
+  } else {
+    aggregateIds = await Event.distinct('aggregateId');
+  }
+
   const results = [];
+  let totalEventsReplayed = 0;
 
   for (const shipmentId of aggregateIds) {
-    const updated = await rebuildShipmentReadModel(shipmentId);
-    if (updated) {
-      results.push(updated);
+    const eventsQuery = Event.find({ aggregateId: shipmentId });
+    const events = typeof eventsQuery.sort === 'function'
+      ? await eventsQuery.sort({ version: 1 })
+      : await eventsQuery;
+
+    if (!events || events.length === 0) {
+      continue;
+    }
+
+    totalEventsReplayed += events.length;
+
+    let projected = null;
+    for (const event of events) {
+      projected = projectEvent(projected, event);
+    }
+
+    if (options.dryRun) {
+      results.push(projected);
+    } else {
+      let readModel = await ShipmentReadModel.findOne({ shipmentId });
+      if (!readModel) {
+        readModel = new ShipmentReadModel(projected);
+      } else {
+        Object.assign(readModel, projected);
+      }
+      const saved = await readModel.save();
+      results.push(saved);
     }
   }
 
   return {
     totalShipments: aggregateIds.length,
     rebuiltCount: results.length,
+    totalEventsReplayed,
     shipments: results
   };
 }

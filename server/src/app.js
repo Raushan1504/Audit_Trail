@@ -37,8 +37,16 @@ if (require.main === module) {
 			if (process.env.DISABLE_PROJECTION_WORKER !== 'true') {
 				const { startProjectionWorker } = require('./projections/projectionWorker');
 				const worker = startProjectionWorker();
+				let lastLoggedError = '';
+				let lastErrorTime = 0;
 				worker.on('error', (err) => {
-					console.error('[ProjectionWorker] Background projection error:', err?.message || err);
+					const msg = err?.message || String(err);
+					const now = Date.now();
+					if (msg !== lastLoggedError || now - lastErrorTime > 10000) {
+						lastLoggedError = msg;
+						lastErrorTime = now;
+						console.error('[ProjectionWorker] Background projection error:', msg);
+					}
 				});
 			}
 		})
