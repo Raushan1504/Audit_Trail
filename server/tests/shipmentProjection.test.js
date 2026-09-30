@@ -274,6 +274,7 @@ test('shipmentProjection - applyEventToReadModel persistence & idempotency', asy
       version: 1,
       payload: { origin: 'Mumbai', cargo: 'Spices' }
     };
+
     const eventV2 = {
       aggregateId: 'SHP-SEQ-1',
       eventType: EVENT_TYPES.LOADED_ON_SHIP,
@@ -294,6 +295,7 @@ test('shipmentProjection - applyEventToReadModel persistence & idempotency', asy
     assert.strictEqual(saved.cargo, 'Spices');
     assert.strictEqual(saved.lastAppliedVersion, 2);
   });
+
   await t.test('matches full historical replay state', async () => {
     const shipmentId = 'SHIP-REPLAY-001';
 
@@ -372,4 +374,95 @@ test('shipmentProjection - applyEventToReadModel persistence & idempotency', asy
       comparableReplayedState
     );
   });
+});
+
+test('Day 21 - projection consistency across all canonical event types', () => {
+  const shipmentId = 'SHP-CONSISTENCY-001';
+
+  const events = [
+    {
+      aggregateId: shipmentId,
+      eventType: EVENT_TYPES.CONTAINER_CREATED,
+      version: 1,
+      payload: {
+        cargo: 'Pharmaceutical Vaccines'
+      },
+      timestamp: new Date('2026-09-01T10:00:00Z')
+    },
+    {
+      aggregateId: shipmentId,
+      eventType: EVENT_TYPES.LOADED_ON_SHIP,
+      version: 2,
+      payload: {
+        port: 'Mumbai Port',
+        vessel: 'MV-AUDIT-21'
+      },
+      timestamp: new Date('2026-09-01T12:00:00Z')
+    },
+    {
+      aggregateId: shipmentId,
+      eventType: EVENT_TYPES.TEMPERATURE_SPIKE,
+      version: 3,
+      payload: {
+        temperature: 12.5
+      },
+      timestamp: new Date('2026-09-01T15:00:00Z')
+    },
+    {
+      aggregateId: shipmentId,
+      eventType: EVENT_TYPES.ARRIVED_AT_PORT,
+      version: 4,
+      payload: {
+        port: 'Chennai Port'
+      },
+      timestamp: new Date('2026-09-01T18:00:00Z')
+    }
+  ];
+
+  let projectedState = null;
+
+  for (const event of events) {
+    projectedState = projectEvent(projectedState, event);
+
+    const replayedState = reconstructShipmentState(
+      shipmentId,
+      events.slice(0, event.version)
+    );
+
+    assert.strictEqual(
+      projectedState.shipmentId,
+      replayedState.shipmentId
+    );
+
+    assert.strictEqual(
+      projectedState.status,
+      replayedState.status
+    );
+
+    assert.strictEqual(
+      projectedState.currentLocation ?? null,
+      replayedState.location ?? null
+    );
+
+    assert.strictEqual(
+      projectedState.temperature ?? null,
+      replayedState.temperature ?? null
+    );
+
+    assert.strictEqual(
+      projectedState.vessel ?? null,
+      replayedState.vessel ?? null
+    );
+
+    assert.strictEqual(
+      projectedState.lastAppliedVersion,
+      replayedState.version
+    );
+  }
+
+  assert.strictEqual(projectedState.status, 'ARRIVED');
+  assert.strictEqual(projectedState.currentLocation, 'Chennai Port');
+  assert.strictEqual(projectedState.temperature, 12.5);
+  assert.strictEqual(projectedState.vessel, 'MV-AUDIT-21');
+  assert.strictEqual(projectedState.lastAppliedVersion, 4);
 });
