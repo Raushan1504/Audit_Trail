@@ -114,7 +114,7 @@ export default function Home() {
               className="hero-search-input"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Enter Shipment or Container ID (e.g. SHIP-001, SHIP-TEMP-ALERT)..."
+              placeholder="Enter Shipment ID (e.g. SHIP-001)"
             />
             <button type="submit" className="hero-search-btn">
               <span>Inspect Ledger</span>
