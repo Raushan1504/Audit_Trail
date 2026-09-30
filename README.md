@@ -262,7 +262,7 @@ All 42 commits for Days 1 through 14 have been committed, peer-reviewed, and mer
 - **Person 1 (Domain):** `test(review): verify projection consistency across all event types`  
   Ensure `CONTAINER_CREATED`, `LOADED_ON_SHIP`, `TEMPERATURE_SPIKE`, and `ARRIVED_AT_PORT` accurately project to read models.
 - **Person 2 (Backend/Worker):** `test(review): verify background worker real-time sync`  
-  Demonstrate that dispatching a new command immediately updates the read model within 200ms.
+  Demonstrate that dispatching a new command immediately updates the read model within 200ms. *(See [Sync Verification Report](docs/WORKER_REALTIME_SYNC_VERIFICATION.md) & run `npm run verify:worker`)*
 - **Person 3 (React):** `feat(review): polish temporal scrubber UI and historical banner`  
   Ensure scrubbed view displays high-contrast alerts to prevent operators from mistaking past states for live data.
 

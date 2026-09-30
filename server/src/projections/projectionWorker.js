@@ -92,10 +92,6 @@ class ProjectionWorker extends EventEmitter {
    * Gracefully stops the worker loop and detaches all event hooks.
    */
   stop() {
-    if (!this.isRunning) {
-      return this;
-    }
-
     this.isRunning = false;
 
     if (this.timer) {
@@ -122,7 +118,7 @@ class ProjectionWorker extends EventEmitter {
     this.hookListener = async (event) => {
       try {
         const result = await this.processEvent(event, 'hook');
-        this.emit('eventProjected', { event, result, source: 'hook' });
+        this.emit('eventProjected', { event, result, source: 'hook', durationMs: result.durationMs });
       } catch (err) {
         this.stats.errorsCount++;
         this.stats.lastError = err.message;
@@ -153,14 +149,90 @@ class ProjectionWorker extends EventEmitter {
    * @returns {Promise<Object>}
    */
   async processEvent(event, source = 'worker') {
+    const startTime = performance.now();
     const result = await applyEventToReadModel(event);
+    const durationMs = Number((performance.now() - startTime).toFixed(3));
 
     if (result.applied) {
       this.stats.processedEventsCount++;
       this.stats.lastProcessedAt = new Date();
+      this.stats.lastDurationMs = durationMs;
     }
 
-    return result;
+    return {
+      ...result,
+      durationMs
+    };
+  }
+
+  /**
+   * Waits for the read model of a given shipment to reach or exceed the expected version.
+   * Guarantees resolution within timeoutMs (default 200ms) or rejects with an SLA timeout error.
+   *
+   * @param {string} shipmentId - The aggregate ID of the shipment.
+   * @param {number} expectedVersion - The version expected in the read model.
+   * @param {number} [timeoutMs=200] - Maximum latency threshold in milliseconds (SLA: 200ms).
+   * @returns {Promise<Object>} The updated read model document.
+   */
+  async waitForVersion(shipmentId, expectedVersion, timeoutMs = 200) {
+    if (!shipmentId) {
+      throw new Error('shipmentId is required');
+    }
+
+    // 1. Immediate check if already projected
+    const immediate = await ShipmentReadModel.findOne({ shipmentId });
+    if (immediate && (immediate.lastAppliedVersion ?? immediate.version) >= expectedVersion) {
+      return immediate;
+    }
+
+    // 2. Await worker event notification
+    return new Promise((resolve, reject) => {
+      let timer = null;
+
+      const onProjected = async ({ event, result }) => {
+        if (event && event.aggregateId === shipmentId) {
+          const version = result?.version ?? (await ShipmentReadModel.findOne({ shipmentId }))?.lastAppliedVersion ?? 0;
+          if (version >= expectedVersion) {
+            cleanup();
+            const doc = await ShipmentReadModel.findOne({ shipmentId });
+            resolve(doc);
+          }
+        }
+      };
+
+      const onError = (err) => {
+        cleanup();
+        reject(err);
+      };
+
+      const cleanup = () => {
+        if (timer) clearTimeout(timer);
+        this.removeListener('eventProjected', onProjected);
+        this.removeListener('error', onError);
+      };
+
+      timer = setTimeout(async () => {
+        try {
+          const doc = await ShipmentReadModel.findOne({ shipmentId });
+          if (doc && (doc.lastAppliedVersion ?? doc.version) >= expectedVersion) {
+            cleanup();
+            return resolve(doc);
+          }
+        } catch {
+          // ignore
+        }
+        cleanup();
+        const err = new Error(
+          `Real-time sync SLA breached: shipment ${shipmentId} did not reach version ${expectedVersion} within ${timeoutMs}ms`
+        );
+        err.code = 'SYNC_TIMEOUT_SLA_BREACH';
+        err.timeoutMs = timeoutMs;
+        reject(err);
+      }, timeoutMs);
+
+      this.on('eventProjected', onProjected);
+      this.once('error', onError);
+    });
   }
 
   /**
@@ -206,7 +278,7 @@ class ProjectionWorker extends EventEmitter {
           const res = await this.processEvent(event, 'poll');
           if (res.applied) {
             processedCount++;
-            this.emit('eventProjected', { event, result: res, source: 'poll' });
+            this.emit('eventProjected', { event, result: res, source: 'poll', durationMs: res.durationMs });
           }
         }
       }
