@@ -63,11 +63,32 @@ EventSchema.pre('save', function () {
   }
 });
 
+// ── Event Store Indexes & Optimistic Concurrency Control (OCC) ────────
+// 1. Compound unique index: Enforces strict version uniqueness per aggregate root.
+//    Guarantees Optimistic Concurrency Control (OCC) at the database layer so that
+//    two simultaneous commands cannot write the same version number for an aggregate.
 EventSchema.index({ aggregateId: 1, version: 1 }, { unique: true });
+
+// 2. Compound index: Optimizes aggregate event retrieval ordered by timestamp.
 EventSchema.index({ aggregateId: 1, timestamp: 1 });
+
+// 3. Single-field index: Optimizes global chronological audit trail retrieval.
 EventSchema.index({ timestamp: 1 });
+
+// 4. Compound index: Optimizes querying events by type chronologically.
 EventSchema.index({ eventType: 1, timestamp: 1 });
+
 const Event = mongoose.model('Event', EventSchema);
 Event.APPEND_ONLY_MSG = APPEND_ONLY_MSG;
+
+/**
+ * Ensures all schema indexes (especially { aggregateId: 1, version: 1 } unique)
+ * are built and synchronized in MongoDB.
+ * @returns {Promise<Event>}
+ */
+Event.ensureIndexes = async function () {
+  return await Event.init();
+};
+
 module.exports = Event;
 

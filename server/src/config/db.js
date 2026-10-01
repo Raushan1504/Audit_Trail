@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const Event = require('../models/Event');
 const { seedDefaultEvents } = require('./seedEvents');
 
 const LOCAL_URI = 'mongodb://127.0.0.1:27017/audit-trail';
@@ -20,6 +21,7 @@ const connectDB = async () => {
         serverSelectionTimeoutMS: 30000
       });
       console.log(`✓ MongoDB connected successfully to host: ${conn.connection.host}`);
+      await Event.ensureIndexes();
       await seedDefaultEvents();
       return conn;
     } catch (primaryError) {
@@ -33,6 +35,7 @@ const connectDB = async () => {
       serverSelectionTimeoutMS: 3000
     });
     console.log(`✓ Connected to local MongoDB instance: ${conn.connection.host}`);
+    await Event.ensureIndexes();
     await seedDefaultEvents();
     return conn;
   } catch (localError) {
