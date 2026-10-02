@@ -9,15 +9,17 @@ import {
   recordTemperatureSpikeCommand,
   arriveAtPortCommand
 } from '../services/api';
+import ConcurrencyConflictModal from './ConcurrencyConflictModal';
 import './CommandPanel.css';
 
 /**
- * CommandPanel Component (Day 22)
+ * CommandPanel Component (Day 22 & Day 23)
  *
  * Implements Optimistic Concurrency Control (OCC) command dispatch.
  * Captures the current loaded aggregate version during query fetch and
  * binds it into React form state as expectedVersion, forwarding it inside
  * command payloads to protect against race conditions and state divergence.
+ * Displays interactive conflict modal upon HTTP 409 responses.
  */
 export default function CommandPanel({
   shipmentId,
@@ -31,17 +33,22 @@ export default function CommandPanel({
   const [activeCommand, setActiveCommand] = useState(allowedCommands[0] || null);
   const [showPayloadPreview, setShowPayloadPreview] = useState(false);
 
-  // Form State
+  // Form State (includes Day 24 telemetry metrics)
   const [formData, setFormData] = useState({
     vessel: 'MV PACIFIC VOYAGER',
     port: 'Shanghai Marine Terminal',
     temperature: '14.5',
     threshold: '4.0',
-    sensorId: 'SENSOR-IOT-09'
+    sensorId: 'SENSOR-IOT-09',
+    humidity: '68.5',
+    batteryVoltage: '3.82',
+    ambientTemp: '24.1'
   });
 
   const [submitting, setSubmitting] = useState(false);
   const [feedback, setFeedback] = useState(null); // { type: 'success' | 'error', message: string, data?: any }
+  const [conflictModalOpen, setConflictModalOpen] = useState(false);
+  const [conflictData, setConflictData] = useState(null);
 
   // Synchronize activeCommand when status changes
   useEffect(() => {
@@ -104,6 +111,17 @@ export default function CommandPanel({
         onCommandSuccess();
       }
     } catch (err) {
+      const isConflict = err.status === 409 || err.data?.code === 'CONCURRENCY_CONFLICT';
+      if (isConflict) {
+        const conflict = err.data?.conflict || {
+          shipmentId,
+          expectedVersion: loadedVersion,
+          currentVersion: (err.data?.conflict?.currentVersion) ?? (loadedVersion + 1),
+          resolutionHint: err.message || 'Optimistic concurrency violation detected. Reload state and retry.'
+        };
+        setConflictData(conflict);
+        setConflictModalOpen(true);
+      }
       setFeedback({
         type: 'error',
         message: err.message || 'Command dispatch failed due to an unexpected error.',
@@ -310,6 +328,48 @@ export default function CommandPanel({
                   />
                   <span className="field-help">Hardware telemetry probe ID.</span>
                 </div>
+
+                <div className="form-field">
+                  <label htmlFor="humidityInput">RELATIVE HUMIDITY (% RH)</label>
+                  <input
+                    id="humidityInput"
+                    type="number"
+                    step="0.1"
+                    name="humidity"
+                    value={formData.humidity || ''}
+                    onChange={handleInputChange}
+                    placeholder="e.g. 68.5"
+                  />
+                  <span className="field-help">Optional sensor humidity percentage.</span>
+                </div>
+
+                <div className="form-field">
+                  <label htmlFor="voltageInput">BATTERY VOLTAGE (V)</label>
+                  <input
+                    id="voltageInput"
+                    type="number"
+                    step="0.01"
+                    name="batteryVoltage"
+                    value={formData.batteryVoltage || ''}
+                    onChange={handleInputChange}
+                    placeholder="e.g. 3.82"
+                  />
+                  <span className="field-help">IoT tracker battery reserve voltage.</span>
+                </div>
+
+                <div className="form-field">
+                  <label htmlFor="ambientInput">AMBIENT TEMPERATURE (°C)</label>
+                  <input
+                    id="ambientInput"
+                    type="number"
+                    step="0.1"
+                    name="ambientTemp"
+                    value={formData.ambientTemp || ''}
+                    onChange={handleInputChange}
+                    placeholder="e.g. 24.1"
+                  />
+                  <span className="field-help">External container ambient temperature.</span>
+                </div>
               </>
             )}
 
@@ -375,6 +435,19 @@ export default function CommandPanel({
           </div>
         </form>
       )}
+
+      {/* Concurrency Conflict Modal (Day 23) */}
+      <ConcurrencyConflictModal
+        isOpen={conflictModalOpen}
+        conflict={conflictData}
+        onRefresh={() => {
+          if (onJumpToLive) onJumpToLive();
+          if (onCommandSuccess) onCommandSuccess();
+          setConflictModalOpen(false);
+          setFeedback(null);
+        }}
+        onClose={() => setConflictModalOpen(false)}
+      />
     </div>
   );
 }

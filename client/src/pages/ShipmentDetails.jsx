@@ -9,6 +9,7 @@ import StateDiffIndicator from '../components/StateDiffIndicator';
 import ShipmentMap from '../components/ShipmentMap';
 import HistoricalWarningBanner from '../components/HistoricalWarningBanner';
 import CommandPanel from '../components/CommandPanel';
+import SensorTelemetryChart from '../components/SensorTelemetryChart';
 import './ShipmentDetails.css';
 
 function getErrorMessage(err) {
@@ -333,6 +334,19 @@ function ShipmentDetails() {
           currentStep={replayStep || events.length}
           totalEvents={events.length}
           isHistorical={isHistoricalActive}
+        />
+      )}
+
+      {/* Day 24: Recharts Sensor Telemetry & Time-Series Visualization */}
+      {!loading && !error && shipmentData && (
+        <SensorTelemetryChart
+          shipmentId={shipmentId}
+          activeScrubberVersion={isHistoricalActive ? replayStep : null}
+          onPointClick={(point) => {
+            if (point && point.version) {
+              handleStepChange(point.version);
+            }
+          }}
         />
       )}
 

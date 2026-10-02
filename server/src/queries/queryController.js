@@ -113,9 +113,36 @@ const getShipmentStateAsOf = async (request, response, next) => {
 	}
 };
 
+/**
+ * GET /api/queries/shipments/:id/telemetry
+ * GET /api/queries/shipments/:shipmentId/telemetry
+ * Returns structured sensor telemetry time-series points and metrics for Recharts visualization.
+ */
+const getShipmentTelemetry = async (request, response, next) => {
+	try {
+		const shipmentId = request.params.id || request.params.shipmentId;
+		const telemetry = await queryService.getShipmentTelemetry(shipmentId);
+
+		if (!telemetry) {
+			return response.status(404).json({
+				success: false,
+				message: `Shipment '${shipmentId}' not found.`,
+			});
+		}
+
+		return response.status(200).json({
+			success: true,
+			data: telemetry,
+		});
+	} catch (error) {
+		next(error);
+	}
+};
+
 module.exports = {
 	getShipmentState,
 	getShipmentStateAsOf,
 	getShipmentEvents,
+	getShipmentTelemetry,
 	listShipments,
 };

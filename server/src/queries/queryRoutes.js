@@ -38,4 +38,10 @@ router.get('/shipments/:shipmentId/events', queryController.getShipmentEvents);
 router.get('/shipment/:id/events', queryController.getShipmentEvents);
 router.get('/shipment/:shipmentId/events', queryController.getShipmentEvents);
 
+// Sensor telemetry time-series endpoint for Recharts visualization (Day 24)
+router.get('/shipments/:id/telemetry', queryController.getShipmentTelemetry);
+router.get('/shipments/:shipmentId/telemetry', queryController.getShipmentTelemetry);
+router.get('/shipment/:id/telemetry', queryController.getShipmentTelemetry);
+router.get('/shipment/:shipmentId/telemetry', queryController.getShipmentTelemetry);
+
 module.exports = router;

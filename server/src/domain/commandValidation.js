@@ -33,6 +33,12 @@ function validateCommand(command) {
   } else if (command.type === COMMAND_TYPES.RECORD_TEMPERATURE_SPIKE) {
     if (command.temperature === undefined) throw new Error('temperature is required');
     if (command.threshold === undefined) throw new Error('threshold is required');
+    if (command.humidity !== undefined && (typeof command.humidity !== 'number' || isNaN(command.humidity) || command.humidity < 0 || command.humidity > 100)) {
+      throw new Error('humidity must be a valid percentage between 0 and 100');
+    }
+    if (command.batteryVoltage !== undefined && (typeof command.batteryVoltage !== 'number' || isNaN(command.batteryVoltage) || command.batteryVoltage < 0)) {
+      throw new Error('batteryVoltage must be a positive number');
+    }
   } else if (command.type === COMMAND_TYPES.ARRIVE_AT_PORT) {
     if (!command.port) throw new Error('port is required');
   }

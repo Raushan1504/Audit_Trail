@@ -97,7 +97,12 @@ export function buildOccCommandPayload(commandType, shipmentId, formData = {}, e
         type: OCC_COMMAND_TYPES.RECORD_TEMPERATURE_SPIKE,
         temperature: Number(formData.temperature),
         threshold: formData.threshold !== undefined ? Number(formData.threshold) : 4.0,
-        sensorId: formData.sensorId?.trim() || 'SENSOR-IOT-01'
+        sensorId: formData.sensorId?.trim() || 'SENSOR-IOT-01',
+        ...(formData.humidity !== undefined && formData.humidity !== '' && { humidity: Number(formData.humidity) }),
+        ...(formData.batteryVoltage !== undefined && formData.batteryVoltage !== '' && { batteryVoltage: Number(formData.batteryVoltage) }),
+        ...(formData.ambientTemp !== undefined && formData.ambientTemp !== '' && { ambientTemp: Number(formData.ambientTemp) }),
+        ...(formData.coordinates && { coordinates: formData.coordinates }),
+        ...(formData.gps && { gps: formData.gps })
       };
 
     case OCC_COMMAND_TYPES.ARRIVE_AT_PORT:
