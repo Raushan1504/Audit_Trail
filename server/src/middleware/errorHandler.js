@@ -55,11 +55,40 @@ function errorHandler(err, req, res, next) { // eslint-disable-line no-unused-va
     message = `Invalid format for field '${err.path}': ${err.value}`;
   }
 
+  // Handle ConcurrencyException / Optimistic Concurrency Violations
+  let conflict = null;
+  if (err.name === 'ConcurrencyException' || err.code === 'CONCURRENCY_CONFLICT' || (err.statusCode === 409 && err.details?.expectedVersion !== undefined)) {
+    statusCode = 409;
+    code = 'CONCURRENCY_CONFLICT';
+    message = err.message;
+    conflict = {
+      shipmentId: err.shipmentId || err.details?.shipmentId || null,
+      expectedVersion: err.expectedVersion !== undefined ? err.expectedVersion : (err.details?.expectedVersion ?? null),
+      currentVersion: err.currentVersion !== undefined ? err.currentVersion : (err.details?.currentVersion ?? null),
+      resolutionHint: err.resolutionHint || err.details?.resolutionHint || 'Reload latest shipment state and retry command with current version.',
+      modifiedBy: err.modifiedBy || err.details?.modifiedBy || 'concurrent_operator'
+    };
+  }
+
   // Handle MongoDB duplicate key errors (code 11000)
   if (err.code === 11000) {
     statusCode = 409;
-    code = 'DUPLICATE_KEY_ERROR';
-    message = 'Resource already exists with conflicting unique field';
+    const isVersionConflict = (err.keyPattern && err.keyPattern.aggregateId && err.keyPattern.version) ||
+      (err.message && err.message.includes('aggregateId_1_version_1'));
+    if (isVersionConflict) {
+      code = 'CONCURRENCY_CONFLICT';
+      message = 'Optimistic concurrency collision: aggregate version was already committed in event store';
+      conflict = {
+        shipmentId: err.keyValue?.aggregateId || null,
+        expectedVersion: err.keyValue?.version !== undefined ? err.keyValue.version - 1 : null,
+        currentVersion: err.keyValue?.version ?? null,
+        resolutionHint: 'The aggregate version was committed by a concurrent transaction. Fetch latest state and retry.',
+        modifiedBy: 'concurrent_operator'
+      };
+    } else {
+      code = 'DUPLICATE_KEY_ERROR';
+      message = 'Resource already exists with conflicting unique field';
+    }
   }
 
   // Handle Domain Command & State Transition Errors (operational client errors)
@@ -96,6 +125,10 @@ function errorHandler(err, req, res, next) { // eslint-disable-line no-unused-va
     statusCode: statusCode,
     details: details,
   };
+
+  if (conflict) {
+    responseBody.conflict = conflict;
+  }
 
   return res.status(statusCode).json(responseBody);
 }
