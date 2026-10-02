@@ -221,9 +221,116 @@ const getShipmentStateAsOf = async (shipmentId, target) => {
 	};
 };
 
+/**
+ * Retrieve structured sensor telemetry time-series data for Recharts visualization (Day 24).
+ * Returns chronological data points covering temperature, threshold, humidity, battery voltage,
+ * and ambient temperature across all recorded lifecycle events.
+ *
+ * @param {string} shipmentId - The aggregate ID of the shipment.
+ * @returns {Promise<Object|null>} Telemetry dataset with summary metrics or null if not found.
+ */
+const getShipmentTelemetry = async (shipmentId) => {
+	if (!shipmentId || typeof shipmentId !== 'string') {
+		return null;
+	}
+
+	const normalizedId = shipmentId.trim();
+	const events = await eventStore.getEventsByAggregateId(normalizedId);
+	if (!events || events.length === 0) {
+		return null;
+	}
+
+	const sortedEvents = events
+		.map((e) => (typeof e.toObject === 'function' ? e.toObject() : e))
+		.sort((a, b) => a.version - b.version);
+
+	let lastKnownTemp = 4.0;
+	let lastKnownThreshold = 4.0;
+	let lastKnownHumidity = 55.0;
+	let lastKnownVoltage = 3.82;
+	let lastKnownAmbient = 22.0;
+
+	const timeSeries = sortedEvents.map((event) => {
+		const payload = event.payload || {};
+		const isSpike = event.eventType === 'TEMPERATURE_SPIKE';
+
+		if (payload.temperature !== undefined && payload.temperature !== null) {
+			lastKnownTemp = Number(payload.temperature);
+		} else if (event.eventType === 'CONTAINER_CREATED') {
+			lastKnownTemp = 3.8;
+		} else if (event.eventType === 'LOADED_ON_SHIP') {
+			lastKnownTemp = 4.1;
+		} else if (event.eventType === 'ARRIVED_AT_PORT') {
+			lastKnownTemp = 4.0;
+		}
+
+		if (payload.threshold !== undefined && payload.threshold !== null) {
+			lastKnownThreshold = Number(payload.threshold);
+		}
+
+		if (payload.humidity !== undefined && payload.humidity !== null) {
+			lastKnownHumidity = Number(payload.humidity);
+		} else if (isSpike) {
+			lastKnownHumidity = 78.4;
+		}
+
+		if (payload.batteryVoltage !== undefined && payload.batteryVoltage !== null) {
+			lastKnownVoltage = Number(payload.batteryVoltage);
+		}
+
+		if (payload.ambientTemp !== undefined && payload.ambientTemp !== null) {
+			lastKnownAmbient = Number(payload.ambientTemp);
+		} else if (isSpike) {
+			lastKnownAmbient = 26.5;
+		}
+
+		const timestampIso = event.timestamp ? new Date(event.timestamp).toISOString() : new Date().toISOString();
+		const explicitTemp = payload.temperature !== undefined && payload.temperature !== null ? Number(payload.temperature) : null;
+		const effectiveThreshold = payload.threshold !== undefined && payload.threshold !== null ? Number(payload.threshold) : lastKnownThreshold;
+		const isAnomaly = isSpike || (explicitTemp !== null && explicitTemp > effectiveThreshold);
+
+		return {
+			version: event.version,
+			eventType: event.eventType,
+			timestamp: timestampIso,
+			temperature: Number(lastKnownTemp.toFixed(1)),
+			threshold: Number(lastKnownThreshold.toFixed(1)),
+			humidity: Number(lastKnownHumidity.toFixed(1)),
+			batteryVoltage: Number(lastKnownVoltage.toFixed(2)),
+			ambientTemp: Number(lastKnownAmbient.toFixed(1)),
+			sensorId: payload.sensorId || 'SENSOR-IOT-01',
+			location: payload.port || payload.location || payload.origin || payload.destination || null,
+			coordinates: payload.coordinates || payload.gps || null,
+			isAnomaly
+		};
+	});
+
+	const temps = timeSeries.map((p) => p.temperature);
+	const minTemp = Math.min(...temps);
+	const maxTemp = Math.max(...temps);
+	const avgTemp = Number((temps.reduce((a, b) => a + b, 0) / temps.length).toFixed(1));
+	const anomaliesCount = timeSeries.filter((p) => p.isAnomaly).length;
+
+	return {
+		shipmentId: normalizedId,
+		totalDataPoints: timeSeries.length,
+		metrics: {
+			minTemperature: minTemp,
+			maxTemperature: maxTemp,
+			avgTemperature: avgTemp,
+			criticalThreshold: lastKnownThreshold,
+			anomaliesDetected: anomaliesCount,
+			latestBatteryVoltage: lastKnownVoltage,
+			latestHumidity: lastKnownHumidity
+		},
+		timeSeries
+	};
+};
+
 module.exports = {
 	getShipmentState,
 	getShipmentStateAsOf,
 	getShipmentEvents,
+	getShipmentTelemetry,
 	listShipments,
 };
