@@ -221,15 +221,18 @@ const getShipmentStateAsOf = async (shipmentId, target) => {
 	};
 };
 
+const { detectEventAnomaly, resolveCargoProfile } = require('../domain/anomalyDetector');
+
 /**
- * Retrieve structured sensor telemetry time-series data for Recharts visualization (Day 24).
+ * Retrieve structured sensor telemetry time-series data for Recharts visualization (Day 24 & Day 25).
  * Returns chronological data points covering temperature, threshold, humidity, battery voltage,
- * and ambient temperature across all recorded lifecycle events.
+ * ambient temperature, and automated anomaly event correlations across lifecycle events.
  *
  * @param {string} shipmentId - The aggregate ID of the shipment.
+ * @param {Object} [options] - Optional query filters (anomaliesOnly, severity, cargoHint).
  * @returns {Promise<Object|null>} Telemetry dataset with summary metrics or null if not found.
  */
-const getShipmentTelemetry = async (shipmentId) => {
+const getShipmentTelemetry = async (shipmentId, options = {}) => {
 	if (!shipmentId || typeof shipmentId !== 'string') {
 		return null;
 	}
@@ -244,13 +247,18 @@ const getShipmentTelemetry = async (shipmentId) => {
 		.map((e) => (typeof e.toObject === 'function' ? e.toObject() : e))
 		.sort((a, b) => a.version - b.version);
 
+	// Extract cargo profile hint from creation event or options
+	const creationEvent = sortedEvents.find((e) => e.eventType === 'CONTAINER_CREATED');
+	const cargoHint = options.cargoHint || creationEvent?.payload?.cargo || 'PERISHABLE';
+	const cargoProfile = resolveCargoProfile(cargoHint);
+
 	let lastKnownTemp = 4.0;
-	let lastKnownThreshold = 4.0;
+	let lastKnownThreshold = cargoProfile.maxTemperature;
 	let lastKnownHumidity = 55.0;
 	let lastKnownVoltage = 3.82;
 	let lastKnownAmbient = 22.0;
 
-	const timeSeries = sortedEvents.map((event) => {
+	let timeSeries = sortedEvents.map((event) => {
 		const payload = event.payload || {};
 		const isSpike = event.eventType === 'TEMPERATURE_SPIKE';
 
@@ -287,10 +295,17 @@ const getShipmentTelemetry = async (shipmentId) => {
 		const timestampIso = event.timestamp ? new Date(event.timestamp).toISOString() : new Date().toISOString();
 		const explicitTemp = payload.temperature !== undefined && payload.temperature !== null ? Number(payload.temperature) : null;
 		const effectiveThreshold = payload.threshold !== undefined && payload.threshold !== null ? Number(payload.threshold) : lastKnownThreshold;
-		const isAnomaly = isSpike || (explicitTemp !== null && explicitTemp > effectiveThreshold);
+
+		// Day 25: Automated anomaly threshold detection and event correlation
+		const anomalyMeta = detectEventAnomaly(event, cargoProfile.type);
+		const isAnomaly = isSpike || anomalyMeta.isAnomaly || (explicitTemp !== null && explicitTemp > effectiveThreshold);
+		const severity = isAnomaly ? (anomalyMeta.severity !== 'NORMAL' ? anomalyMeta.severity : 'CRITICAL') : 'NORMAL';
+
+		const eventIdStr = String(event._id || event.id || `evt-${event.version}`);
 
 		return {
 			version: event.version,
+			eventId: eventIdStr,
 			eventType: event.eventType,
 			timestamp: timestampIso,
 			temperature: Number(lastKnownTemp.toFixed(1)),
@@ -301,18 +316,43 @@ const getShipmentTelemetry = async (shipmentId) => {
 			sensorId: payload.sensorId || 'SENSOR-IOT-01',
 			location: payload.port || payload.location || payload.origin || payload.destination || null,
 			coordinates: payload.coordinates || payload.gps || null,
-			isAnomaly
+			isAnomaly,
+			severity,
+			cargoProfile: cargoProfile.type,
+			breaches: anomalyMeta.breaches || [],
+			anomalySummary: anomalyMeta.summary,
+			// Day 25 Coincidence Linkage to domain event
+			coincidence: {
+				eventId: eventIdStr,
+				eventType: event.eventType,
+				version: event.version,
+				timestamp: timestampIso,
+				description: isAnomaly
+					? `Anomaly detected coinciding with ${event.eventType} event at version ${event.version}`
+					: `Nominal reading synchronized with ${event.eventType}`
+			}
 		};
 	});
 
+	// Apply optional query filters
+	if (options.anomaliesOnly || options.filter === 'anomalies') {
+		timeSeries = timeSeries.filter((p) => p.isAnomaly);
+	}
+
+	if (options.severity) {
+		const targetSev = String(options.severity).toUpperCase();
+		timeSeries = timeSeries.filter((p) => p.severity === targetSev);
+	}
+
 	const temps = timeSeries.map((p) => p.temperature);
-	const minTemp = Math.min(...temps);
-	const maxTemp = Math.max(...temps);
-	const avgTemp = Number((temps.reduce((a, b) => a + b, 0) / temps.length).toFixed(1));
+	const minTemp = temps.length > 0 ? Math.min(...temps) : 0;
+	const maxTemp = temps.length > 0 ? Math.max(...temps) : 0;
+	const avgTemp = temps.length > 0 ? Number((temps.reduce((a, b) => a + b, 0) / temps.length).toFixed(1)) : 0;
 	const anomaliesCount = timeSeries.filter((p) => p.isAnomaly).length;
 
 	return {
 		shipmentId: normalizedId,
+		cargoProfile: cargoProfile.type,
 		totalDataPoints: timeSeries.length,
 		metrics: {
 			minTemperature: minTemp,
@@ -327,10 +367,33 @@ const getShipmentTelemetry = async (shipmentId) => {
 	};
 };
 
+/**
+ * Day 25: Retrieve only correlated anomalies for a shipment.
+ * @param {string} shipmentId - The aggregate ID of the shipment.
+ * @param {Object} [options] - Optional filter options.
+ * @returns {Promise<Object|null>} Anomaly correlation dataset.
+ */
+const getCorrelatedAnomalies = async (shipmentId, options = {}) => {
+	const telemetry = await getShipmentTelemetry(shipmentId, { ...options, anomaliesOnly: true });
+	if (!telemetry) {
+		return null;
+	}
+
+	return {
+		shipmentId: telemetry.shipmentId,
+		cargoProfile: telemetry.cargoProfile,
+		totalAnomalies: telemetry.timeSeries.length,
+		criticalCount: telemetry.timeSeries.filter((a) => a.severity === 'CRITICAL').length,
+		warningCount: telemetry.timeSeries.filter((a) => a.severity === 'WARNING').length,
+		anomalies: telemetry.timeSeries
+	};
+};
+
 module.exports = {
 	getShipmentState,
 	getShipmentStateAsOf,
 	getShipmentEvents,
 	getShipmentTelemetry,
+	getCorrelatedAnomalies,
 	listShipments,
 };
