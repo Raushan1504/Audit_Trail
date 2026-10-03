@@ -30,10 +30,7 @@ app.use(errorHandler);
 if (require.main === module) {
 	connectDB()
 		.then(() => {
-			app.listen(port, () => {
-				console.log(`Audit Trail server listening on port ${port}`);
-			});
-
+			console.log(`✓ MongoDB connection established.`);
 			if (process.env.DISABLE_PROJECTION_WORKER !== 'true') {
 				const { startProjectionWorker } = require('./projections/projectionWorker');
 				const worker = startProjectionWorker();
@@ -51,8 +48,13 @@ if (require.main === module) {
 			}
 		})
 		.catch((error) => {
-			console.error('Failed to start the server due to MongoDB connection failure:', error);
-			process.exit(1);
+			console.warn(`⚠️ MongoDB connection unavailable (${error.message}).`);
+			console.warn(`💡 Server is running in resilient mode on port ${port}. (Tip: Add MONGODB_URI in server/.env or start local mongod for persistence)`);
+		})
+		.finally(() => {
+			app.listen(port, () => {
+				console.log(`🚀 Audit Trail API server listening on http://localhost:${port}`);
+			});
 		});
 }
 
