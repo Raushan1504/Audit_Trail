@@ -26,9 +26,7 @@ export default function SensorTelemetryChart({
   shipmentId,
   initialTelemetry = null,
   activeScrubberVersion = null,
-  highlightedVersion = null,
-  onPointClick,
-  onPointHover
+  onPointClick
 }) {
   const [telemetry, setTelemetry] = useState(initialTelemetry);
   const [loading, setLoading] = useState(false);
@@ -258,14 +256,6 @@ export default function SensorTelemetryChart({
             <AreaChart
               data={chartData}
               margin={{ top: 20, right: 30, left: 10, bottom: 20 }}
-              onMouseMove={(e) => {
-                if (e && e.activePayload && e.activePayload[0] && onPointHover) {
-                  onPointHover(e.activePayload[0].payload);
-                }
-              }}
-              onMouseLeave={() => {
-                if (onPointHover) onPointHover(null);
-              }}
               onClick={(e) => {
                 if (e && e.activePayload && e.activePayload[0] && onPointClick) {
                   onPointClick(e.activePayload[0].payload);
@@ -321,21 +311,6 @@ export default function SensorTelemetryChart({
                 />
               )}
 
-              {highlightedVersion && (
-                <ReferenceLine
-                  x={`v${highlightedVersion}`}
-                  stroke="#f43f5e"
-                  strokeWidth={2}
-                  strokeDasharray="3 3"
-                  label={{
-                    value: `TIMELINE v${highlightedVersion}`,
-                    fill: '#f43f5e',
-                    fontSize: 10,
-                    position: 'insideTopRight'
-                  }}
-                />
-              )}
-
               <Area
                 type="monotone"
                 dataKey="ambientTemp"
@@ -359,18 +334,7 @@ export default function SensorTelemetryChart({
               />
             </AreaChart>
           ) : metricView === 'humidity' ? (
-            <AreaChart
-              data={chartData}
-              margin={{ top: 20, right: 30, left: 10, bottom: 20 }}
-              onMouseMove={(e) => {
-                if (e && e.activePayload && e.activePayload[0] && onPointHover) {
-                  onPointHover(e.activePayload[0].payload);
-                }
-              }}
-              onMouseLeave={() => {
-                if (onPointHover) onPointHover(null);
-              }}
-            >
+            <AreaChart data={chartData} margin={{ top: 20, right: 30, left: 10, bottom: 20 }}>
               <defs>
                 <linearGradient id="humidityGrad" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#2dd4bf" stopOpacity={0.4} />
@@ -382,9 +346,6 @@ export default function SensorTelemetryChart({
               <YAxis unit="%" stroke="#94a3b8" domain={[0, 100]} />
               <Tooltip content={<CustomTooltip />} />
               <Legend />
-              {highlightedVersion && (
-                <ReferenceLine x={`v${highlightedVersion}`} stroke="#f43f5e" strokeDasharray="3 3" />
-              )}
               <Area
                 type="monotone"
                 dataKey="humidity"
@@ -395,26 +356,12 @@ export default function SensorTelemetryChart({
               />
             </AreaChart>
           ) : metricView === 'voltage' ? (
-            <LineChart
-              data={chartData}
-              margin={{ top: 20, right: 30, left: 10, bottom: 20 }}
-              onMouseMove={(e) => {
-                if (e && e.activePayload && e.activePayload[0] && onPointHover) {
-                  onPointHover(e.activePayload[0].payload);
-                }
-              }}
-              onMouseLeave={() => {
-                if (onPointHover) onPointHover(null);
-              }}
-            >
+            <LineChart data={chartData} margin={{ top: 20, right: 30, left: 10, bottom: 20 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.08)" />
               <XAxis dataKey="shortName" stroke="#94a3b8" />
               <YAxis unit="V" stroke="#94a3b8" domain={[3.0, 4.2]} />
               <Tooltip content={<CustomTooltip />} />
               <Legend />
-              {highlightedVersion && (
-                <ReferenceLine x={`v${highlightedVersion}`} stroke="#f43f5e" strokeDasharray="3 3" />
-              )}
               <Line
                 type="monotone"
                 dataKey="batteryVoltage"
@@ -425,27 +372,13 @@ export default function SensorTelemetryChart({
               />
             </LineChart>
           ) : (
-            <LineChart
-              data={chartData}
-              margin={{ top: 20, right: 30, left: 10, bottom: 20 }}
-              onMouseMove={(e) => {
-                if (e && e.activePayload && e.activePayload[0] && onPointHover) {
-                  onPointHover(e.activePayload[0].payload);
-                }
-              }}
-              onMouseLeave={() => {
-                if (onPointHover) onPointHover(null);
-              }}
-            >
+            <LineChart data={chartData} margin={{ top: 20, right: 30, left: 10, bottom: 20 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.08)" />
               <XAxis dataKey="shortName" stroke="#94a3b8" />
               <YAxis stroke="#94a3b8" />
               <Tooltip content={<CustomTooltip />} />
               <Legend />
               <ReferenceLine y={threshold} stroke="#ef4444" strokeDasharray="3 3" />
-              {highlightedVersion && (
-                <ReferenceLine x={`v${highlightedVersion}`} stroke="#f43f5e" strokeDasharray="3 3" />
-              )}
               <Line type="monotone" dataKey="temperature" name="Cargo Temp (°C)" stroke="#38bdf8" strokeWidth={3} />
               <Line type="monotone" dataKey="ambientTemp" name="Ambient Temp (°C)" stroke="#fbbf24" strokeWidth={2} />
               <Line type="monotone" dataKey="humidity" name="Humidity (%)" stroke="#2dd4bf" strokeWidth={2} />

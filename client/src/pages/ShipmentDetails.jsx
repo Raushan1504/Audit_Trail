@@ -94,7 +94,6 @@ function ShipmentDetails() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [isLooping, setIsLooping] = useState(false);
-  const [hoveredEventVersion, setHoveredEventVersion] = useState(null); // Day 25: Telemetry <-> Timeline synchronization
 
   const refreshShipmentData = () => {
     if (!shipmentId) return Promise.resolve();
@@ -338,15 +337,11 @@ function ShipmentDetails() {
         />
       )}
 
-      {/* Day 24 & Day 25: Recharts Sensor Telemetry & Event Timeline Overlay Synchronization */}
+      {/* Day 24: Recharts Sensor Telemetry & Time-Series Visualization */}
       {!loading && !error && shipmentData && (
         <SensorTelemetryChart
           shipmentId={shipmentId}
           activeScrubberVersion={isHistoricalActive ? replayStep : null}
-          highlightedVersion={hoveredEventVersion}
-          onPointHover={(point) => {
-            setHoveredEventVersion(point ? point.version : null);
-          }}
           onPointClick={(point) => {
             if (point && point.version) {
               handleStepChange(point.version);
@@ -379,10 +374,6 @@ function ShipmentDetails() {
             events={events}
             currentReplayStep={replayStep}
             onStepChange={handleStepChange}
-            highlightedVersion={hoveredEventVersion}
-            onEventHover={(ev) => {
-              setHoveredEventVersion(ev ? ev.version : null);
-            }}
           />
         </div>
       )}

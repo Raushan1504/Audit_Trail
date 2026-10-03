@@ -44,11 +44,4 @@ router.get('/shipments/:shipmentId/telemetry', queryController.getShipmentTeleme
 router.get('/shipment/:id/telemetry', queryController.getShipmentTelemetry);
 router.get('/shipment/:shipmentId/telemetry', queryController.getShipmentTelemetry);
 
-// Correlated sensor anomalies query endpoint (Day 25)
-router.get('/shipments/:id/anomalies', queryController.getShipmentAnomalies);
-router.get('/shipments/:shipmentId/anomalies', queryController.getShipmentAnomalies);
-router.get('/shipment/:id/anomalies', queryController.getShipmentAnomalies);
-router.get('/shipment/:shipmentId/anomalies', queryController.getShipmentAnomalies);
-
 module.exports = router;
-
