@@ -20,7 +20,13 @@ function formatPayload(payload) {
  * Renders the vertical chronological event stream with interactive timeline event jump interactions.
  * Users can click any event card or jump button to immediately jump the time scrubber to that exact point in time.
  */
-function EventTimeline({ events = [], onStepChange, currentReplayStep }) {
+function EventTimeline({
+  events = [],
+  onStepChange,
+  currentReplayStep,
+  highlightedVersion = null,
+  onEventHover
+}) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [activeStep, setActiveStep] = useState(null); // null means showing full latest state
   const [justJumpedStep, setJustJumpedStep] = useState(null);
@@ -202,6 +208,7 @@ function EventTimeline({ events = [], onStepChange, currentReplayStep }) {
       <div className="event-timeline-3d__stream" role="feed" aria-label="Chronological events list">
         {events.map((event, index) => {
           const stepNumber = index + 1;
+          const eventVersion = event.version ?? stepNumber;
           const isTempSpike = event.eventType === 'TEMPERATURE_SPIKE';
           const isGenesis = event.version === 1 || event.eventType === 'CONTAINER_CREATED';
           const isTerminal = event.eventType === 'ARRIVED_AT_PORT';
@@ -209,6 +216,7 @@ function EventTimeline({ events = [], onStepChange, currentReplayStep }) {
           const isPastReplayPoint = effectiveStep !== null && stepNumber <= effectiveStep;
           const isFutureReplayPoint = effectiveStep !== null && stepNumber > effectiveStep;
           const isJustJumped = justJumpedStep === stepNumber;
+          const isChartHovered = highlightedVersion !== null && (eventVersion === highlightedVersion || stepNumber === highlightedVersion);
 
           return (
             <div
@@ -217,8 +225,15 @@ function EventTimeline({ events = [], onStepChange, currentReplayStep }) {
                 ${isCurrentReplayPoint ? 'timeline-item-3d--active-step' : ''}
                 ${isFutureReplayPoint ? 'timeline-item-3d--future' : ''}
                 ${isJustJumped ? 'timeline-item-3d--just-jumped' : ''}
+                ${isChartHovered ? 'timeline-item-3d--chart-hovered' : ''}
               `}
               key={event._id || index}
+              onMouseEnter={() => {
+                if (onEventHover) onEventHover(event);
+              }}
+              onMouseLeave={() => {
+                if (onEventHover) onEventHover(null);
+              }}
               onClick={() => handleJumpToEvent(stepNumber, event.eventType)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
@@ -228,7 +243,7 @@ function EventTimeline({ events = [], onStepChange, currentReplayStep }) {
               }}
               tabIndex={0}
               role="button"
-              aria-label={`Jump time scrubber to Version ${event.version ?? stepNumber}: ${formatEventType(event.eventType)}`}
+              aria-label={`Jump time scrubber to Version ${eventVersion}: ${formatEventType(event.eventType)}`}
               aria-pressed={isCurrentReplayPoint}
               title="Click to jump time slider to this event snapshot"
             >
@@ -241,9 +256,9 @@ function EventTimeline({ events = [], onStepChange, currentReplayStep }) {
 
               {/* Glowing Marker */}
               <div
-                className={`timeline-item-3d__marker ${isCurrentReplayPoint ? 'marker--pulsing' : ''}`}
+                className={`timeline-item-3d__marker ${isCurrentReplayPoint ? 'marker--pulsing' : ''} ${isChartHovered ? 'marker--synced' : ''}`}
               >
-                <span className="marker-inner">{event.version ?? stepNumber}</span>
+                <span className="marker-inner">{eventVersion}</span>
               </div>
 
               {/* 3D Glassmorphic Card */}
@@ -260,6 +275,11 @@ function EventTimeline({ events = [], onStepChange, currentReplayStep }) {
                     )}
                     {isTempSpike && (
                       <span className="badge-pill badge-pill--anomaly">🔥 Thermal Spike Anomaly</span>
+                    )}
+                    {isChartHovered && (
+                      <span className={`badge-pill ${isTempSpike ? 'badge-pill--spike-synced' : 'badge-pill--chart-synced'}`}>
+                        {isTempSpike ? '🔥 ANOMALY CORRELATED' : '📡 TELEMETRY SYNCED'}
+                      </span>
                     )}
                     {isTerminal && (
                       <span className="badge-pill badge-pill--terminal">🏁 Final Destination</span>
