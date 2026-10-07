@@ -6,8 +6,14 @@
  */
 
 class AppError extends Error {
-  constructor(message, statusCode = 500, code = 'INTERNAL_SERVER_ERROR', details = null) {
+  constructor(
+    message,
+    statusCode = 500,
+    code = 'INTERNAL_SERVER_ERROR',
+    details = null
+  ) {
     super(message);
+
     this.name = this.constructor.name;
     this.statusCode = statusCode;
     this.status = statusCode;
@@ -38,63 +44,107 @@ class NotFoundError extends AppError {
 }
 
 class ConflictError extends AppError {
-  constructor(message = 'Resource already exists or conflict occurred', details = null) {
+  constructor(
+    message = 'Resource already exists or conflict occurred',
+    details = null
+  ) {
     super(message, 409, 'CONFLICT', details);
   }
 }
 
+/**
+ * Optimistic Concurrency Control exception.
+ *
+ * Supports both forms used by the application:
+ *
+ * 1. Aggregate version check:
+ *    new ConcurrencyException({
+ *      shipmentId,
+ *      expectedVersion,
+ *      currentVersion
+ *    })
+ *
+ * 2. Persistence collision:
+ *    new ConcurrencyException(message, {
+ *      shipmentId,
+ *      expectedVersion,
+ *      currentVersion,
+ *      modifiedBy,
+ *      resolutionHint
+ *    })
+ */
 class ConcurrencyException extends ConflictError {
-  constructor({ shipmentId, expectedVersion, currentVersion }) {
+  constructor(input, options = {}) {
+    let message;
+    let shipmentId;
+    let expectedVersion;
+    let currentVersion;
+    let modifiedBy;
+    let resolutionHint;
+
+    // Object-style constructor used by ShipmentAggregate.
+    if (
+      input &&
+      typeof input === 'object' &&
+      !Array.isArray(input)
+    ) {
+      shipmentId = input.shipmentId;
+      expectedVersion = input.expectedVersion;
+      currentVersion = input.currentVersion;
+      modifiedBy = input.modifiedBy;
+      resolutionHint = input.resolutionHint;
+      message = input.message;
+    } else {
+      // Message + details constructor used by persistence collision handling.
+      message = input;
+
+      shipmentId = options?.shipmentId;
+      expectedVersion = options?.expectedVersion;
+      currentVersion = options?.currentVersion;
+      modifiedBy = options?.modifiedBy;
+      resolutionHint = options?.resolutionHint;
+    }
+
+    const defaultMessage =
+      shipmentId !== undefined && shipmentId !== null
+        ? `Optimistic concurrency conflict on shipment '${shipmentId}': expected version ${expectedVersion}, but current database version is ${currentVersion}.`
+        : 'Optimistic concurrency conflict: aggregate was modified by a concurrent transaction.';
+
+    const defaultResolutionHint =
+      currentVersion !== undefined && currentVersion !== null
+        ? `Reload the latest shipment state (version ${currentVersion}) and retry your command with expectedVersion: ${currentVersion}.`
+        : 'Fetch the latest aggregate version and reapply your command.';
+
+    const finalResolutionHint =
+      resolutionHint || defaultResolutionHint;
+
+    const details = {
+      shipmentId: shipmentId ?? null,
+      expectedVersion: expectedVersion ?? null,
+      currentVersion: currentVersion ?? null,
+      ...(modifiedBy !== undefined && {
+        modifiedBy
+      }),
+      resolutionHint: finalResolutionHint,
+      resolution: finalResolutionHint
+    };
+
     super(
-      `Concurrency conflict for shipment ${shipmentId}: expected version ${expectedVersion}, current version ${currentVersion}`,
-      {
-        shipmentId,
-        expectedVersion,
-        currentVersion,
-        resolution: 'Reload the latest shipment state and retry the command.'
-      }
+      message || defaultMessage,
+      details
     );
 
     this.name = 'ConcurrencyException';
     this.code = 'CONCURRENCY_CONFLICT';
-  }
-}
 
-class ConcurrencyException extends ConflictError {
-  constructor(message, options = {}) {
-    const {
-      shipmentId = null,
-      expectedVersion = null,
-      currentVersion = null,
-      modifiedBy = 'concurrent_operator',
-      resolutionHint = null
-    } = typeof options === 'object' && options !== null ? options : {};
+    this.shipmentId = shipmentId ?? null;
+    this.expectedVersion = expectedVersion ?? null;
+    this.currentVersion = currentVersion ?? null;
+    this.modifiedBy = modifiedBy ?? null;
 
-    const defaultMsg = shipmentId
-      ? `Optimistic concurrency conflict on shipment '${shipmentId}': expected version ${expectedVersion}, but current database version is ${currentVersion}.`
-      : 'Optimistic concurrency conflict: aggregate was modified by a concurrent transaction.';
+    this.resolutionHint = finalResolutionHint;
 
-    super(message || defaultMsg);
-
-    this.name = 'ConcurrencyException';
-    this.code = 'CONCURRENCY_CONFLICT';
-    this.statusCode = 409;
-    this.shipmentId = shipmentId;
-    this.expectedVersion = expectedVersion;
-    this.currentVersion = currentVersion;
-    this.modifiedBy = modifiedBy;
-    this.resolutionHint = resolutionHint ||
-      (currentVersion !== null
-        ? `Reload the latest shipment state (version ${currentVersion}) and retry your command with expectedVersion: ${currentVersion}.`
-        : 'Fetch the latest aggregate version and reapply your command.');
-
-    this.details = {
-      shipmentId: this.shipmentId,
-      expectedVersion: this.expectedVersion,
-      currentVersion: this.currentVersion,
-      modifiedBy: this.modifiedBy,
-      resolutionHint: this.resolutionHint
-    };
+    this.details = details;
   }
 }
 
@@ -111,5 +161,5 @@ module.exports = {
   NotFoundError,
   ConflictError,
   ConcurrencyException,
-  InternalServerError,
+  InternalServerError
 };
