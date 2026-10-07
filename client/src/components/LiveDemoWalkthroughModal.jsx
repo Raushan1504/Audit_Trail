@@ -158,7 +158,7 @@ export default function LiveDemoWalkthroughModal({ isOpen, onClose, onSelectPres
 
         {/* Footer */}
         <div className="demo-modal-footer">
-          <span className="demo-footer-info">Engineering Team: Aman Kumar (Frontend) · Raushan Kumar (Backend) · Chhotadon (Domain)</span>
+          <span className="demo-footer-info">Engineering Team: Aman Kumar (Lead Forensic Analyst) · Raushan Kumar (Chief Architect & Tech Lead) · Yash Kamble (Lead Domain Architect)</span>
           <button type="button" className="demo-btn-close" onClick={onClose}>
             Close Guide
           </button>

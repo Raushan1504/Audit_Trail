@@ -1,6 +1,6 @@
 # Optimistic Concurrency Control (OCC) Specification
 **Audit Trail — Concurrency Invariants & HTTP 409 Resolution**  
-*Author: Person 1 (Domain Engineering) — Chhotadon*  
+*Author: Person 1 (Lead Domain Architect) — Yash Kamble (yk3144779@gmail.com)*  
 *Milestone: Day 28 Final Architectural Delivery*
 
 ---

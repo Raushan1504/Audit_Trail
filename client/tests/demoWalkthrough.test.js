@@ -51,6 +51,7 @@ describe('Day 28: Person 3 React - Live Demo Walkthrough & Forensic Viva Guide',
     assert.match(content, /Recharts/);
     assert.match(content, /Aman Kumar/);
     assert.match(content, /Raushan Kumar/);
+    assert.match(content, /Yash Kamble/);
     assert.match(content, /Chhotadon/);
   });
 });

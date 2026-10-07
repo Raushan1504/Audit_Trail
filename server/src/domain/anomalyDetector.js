@@ -1,6 +1,6 @@
 /**
  * Day 25: Automated Anomaly Threshold Detection
- * Person 1 (Domain): Chhotadon <yk3144779@gmail.com>
+ * Person 1 (Domain): Yash Kamble <yk3144779@gmail.com>
  *
  * Implements domain rules for evaluating cold-chain, environmental, and hardware telemetry
  * against strict cargo safety profiles (e.g. Frozen cargo <= -18°C, Pharma 2-8°C).
