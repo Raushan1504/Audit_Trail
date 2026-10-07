@@ -8,10 +8,20 @@ const { EVENT_TYPES } = require('../events/eventTypes');
  */
 function normalizeCargo(cargoVal) {
   if (cargoVal === null || cargoVal === undefined) return null;
-  if (typeof cargoVal === 'string') return cargoVal.trim();
-  if (typeof cargoVal === 'object') {
-    return (cargoVal.description || cargoVal.name || cargoVal.type || JSON.stringify(cargoVal)).trim();
+
+  if (typeof cargoVal === 'string') {
+    return cargoVal.trim();
   }
+
+  if (typeof cargoVal === 'object') {
+    return (
+      cargoVal.description ||
+      cargoVal.name ||
+      cargoVal.type ||
+      JSON.stringify(cargoVal)
+    ).trim();
+  }
+
   return String(cargoVal).trim();
 }
 
@@ -35,14 +45,34 @@ function projectEvent(priorState, event) {
     throw new Error('aggregateId is required');
   }
 
-  const timestamp = event.timestamp ? new Date(event.timestamp) : new Date();
+  const timestamp = event.timestamp
+    ? new Date(event.timestamp)
+    : new Date();
 
   const base = {
     shipmentId: event.aggregateId,
     status: priorState?.status ?? 'CREATED',
-    currentLocation: priorState?.currentLocation ?? priorState?.location ?? null,
+    currentLocation:
+      priorState?.currentLocation ??
+      priorState?.location ??
+      null,
+
+    // Existing temperature telemetry
     temperature: priorState?.temperature ?? null,
-    lastAppliedVersion: priorState?.lastAppliedVersion ?? priorState?.version ?? 0,
+
+    // Day 24: Environmental telemetry
+    humidity: priorState?.humidity ?? null,
+    batteryVoltage: priorState?.batteryVoltage ?? null,
+    ambientTemp: priorState?.ambientTemp ?? null,
+
+    // Day 24: GPS telemetry
+    coordinates: priorState?.coordinates ?? null,
+
+    lastAppliedVersion:
+      priorState?.lastAppliedVersion ??
+      priorState?.version ??
+      0,
+
     vessel: priorState?.vessel ?? null,
     cargo: normalizeCargo(priorState?.cargo),
     lastEventTimestamp: priorState?.lastEventTimestamp ?? null
@@ -53,15 +83,22 @@ function projectEvent(priorState, event) {
       return {
         ...base,
         status: 'CREATED',
-        cargo: normalizeCargo(event.payload?.cargo ?? base.cargo),
+        cargo: normalizeCargo(
+          event.payload?.cargo ?? base.cargo
+        ),
         currentLocation:
           event.payload?.origin ??
           event.payload?.location ??
           event.payload?.port ??
           base.currentLocation,
+
         temperature: null,
+
         vessel: null,
-        lastAppliedVersion: event.version ?? 1,
+
+        lastAppliedVersion:
+          event.version ?? 1,
+
         lastEventTimestamp: timestamp
       };
 
@@ -73,8 +110,15 @@ function projectEvent(priorState, event) {
           event.payload?.port ??
           event.payload?.location ??
           base.currentLocation,
-        vessel: event.payload?.vessel ?? base.vessel,
-        lastAppliedVersion: event.version ?? base.lastAppliedVersion + 1,
+
+        vessel:
+          event.payload?.vessel ??
+          base.vessel,
+
+        lastAppliedVersion:
+          event.version ??
+          base.lastAppliedVersion + 1,
+
         lastEventTimestamp: timestamp
       };
 
@@ -82,9 +126,37 @@ function projectEvent(priorState, event) {
       return {
         ...base,
         status: 'TEMPERATURE_SPIKE',
+
+        // Existing temperature telemetry
         temperature:
-          event.payload?.temperature ?? base.temperature,
-        lastAppliedVersion: event.version ?? base.lastAppliedVersion + 1,
+          event.payload?.temperature ??
+          base.temperature,
+
+        // Day 24: Environmental telemetry
+        humidity:
+          event.payload?.humidity ??
+          base.humidity,
+
+        batteryVoltage:
+          event.payload?.batteryVoltage ??
+          base.batteryVoltage,
+
+        ambientTemp:
+          event.payload?.ambientTemp ??
+          base.ambientTemp,
+
+        // Day 24: GPS telemetry
+        // `coordinates` is the canonical read-model field.
+        // `gps` is supported as a fallback for existing event payloads.
+        coordinates:
+          event.payload?.coordinates ??
+          event.payload?.gps ??
+          base.coordinates,
+
+        lastAppliedVersion:
+          event.version ??
+          base.lastAppliedVersion + 1,
+
         lastEventTimestamp: timestamp
       };
 
@@ -92,16 +164,23 @@ function projectEvent(priorState, event) {
       return {
         ...base,
         status: 'ARRIVED',
+
         currentLocation:
           event.payload?.port ??
           event.payload?.location ??
           base.currentLocation,
-        lastAppliedVersion: event.version ?? base.lastAppliedVersion + 1,
+
+        lastAppliedVersion:
+          event.version ??
+          base.lastAppliedVersion + 1,
+
         lastEventTimestamp: timestamp
       };
 
     default:
-      throw new Error(`Unsupported event type: ${event.eventType}`);
+      throw new Error(
+        `Unsupported event type: ${event.eventType}`
+      );
   }
 }
 
@@ -110,18 +189,32 @@ function projectEvent(priorState, event) {
  * Enforces idempotency and catches up version gaps if out-of-order events occur.
  *
  * @param {Object} event - The domain event to apply
- * @returns {Promise<{ applied: boolean, reason: string, version: number, shipmentId: string, readModel: Object }>}
+ * @returns {Promise<{
+ *   applied: boolean,
+ *   reason: string,
+ *   version: number,
+ *   shipmentId: string,
+ *   readModel: Object
+ * }>}
  */
 async function applyEventToReadModel(event) {
   if (!event || !event.aggregateId || !event.eventType) {
-    throw new Error('Valid domain event with aggregateId and eventType is required');
+    throw new Error(
+      'Valid domain event with aggregateId and eventType is required'
+    );
   }
 
   const shipmentId = event.aggregateId;
-  let readModel = await ShipmentReadModel.findOne({ shipmentId });
+
+  let readModel = await ShipmentReadModel.findOne({
+    shipmentId
+  });
 
   // 1. Idempotency Check: if this version was already processed, skip
-  if (readModel && readModel.lastAppliedVersion >= event.version) {
+  if (
+    readModel &&
+    readModel.lastAppliedVersion >= event.version
+  ) {
     return {
       applied: false,
       reason: 'ALREADY_APPLIED',
@@ -131,18 +224,29 @@ async function applyEventToReadModel(event) {
     };
   }
 
-  // 2. Version Gap Detection: if event.version > lastAppliedVersion + 1, catch up intermediate events
-  const currentVersion = readModel ? readModel.lastAppliedVersion : 0;
+  // 2. Version Gap Detection: if event.version > lastAppliedVersion + 1,
+  // catch up intermediate events
+  const currentVersion = readModel
+    ? readModel.lastAppliedVersion
+    : 0;
+
   if (event.version > currentVersion + 1) {
     const missingEvents = await Event.find({
       aggregateId: shipmentId,
-      version: { $gt: currentVersion, $lte: event.version }
+      version: {
+        $gt: currentVersion,
+        $lte: event.version
+      }
     }).sort({ version: 1 });
 
     if (missingEvents && missingEvents.length > 0) {
       for (const ev of missingEvents) {
-        readModel = await applySingleEvent(readModel, ev);
+        readModel = await applySingleEvent(
+          readModel,
+          ev
+        );
       }
+
       return {
         applied: true,
         reason: 'CAUGHT_UP_AND_APPLIED',
@@ -154,7 +258,10 @@ async function applyEventToReadModel(event) {
   }
 
   // 3. Normal sequential application
-  readModel = await applySingleEvent(readModel, event);
+  readModel = await applySingleEvent(
+    readModel,
+    event
+  );
 
   return {
     applied: true,
@@ -170,30 +277,56 @@ async function applyEventToReadModel(event) {
  */
 async function applySingleEvent(readModel, event) {
   const currentSnapshot = readModel
-    ? (typeof readModel.toObject === 'function' ? readModel.toObject() : readModel)
+    ? (
+        typeof readModel.toObject === 'function'
+          ? readModel.toObject()
+          : readModel
+      )
     : null;
 
-  const nextSnapshot = projectEvent(currentSnapshot, event);
+  const nextSnapshot = projectEvent(
+    currentSnapshot,
+    event
+  );
 
   if (!readModel) {
-    const existing = await ShipmentReadModel.findOne({ shipmentId: event.aggregateId });
+    const existing = await ShipmentReadModel.findOne({
+      shipmentId: event.aggregateId
+    });
+
     if (existing) {
-      if (existing.lastAppliedVersion >= event.version) {
+      if (
+        existing.lastAppliedVersion >= event.version
+      ) {
         return existing;
       }
-      Object.assign(existing, nextSnapshot);
+
+      Object.assign(
+        existing,
+        nextSnapshot
+      );
+
       return await existing.save();
     }
-    const created = new ShipmentReadModel(nextSnapshot);
+
+    const created = new ShipmentReadModel(
+      nextSnapshot
+    );
+
     return await created.save();
   }
 
-  Object.assign(readModel, nextSnapshot);
+  Object.assign(
+    readModel,
+    nextSnapshot
+  );
+
   return await readModel.save();
 }
 
 /**
- * Replays all historical events for a shipmentId from scratch and rebuilds its read model.
+ * Replays all historical events for a shipmentId from scratch
+ * and rebuilds its read model.
  *
  * @param {string} shipmentId - Shipment aggregate ID
  * @returns {Promise<Object|null>} Rebuilt read model document
@@ -203,25 +336,41 @@ async function rebuildShipmentReadModel(shipmentId) {
     throw new Error('shipmentId is required');
   }
 
-  const eventsQuery = Event.find({ aggregateId: shipmentId });
-  const events = typeof eventsQuery.sort === 'function'
-    ? await eventsQuery.sort({ version: 1 })
-    : await eventsQuery;
+  const eventsQuery = Event.find({
+    aggregateId: shipmentId
+  });
+
+  const events =
+    typeof eventsQuery.sort === 'function'
+      ? await eventsQuery.sort({ version: 1 })
+      : await eventsQuery;
 
   if (!events || events.length === 0) {
     return null;
   }
 
   let projected = null;
+
   for (const event of events) {
-    projected = projectEvent(projected, event);
+    projected = projectEvent(
+      projected,
+      event
+    );
   }
 
-  let readModel = await ShipmentReadModel.findOne({ shipmentId });
+  let readModel = await ShipmentReadModel.findOne({
+    shipmentId
+  });
+
   if (!readModel) {
-    readModel = new ShipmentReadModel(projected);
+    readModel = new ShipmentReadModel(
+      projected
+    );
   } else {
-    Object.assign(readModel, projected);
+    Object.assign(
+      readModel,
+      projected
+    );
   }
 
   return await readModel.save();
@@ -235,7 +384,12 @@ async function rebuildShipmentReadModel(shipmentId) {
  * @param {boolean} [options.clean=false] - Whether to wipe the read model collection before replay
  * @param {string} [options.shipmentId] - If provided, rebuilds only this specific shipment
  * @param {boolean} [options.dryRun=false] - If true, computes projection without saving to DB
- * @returns {Promise<{ totalShipments: number, rebuiltCount: number, totalEventsReplayed: number, shipments: Array }>}
+ * @returns {Promise<{
+ *   totalShipments: number,
+ *   rebuiltCount: number,
+ *   totalEventsReplayed: number,
+ *   shipments: Array
+ * }>}
  */
 async function rebuildAllReadModels(options = {}) {
   if (options.clean && !options.dryRun) {
@@ -243,20 +397,30 @@ async function rebuildAllReadModels(options = {}) {
   }
 
   let aggregateIds;
+
   if (options.shipmentId) {
-    aggregateIds = [options.shipmentId.trim()];
+    aggregateIds = [
+      options.shipmentId.trim()
+    ];
   } else {
-    aggregateIds = await Event.distinct('aggregateId');
+    aggregateIds =
+      await Event.distinct('aggregateId');
   }
 
   const results = [];
   let totalEventsReplayed = 0;
 
   for (const shipmentId of aggregateIds) {
-    const eventsQuery = Event.find({ aggregateId: shipmentId });
-    const events = typeof eventsQuery.sort === 'function'
-      ? await eventsQuery.sort({ version: 1 })
-      : await eventsQuery;
+    const eventsQuery = Event.find({
+      aggregateId: shipmentId
+    });
+
+    const events =
+      typeof eventsQuery.sort === 'function'
+        ? await eventsQuery.sort({
+            version: 1
+          })
+        : await eventsQuery;
 
     if (!events || events.length === 0) {
       continue;
@@ -265,20 +429,35 @@ async function rebuildAllReadModels(options = {}) {
     totalEventsReplayed += events.length;
 
     let projected = null;
+
     for (const event of events) {
-      projected = projectEvent(projected, event);
+      projected = projectEvent(
+        projected,
+        event
+      );
     }
 
     if (options.dryRun) {
       results.push(projected);
     } else {
-      let readModel = await ShipmentReadModel.findOne({ shipmentId });
+      let readModel =
+        await ShipmentReadModel.findOne({
+          shipmentId
+        });
+
       if (!readModel) {
-        readModel = new ShipmentReadModel(projected);
+        readModel =
+          new ShipmentReadModel(projected);
       } else {
-        Object.assign(readModel, projected);
+        Object.assign(
+          readModel,
+          projected
+        );
       }
-      const saved = await readModel.save();
+
+      const saved =
+        await readModel.save();
+
       results.push(saved);
     }
   }

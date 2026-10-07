@@ -4,8 +4,9 @@ const mongoose = require('mongoose');
  * ShipmentReadModel Schema
  *
  * Denormalized read-optimized projection model for shipments in the CQRS architecture.
- * Maintains the current snapshot state (location, status, temperature, version) to serve
- * high-speed O(1) queries on the dashboard without requiring full chronological event replay.
+ * Maintains the current snapshot state (location, status, telemetry, temperature, version)
+ * to serve high-speed O(1) queries on the dashboard without requiring full chronological
+ * event replay.
  */
 const ShipmentReadModelSchema = new mongoose.Schema(
   {
@@ -15,6 +16,7 @@ const ShipmentReadModelSchema = new mongoose.Schema(
       trim: true,
       alias: 'aggregateId'
     },
+
     status: {
       type: String,
       required: [true, 'status is required'],
@@ -24,16 +26,52 @@ const ShipmentReadModelSchema = new mongoose.Schema(
       },
       default: 'CREATED'
     },
+
     currentLocation: {
       type: String,
       default: null,
       trim: true,
       alias: 'location'
     },
+
     temperature: {
       type: Number,
       default: null
     },
+
+    // ── Day 24: Environmental Telemetry ──────────────────────────────
+    humidity: {
+      type: Number,
+      default: null,
+      min: [0, 'humidity cannot be negative'],
+      max: [100, 'humidity cannot exceed 100']
+    },
+
+    batteryVoltage: {
+      type: Number,
+      default: null,
+      min: [0, 'batteryVoltage cannot be negative']
+    },
+
+    ambientTemp: {
+      type: Number,
+      default: null
+    },
+
+    // ── Day 24: GPS Coordinates ───────────────────────────────────────
+    coordinates: {
+      lat: {
+        type: Number,
+        min: [-90, 'latitude cannot be below -90'],
+        max: [90, 'latitude cannot exceed 90']
+      },
+      lng: {
+        type: Number,
+        min: [-180, 'longitude cannot be below -180'],
+        max: [180, 'longitude cannot exceed 180']
+      }
+    },
+
     lastAppliedVersion: {
       type: Number,
       required: [true, 'lastAppliedVersion is required'],
@@ -41,28 +79,39 @@ const ShipmentReadModelSchema = new mongoose.Schema(
       min: [0, 'lastAppliedVersion cannot be negative'],
       alias: 'version'
     },
+
     vessel: {
       type: String,
       default: null,
       trim: true
     },
+
     cargo: {
       type: String,
       default: null,
       trim: true,
       set: (val) => {
         if (val === null || val === undefined) return null;
+
         if (typeof val === 'object') {
-          return (val.description || val.name || val.type || JSON.stringify(val)).trim();
+          return (
+            val.description ||
+            val.name ||
+            val.type ||
+            JSON.stringify(val)
+          ).trim();
         }
+
         return String(val).trim();
       }
     },
+
     lastEventTimestamp: {
       type: Date,
       default: null
     }
   },
+
   {
     timestamps: true,
     versionKey: false,
@@ -72,8 +121,12 @@ const ShipmentReadModelSchema = new mongoose.Schema(
 );
 
 // ── Indexes for High-Performance Queries ──────────────────────────────
+
 // Primary unique index for fast O(1) shipment lookups by aggregate/shipment ID
-ShipmentReadModelSchema.index({ shipmentId: 1 }, { unique: true });
+ShipmentReadModelSchema.index(
+  { shipmentId: 1 },
+  { unique: true }
+);
 
 // Index for filtering shipments by operational status (CREATED, LOADED, etc.)
 ShipmentReadModelSchema.index({ status: 1 });
@@ -88,11 +141,20 @@ ShipmentReadModelSchema.index({ temperature: 1 });
 ShipmentReadModelSchema.index({ lastAppliedVersion: 1 });
 
 // Compound index for dashboard views filtered by status and sorted by latest update
-ShipmentReadModelSchema.index({ status: 1, updatedAt: -1 });
+ShipmentReadModelSchema.index({
+  status: 1,
+  updatedAt: -1
+});
 
 // Compound index for idempotency and version check during projection updates
-ShipmentReadModelSchema.index({ shipmentId: 1, lastAppliedVersion: 1 });
+ShipmentReadModelSchema.index({
+  shipmentId: 1,
+  lastAppliedVersion: 1
+});
 
-const ShipmentReadModel = mongoose.model('ShipmentReadModel', ShipmentReadModelSchema);
+const ShipmentReadModel = mongoose.model(
+  'ShipmentReadModel',
+  ShipmentReadModelSchema
+);
 
 module.exports = ShipmentReadModel;
