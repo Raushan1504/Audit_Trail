@@ -5,9 +5,22 @@ const { connectDB } = require('./config/db');
 const commandRoutes = require('./commands/commandRoutes');
 const queryRoutes = require('./queries/queryRoutes');
 const auditRoutes = require('./audit/auditRoutes');
-const { notFoundHandler, errorHandler, immutabilityGuard } = require('./middleware');
+const {
+	notFoundHandler,
+	errorHandler,
+	immutabilityGuard,
+	createRateLimiter,
+	cacheControlMiddleware,
+	securityHeadersMiddleware
+} = require('./middleware');
 const app = express();
 const port = Number(process.env.PORT) || 5000;
+
+// Security and performance middleware (Day 26)
+app.use(securityHeadersMiddleware);
+app.use(cacheControlMiddleware);
+app.use(createRateLimiter({ maxRequests: 200 }));
+
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

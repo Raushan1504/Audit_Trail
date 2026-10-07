@@ -11,11 +11,18 @@ const {
   InternalServerError,
 } = require('../utils/errors');
 
+const { createRateLimiter } = require('./rateLimiter');
+const { cacheControlMiddleware } = require('./cacheControl');
+const { securityHeadersMiddleware } = require('./securityHeaders');
+
 module.exports = {
   errorHandler,
   notFoundHandler,
   validateRequest,
   immutabilityGuard,
+  createRateLimiter,
+  cacheControlMiddleware,
+  securityHeadersMiddleware,
   AppError,
   ValidationError,
   BadRequestError,
