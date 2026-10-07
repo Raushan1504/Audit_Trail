@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: audit-trail-backend
+    runtime: node
+    plan: free
+    region: oregon
+    rootDir: server
+    buildCommand: npm install --omit=dev
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: MONGODB_URI
+        sync: false # Set securely in Render Dashboard (MongoDB Atlas URI)
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DISABLE_PROJECTION_WORKER
+        value: false

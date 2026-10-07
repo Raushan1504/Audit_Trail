@@ -226,3 +226,35 @@
   color: var(--theme-text-secondary, #94a3b8);
   margin: 0;
 }
+
+/* Day 26: Responsive Layout Audit & Mobile Optimization */
+@media (max-width: 1024px) {
+  .details-container {
+    padding: 16px 20px 48px;
+    gap: 20px;
+  }
+  .details-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+}
+
+@media (max-width: 640px) {
+  .details-container {
+    padding: 12px 14px 40px;
+    gap: 16px;
+  }
+  .details-header-title h1 {
+    font-size: 22px;
+  }
+  .details-meta-badges {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .details-error-card {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 16px;
+  }
+}

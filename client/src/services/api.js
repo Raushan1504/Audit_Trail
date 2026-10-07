@@ -1,4 +1,9 @@
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const BASE_URL =
+  import.meta.env.VITE_API_URL ||
+  import.meta.env.VITE_API_BASE_URL ||
+  (typeof window !== 'undefined' && window.location.origin.includes('vercel.app')
+    ? `${window.location.origin}/api`
+    : 'http://localhost:5000/api');
 
 async function handleResponse(response) {
   if (!response.ok) {

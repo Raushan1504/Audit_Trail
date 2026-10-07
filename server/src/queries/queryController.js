@@ -117,11 +117,17 @@ const getShipmentStateAsOf = async (request, response, next) => {
  * GET /api/queries/shipments/:id/telemetry
  * GET /api/queries/shipments/:shipmentId/telemetry
  * Returns structured sensor telemetry time-series points and metrics for Recharts visualization.
+ * Supports query parameters: ?filter=anomalies | ?anomaliesOnly=true | ?severity=CRITICAL
  */
 const getShipmentTelemetry = async (request, response, next) => {
 	try {
 		const shipmentId = request.params.id || request.params.shipmentId;
-		const telemetry = await queryService.getShipmentTelemetry(shipmentId);
+		const options = {
+			anomaliesOnly: request.query.anomaliesOnly === 'true' || request.query.filter === 'anomalies',
+			severity: request.query.severity,
+			cargoHint: request.query.cargo
+		};
+		const telemetry = await queryService.getShipmentTelemetry(shipmentId, options);
 
 		if (!telemetry) {
 			return response.status(404).json({
@@ -139,10 +145,42 @@ const getShipmentTelemetry = async (request, response, next) => {
 	}
 };
 
+/**
+ * GET /api/queries/shipments/:id/anomalies
+ * GET /api/queries/shipments/:shipmentId/anomalies
+ * Day 25: Returns only sensor anomalies correlated with domain events.
+ */
+const getShipmentAnomalies = async (request, response, next) => {
+	try {
+		const shipmentId = request.params.id || request.params.shipmentId;
+		const options = {
+			severity: request.query.severity,
+			cargoHint: request.query.cargo
+		};
+		const anomalies = await queryService.getCorrelatedAnomalies(shipmentId, options);
+
+		if (!anomalies) {
+			return response.status(404).json({
+				success: false,
+				message: `Shipment '${shipmentId}' not found.`,
+			});
+		}
+
+		return response.status(200).json({
+			success: true,
+			data: anomalies,
+		});
+	} catch (error) {
+		next(error);
+	}
+};
+
 module.exports = {
 	getShipmentState,
 	getShipmentStateAsOf,
 	getShipmentEvents,
 	getShipmentTelemetry,
+	getShipmentAnomalies,
 	listShipments,
 };
+
