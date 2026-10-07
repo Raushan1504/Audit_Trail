@@ -38,8 +38,25 @@ class NotFoundError extends AppError {
 }
 
 class ConflictError extends AppError {
-  constructor(message = 'Resource already exists or conflict occurred') {
-    super(message, 409, 'CONFLICT');
+  constructor(message = 'Resource already exists or conflict occurred', details = null) {
+    super(message, 409, 'CONFLICT', details);
+  }
+}
+
+class ConcurrencyException extends ConflictError {
+  constructor({ shipmentId, expectedVersion, currentVersion }) {
+    super(
+      `Concurrency conflict for shipment ${shipmentId}: expected version ${expectedVersion}, current version ${currentVersion}`,
+      {
+        shipmentId,
+        expectedVersion,
+        currentVersion,
+        resolution: 'Reload the latest shipment state and retry the command.'
+      }
+    );
+
+    this.name = 'ConcurrencyException';
+    this.code = 'CONCURRENCY_CONFLICT';
   }
 }
 
@@ -55,5 +72,6 @@ module.exports = {
   BadRequestError,
   NotFoundError,
   ConflictError,
+  ConcurrencyException,
   InternalServerError,
 };
