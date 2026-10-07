@@ -62,10 +62,14 @@ When a concurrency collision is detected, the API returns:
 
 ---
 
-## 4. Frontend Recovery Pattern
+## 4. Client Recovery Pattern
 
-The React Forensic Dashboard (`ConcurrencyConflictModal.jsx`) captures this response:
-1. Freezes the submission attempt.
-2. Displays side-by-side version disparity (Asserted: v2 vs Confirmed: v3).
-3. Offers a **1-Click "Refresh with Latest State"** recovery button.
-4. Auto-synchronizes the form state with the latest confirmed version vector, enabling zero-data-loss retries.
+Clients consuming the OCC API should treat `409 CONCURRENCY_CONFLICT` as a recoverable optimistic-lock failure:
+
+1. Preserve the rejected command and its asserted `expectedVersion`.
+2. Display the confirmed `currentVersion` and conflict details returned by the API.
+3. Refresh the latest shipment state from the read model.
+4. Retry the command using the latest confirmed version as `expectedVersion`.
+5. Do not overwrite the conflicting event or mutate historical event records.
+
+This recovery pattern allows a client to resolve stale commands without modifying the immutable event history.
