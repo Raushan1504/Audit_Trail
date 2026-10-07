@@ -1,11 +1,15 @@
-import { Link, useLocation } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import ThemeSelector from './ThemeSelector';
+import LiveDemoWalkthroughModal from './LiveDemoWalkthroughModal';
 import './Navbar.css';
 
 function Navbar() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
 
   const isHome = location.pathname === '/';
   const isDashboard = location.pathname.startsWith('/dashboard') || location.pathname.startsWith('/shipment');
@@ -43,6 +47,15 @@ function Navbar() {
 
         {/* Right Actions & Operator Status */}
         <div className="top-navbar__actions">
+          <button
+            type="button"
+            className="btn-demo-walkthrough"
+            onClick={() => setIsDemoModalOpen(true)}
+            title="Open Live Viva Demo Guide & Forensic Walkthrough"
+          >
+            🎓 Viva Demo
+          </button>
+
           <div className="navbar-status-indicator" title="MongoDB Event Store: Write-Once / Read-Many">
             <span className="status-dot" />
             <span className="status-text">Append-Only Active</span>
@@ -82,6 +95,14 @@ function Navbar() {
           <ThemeSelector />
         </div>
       </div>
+
+      <LiveDemoWalkthroughModal
+        isOpen={isDemoModalOpen}
+        onClose={() => setIsDemoModalOpen(false)}
+        onSelectPreset={(shipmentId) => {
+          navigate(`/shipment/${shipmentId}`);
+        }}
+      />
     </nav>
   );
 }
