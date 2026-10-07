@@ -47,7 +47,7 @@ function validateCommand(command) {
 }
 function validateStateTransition(currentState, commandType) {
   const status = currentState?.status;
-  const version = currentState?.version || 0;
+  const version = currentState?.version !== undefined ? currentState.version : (currentState?.lastAppliedVersion || 0);
   if (version === 0) {
     if (commandType !== COMMAND_TYPES.CREATE_CONTAINER) {
       throw new Error(`Shipment must be created first before executing command: ${commandType}`);
