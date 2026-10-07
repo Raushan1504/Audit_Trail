@@ -24,7 +24,7 @@ function Navbar() {
           <span className="brand-text">
             AUDIT<span className="brand-accent">TRAIL</span>
           </span>
-          <span className="brand-badge">v1.0 · Day 23</span>
+          <span className="brand-badge">v1.0 · Day 28 Final</span>
         </Link>
 
         {/* Primary Navigation Links */}

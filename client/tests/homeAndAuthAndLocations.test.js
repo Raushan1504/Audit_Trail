@@ -114,6 +114,12 @@ describe('Day 23 Features: Forensic Operator Authentication & Demo Profiles', ()
     assert.equal(raushan.name, 'Raushan Kumar');
     assert.equal(raushan.email, 'raushan@audittrail.io');
     assert.ok(raushan.role.includes('Chief Auditor'));
+
+    const yash = DEMO_OPERATORS.find((op) => op.id === 'op_yash');
+    assert.ok(yash, 'Yash Kamble operator must be defined');
+    assert.equal(yash.name, 'Yash Kamble');
+    assert.equal(yash.email, 'yash@audittrail.io');
+    assert.ok(yash.role.includes('Domain Architect'));
   });
 
   it('validates operator credentials correctly', () => {

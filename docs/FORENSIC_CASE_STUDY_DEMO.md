@@ -1,6 +1,6 @@
 # Forensic Case Study & Live Evaluation Walkthrough
 **Audit Trail — Cold-Chain Spoilage Investigation Guide**  
-*Project Team: Aman Kumar (Frontend), Raushan Kumar (Backend), Chhotadon (Domain Aggregate)*  
+*Project Team: Aman Kumar (Lead Forensic Analyst / Person 3), Raushan Kumar (Chief Architect & Tech Lead / Person 2), Yash Kamble (Chhotadon - Lead Domain Architect / Person 1)*  
 *Milestone: Day 28 Final Architectural Delivery*
 
 ---

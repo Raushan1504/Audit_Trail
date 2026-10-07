@@ -1,6 +1,6 @@
 # Projection Worker & Read Model Architecture Guide
 **Audit Trail — CQRS Projection Engine & Real-Time Sync**  
-*Author: Person 2 (Backend & Database Architecture) — Raushan Kumar*  
+*Author: Person 2 (Chief Architect & Tech Lead) — Raushan Kumar*  
 *Milestone: Day 28 Final Architectural Delivery*
 
 ---

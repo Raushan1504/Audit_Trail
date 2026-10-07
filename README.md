@@ -111,13 +111,25 @@ $$\text{3 Team Members} \times \text{1 Meaningful Commit / Day} \times \text{28 
 
 ---
 
-## 4. Team Ownership & Responsibilities
+## 4. Team Leadership & Engineering Roster
 
-| Role | Primary Ownership | Phase 1 Completed (Days 1–14) | Phase 2 Scope (Days 15–28 / Rest of Month) |
+### Core Engineering Leadership
+
+| Role & Designation | Member | Contact & Profile | Core Engineering Focus |
 |---|---|---|---|
-| **Person 1** | **Event Sourcing & Domain Architecture** | Aggregate root, Domain events, Replay fold engine, Immutability guards | Time-travel state reconstruction (`as-of`), OCC domain validation rules, version conflict detection, temporal delta algorithms |
-| **Person 2** | **CQRS, MongoDB & Background Workers** | Express setup, Mongoose Event model, CQRS routes, Immutability verification tests | Background projection worker, `ShipmentReadModel` schema & pipeline, OCC persistence verification, production deployment config |
-| **Person 3** | **React Forensic Dashboard & Visualizations** | Search bar, initial layout, chronological timeline, current state card | State-scrubbing slider UI ("Rewind Time"), Recharts sensor graphs (temperature & shock spikes), OCC conflict toast alerts, mobile responsiveness |
+| **Chief Architect & Tech Lead**<br>*(Person 2)* | **Raushan Kumar** | 📧 `rashukumar1504@gmail.com`<br>🐙 [@Raushan1504](https://github.com/Raushan1504) | **CQRS Architecture, Express API & Background Workers**<br>Command-Query segregation (`/api/commands` vs `/api/queries`), MongoDB Event Store, Asynchronous Background Projection Worker, `ShipmentReadModel` cache pipeline, sub-10ms query optimization, HTTP compression & caching, Docker containerization, and Render/Railway cloud backend deployment. |
+| **Lead Domain Architect**<br>*(Person 1)* | **Yash Kamble** | 📧 `yk3144779@gmail.com`<br>🐙 *Chhotadon* | **Event Sourcing Core, Domain Invariants & OCC**<br>Immutable Aggregate Roots, deterministic pure event fold engine (`replayShipmentEvents`), point-in-time state reconstruction (`reconstructStateAsOf`), Optimistic Concurrency Control (OCC) invariants, automated IoT anomaly threshold detection, comprehensive multi-scenario seed generators, full-system E2E testing suite, Domain Event Catalog & OCC Technical Specifications. |
+| **Lead Forensic Analyst**<br>*(Person 3)* | **Aman Kumar** | 📧 `ak1276054@gmail.com`<br>🐙 [@amankr-55](https://github.com/amankr-55) | **React 19 Frontend & Forensic Visualizations**<br>Forensic Console dashboard, chronological Event Timeline, interactive Time-Scrubbing Slider ("Rewind Time"), automated step-by-step playback controls, Recharts sensor telemetry (temperature & humidity), tooltip-to-timeline synchronized highlighting, OCC 409 conflict recovery modal, responsive/A11y design, Vercel SPA deployment & live Viva walkthrough guide. |
+
+---
+
+### Module Ownership Matrix Across Project Phases
+
+| Engineering Area | Primary Lead | Phase 1 Completed (Days 1–14) | Phase 2 Completed (Days 15–21) | Phase 3 Completed (Days 22–28) |
+|---|---|---|---|---|
+| **Domain Logic & Event Engine** | **Yash Kamble**<br>*(Person 1)* | Aggregate root, Domain events, Replay fold engine, Immutability guards | Projection state contract, pure projection reducers, point-in-time replay algorithm (`reconstructStateAsOf`), timestamp cutoff validation, replay stress testing (100+ events) | OCC version validation in Aggregate, ConcurrencyException definitions, telemetry payload enrichment, automated anomaly threshold detector (`anomalyDetector.js`), logistics scenario generator (`scenarioGenerator.js`), full-system E2E integration test suite, Domain Event Catalog & OCC technical specification |
+| **CQRS, Worker & Cloud Infra** | **Raushan Kumar**<br>*(Person 2)* | Express CQRS setup, Mongoose Event schema, Command/Query routers, Immutability verification test suite | `ShipmentReadModel` schema & indexing, background Node.js projection worker, O(1) query routing, historical as-of query endpoints, catch-up rebuild script (`projections:rebuild`), query latency benchmarking (<10ms SLA) | Compound unique index `{ aggregateId: 1, version: 1 }`, HTTP 409 Conflict middleware, sensor telemetry query endpoint, sensor anomaly correlation query service, HTTP response caching & compression, Render/Railway/Atlas cloud deployment, API Reference & Projection Architecture Guide |
+| **Frontend & Forensic Visualizer** | **Aman Kumar**<br>*(Person 3)* | Shipment search bar, chronological event timeline stream, live aggregate status card, responsive layout | Time-travel control bar, interactive state-scrubbing slider ("Rewind Time"), slider-to-state reactive bindings, visual historical state diff badges, step-by-step automated playback controls | Form-level expectedVersion tracking, optimistic concurrency 409 conflict resolution modal, Recharts environmental telemetry graphs, timeline-to-chart hover synchronization, responsive/A11y mobile audit, Vercel SPA deployment configuration, live demo walkthrough modal & forensic case study |
 
 ---
 

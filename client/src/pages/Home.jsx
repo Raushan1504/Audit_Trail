@@ -288,7 +288,7 @@ export default function Home() {
             <span className="brand-name">
               AUDIT<span className="brand-accent">TRAIL</span>
             </span>
-            <span className="brand-version">v1.0 · Day 23</span>
+            <span className="brand-version">v1.0 · Day 28 Final</span>
           </div>
 
           <div className="footer-team">
@@ -300,6 +300,11 @@ export default function Home() {
             <div className="team-member">
               <span className="team-role">Chief Architect & Tech Lead:</span>
               <span className="team-name">Raushan Kumar</span>
+            </div>
+            <div className="team-divider" />
+            <div className="team-member">
+              <span className="team-role">Lead Domain Architect (Person 1):</span>
+              <span className="team-name">Yash Kamble</span>
             </div>
           </div>
 

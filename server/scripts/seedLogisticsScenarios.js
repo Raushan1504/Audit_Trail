@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Day 26: CLI Logistics Scenario Seeder
- * Person 1 (Domain): Chhotadon <yk3144779@gmail.com>
+ * Person 1 (Domain): Yash Kamble <yk3144779@gmail.com>
  *
  * Seeds comprehensive realistic scenarios (Pharma Cold-Chain, Trans-Oceanic Electronics, Sub-Zero Seafood)
  * directly into MongoDB Event Store and projects read models.

@@ -1,6 +1,6 @@
 /**
  * Day 27: Full-System End-to-End Integration Test Suite
- * Person 1 (Domain): Chhotadon <yk3144779@gmail.com>
+ * Person 1 (Domain): Yash Kamble <yk3144779@gmail.com>
  *
  * Validates the complete lifecycle: Command Dispatch -> OCC Check -> Event Store Append
  * -> Projection Worker Read Model -> Telemetry Query -> Historical Replay -> OCC Conflict Rejection.

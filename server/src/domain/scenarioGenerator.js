@@ -1,6 +1,6 @@
 /**
  * Day 26: Logistics Scenario Generator
- * Person 1 (Domain): Chhotadon <yk3144779@gmail.com>
+ * Person 1 (Domain): Yash Kamble <yk3144779@gmail.com>
  *
  * Builds deterministic, production-grade enterprise logistics event sequences
  * for cold-chain pharmaceuticals, trans-oceanic shipping, and hazardous cargo.
