@@ -1,5 +1,5 @@
 const { createInitialShipmentState } = require('./shipmentState');
-const { ConflictError, ValidationError } = require('../utils/errors');
+const { ConcurrencyException, ValidationError } = require('../utils/errors');
 
 function createShipmentAggregate(shipmentId) {
   if (!shipmentId) {
@@ -17,9 +17,11 @@ function createShipmentAggregate(shipmentId) {
       }
 
       if (expectedVersion !== state.version) {
-        throw new ConflictError(
-          `Version conflict: expected version ${expectedVersion}, current version ${state.version}`
-        );
+        throw new ConcurrencyException({
+          shipmentId: state.shipmentId,
+          expectedVersion,
+          currentVersion: state.version
+        });
       }
 
       return true;

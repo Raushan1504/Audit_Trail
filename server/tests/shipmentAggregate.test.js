@@ -25,9 +25,13 @@ test('rejects a stale expected version', () => {
   assert.throws(
     () => aggregate.checkVersion(2),
     (error) => {
-      assert.equal(error.name, 'ConflictError');
+      assert.equal(error.name, 'ConcurrencyException');
       assert.equal(error.statusCode, 409);
-      assert.equal(error.code, 'CONFLICT');
+      assert.equal(error.code, 'CONCURRENCY_CONFLICT');
+      assert.equal(error.details.shipmentId, 'SHIP-OCC-003');
+      assert.equal(error.details.expectedVersion, 2);
+      assert.equal(error.details.currentVersion, 3);
+      assert.match(error.details.resolution, /Reload the latest shipment state/);
       return true;
     }
   );
@@ -40,7 +44,7 @@ test('rejects an expected version ahead of current version', () => {
   assert.throws(
     () => aggregate.checkVersion(4),
     (error) => {
-      assert.equal(error.name, 'ConflictError');
+      assert.equal(error.name, 'ConcurrencyException');
       assert.equal(error.statusCode, 409);
       return true;
     }
