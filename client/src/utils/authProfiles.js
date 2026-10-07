@@ -9,7 +9,7 @@ export const DEMO_OPERATORS = [
     email: 'aman@audittrail.io',
     role: 'Lead Forensic Analyst',
     passcode: 'audit2026',
-    badge: 'Person 3 · Dashboard Engineer',
+    badge: 'Person 3 · Forensic Analyst',
     avatar: '👨‍💻'
   },
   {
@@ -18,8 +18,17 @@ export const DEMO_OPERATORS = [
     email: 'raushan@audittrail.io',
     role: 'Chief Auditor & Architect',
     passcode: 'audit2026',
-    badge: 'Team Lead · Event Store',
+    badge: 'Chief Architect & Tech Lead',
     avatar: '🛡️'
+  },
+  {
+    id: 'op_yash',
+    name: 'Yash Kamble',
+    email: 'yash@audittrail.io',
+    role: 'Lead Domain Architect',
+    passcode: 'audit2026',
+    badge: 'Person 1 · Domain Lead',
+    avatar: '🏛️'
   },
   {
     id: 'op_compliance',
