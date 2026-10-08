@@ -117,18 +117,6 @@ Traditional CRUD (Destructive In-Place Mutation):
 
 </div>
 
-### Video Demonstration Chapter Index & Walkthrough Script
-
-| Timestamp | Chapter | Key System Interactions Shown | Architectural Significance |
-|---|---|---|---|
-| **`00:00 - 00:35`** | **1. System Architecture & Hero Overview** | Landing page showcase, architectural pillars, tech stack summary, live deployment badges. | Introduces Event Sourcing & CQRS advantages over legacy CRUD. |
-| **`00:35 - 01:10`** | **2. Forensic Operations Console & Read Model Lookup** | Lookup shipment `SHIP-PHARMA-2026-EU-JP`, sub-10ms instantaneous read model response, AIS radar route visualization. | Demonstrates $\mathcal{O}(1)$ read performance via background projections. |
-| **`01:10 - 01:50`** | **3. Chronological Event Stream & Ledger Immutability** | Inspection of vertical event timeline cards, monotonically increasing versions ($v1 \rightarrow v4$), cryptographic payload verification. | Proves the append-only event log cannot be mutated or deleted. |
-| **`01:50 - 02:30`** | **4. Temporal Time-Scrubbing ("Rewind Time")** | Scrubbing slider back to $v1$ (Genesis) and $v2$ (North Sea), amber Historical Warning Banner, state diff badge updates. | Demonstrates pure mathematical event replay (`foldEventsUpTo`). |
-| **`02:30 - 03:15`** | **5. Cold-Chain Thermal Anomaly & Recharts Hover Sync** | Scrubbing to $v3$ (`TEMPERATURE_SPIKE_DETECTED`), Recharts telemetry curve crossing the $+8^\circ\text{C}$ threshold, synchronized hover pulse on timeline. | Forensic incident isolation and automated fault attribution. |
-| **`03:15 - 03:50`** | **6. Optimistic Concurrency Control (OCC 409 Conflict)** | Dispatching an outdated command from an earlier version ($v2$ assertion against $v4$ active), 409 modal trigger, safe recovery. | Demonstrates multi-user race condition protection without table locks. |
-| **`03:50 - 04:20`** | **7. Empirical Benchmark & Cloud Infrastructure** | Terminal load benchmark output ($<0.01\text{ ms}$ Read Model vs $411\text{ ms}$ Replay), Vercel & Render production health checks. | Validates engineering SLA compliance and high scalability. |
-
 ---
 
 ## 3. 📸 Visual System Walkthrough & Screenshot Gallery
@@ -205,15 +193,14 @@ This section documents all primary user interfaces, temporal controls, telemetry
 ![Figure 9: Latency Benchmark Graph](docs/screenshots/09_benchmark_read_vs_replay.png)
 
 > **Figure 9 Description:**  
-> Empirical latency evaluation comparing MongoDB `ShipmentReadModel` queries ($<0.01\text{ ms}$) against raw multi-event sequential replay ($>400\text{ ms}$ at 500 events). Illustrates how CQRS maintains flat $\mathcal{O}(1)$ performance regardless of aggregate event depth.
+
 
 ---
 
 ### Figure 10: Terminal Proof of Ledger Immutability & Test Suite
 ![Figure 10: Immutability Test Suite Run](docs/screenshots/10_immutability_audit_terminal.png)
 
-> **Figure 10 Description:**  
-> Native Node.js test runner executing the immutability audit test suite (`npm run test:audit`). Shows explicit programmatic proof that HTTP `PUT`, `PATCH`, and `DELETE` requests aimed at historical event records return `405 Method Not Allowed` / `403 Forbidden`, with zero data loss.
+
 
 ---
 
