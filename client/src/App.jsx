@@ -19,9 +19,13 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/shipment/:shipmentId" element={<ShipmentDetails />} />
           </Routes>
+
         </BrowserRouter>
+
       </AuthProvider>
+
     </ThemeProvider>
+
   );
 }
 

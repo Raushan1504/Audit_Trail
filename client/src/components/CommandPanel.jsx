@@ -12,15 +12,6 @@ import {
 import ConcurrencyConflictModal from './ConcurrencyConflictModal';
 import './CommandPanel.css';
 
-/**
- * CommandPanel Component (Day 22 & Day 23)
- *
- * Implements Optimistic Concurrency Control (OCC) command dispatch.
- * Captures the current loaded aggregate version during query fetch and
- * binds it into React form state as expectedVersion, forwarding it inside
- * command payloads to protect against race conditions and state divergence.
- * Displays interactive conflict modal upon HTTP 409 responses.
- */
 export default function CommandPanel({
   shipmentId,
   currentStatus = 'UNKNOWN',
@@ -33,7 +24,6 @@ export default function CommandPanel({
   const [activeCommand, setActiveCommand] = useState(allowedCommands[0] || null);
   const [showPayloadPreview, setShowPayloadPreview] = useState(false);
 
-  // Form State (includes Day 24 telemetry metrics)
   const [formData, setFormData] = useState({
     vessel: 'MV PACIFIC VOYAGER',
     port: 'Shanghai Marine Terminal',
@@ -46,11 +36,10 @@ export default function CommandPanel({
   });
 
   const [submitting, setSubmitting] = useState(false);
-  const [feedback, setFeedback] = useState(null); // { type: 'success' | 'error', message: string, data?: any }
+  const [feedback, setFeedback] = useState(null);
   const [conflictModalOpen, setConflictModalOpen] = useState(false);
   const [conflictData, setConflictData] = useState(null);
 
-  // Synchronize activeCommand when status changes
   useEffect(() => {
     if (allowedCommands.length > 0 && (!activeCommand || !allowedCommands.includes(activeCommand))) {
       setActiveCommand(allowedCommands[0]);
@@ -63,7 +52,6 @@ export default function CommandPanel({
     setFeedback(null);
   };
 
-  // Construct current OCC command payload
   let currentPayload = null;
   let payloadError = null;
   if (activeCommand && shipmentId) {
@@ -136,38 +124,49 @@ export default function CommandPanel({
     <div className="command-panel-card">
       <div className="command-panel-glow" />
 
-      {/* Header with OCC Concurrency Lock Status */}
       <div className="command-panel-header">
         <div className="header-badge-row">
           <div className="occ-guard-badge">
             <span className="occ-lock-icon">🔒</span>
+
             <span className="occ-title">OPTIMISTIC CONCURRENCY CONTROL</span>
+
             <span className="occ-status-tag">ACTIVE GUARD</span>
+
           </div>
 
           <div className="version-lock-indicator">
             <span className="lock-label">TRACKED AGGREGATE VERSION:</span>
+
             <span className="lock-value">v{loadedVersion}</span>
+
           </div>
+
         </div>
 
         <h3 className="command-panel-title">Dispatch Logistics Domain Command</h3>
+
         <p className="command-panel-subtitle">
           All state transitions require an exact <code>expectedVersion: {loadedVersion}</code> match.
+
           If another operator mutates this aggregate concurrently, your command is protected and rejected with HTTP 409 Conflict.
         </p>
+
       </div>
 
-      {/* Historical Mode Warning Callout */}
       {isHistoricalActive && (
         <div className="command-historical-warning" role="alert">
           <div className="warning-left">
             <span className="warning-icon">⚠</span>
+
             <div>
               <strong>COMMANDS FROZEN IN HISTORICAL VIEW:</strong> You are currently inspecting a scrubbed past state.
+
               Commands can only be dispatched against the live confirmed head (v{loadedVersion}).
             </div>
+
           </div>
+
           {onJumpToLive && (
             <button
               type="button"
@@ -176,19 +175,24 @@ export default function CommandPanel({
             >
               ⚡ Return to Live Head to Dispatch
             </button>
+
           )}
         </div>
+
       )}
 
-      {/* Command Action Tabs */}
       <div className="command-tabs-container">
         <span className="tabs-label">AVAILABLE COMMANDS FOR STATUS ({currentStatus}):</span>
+
         <div className="command-tabs-list" role="tablist">
           {allowedCommands.length === 0 ? (
             <div className="no-commands-message">
               <span>🏁</span>
+
               <span>Voyage Terminated at Port — Terminal state reached. No further state transitions allowed.</span>
+
             </div>
+
           ) : (
             allowedCommands.map((type) => {
               const isActive = activeCommand === type;
@@ -219,24 +223,30 @@ export default function CommandPanel({
                   aria-selected={isActive}
                 >
                   <span className="tab-icon">{icon}</span>
+
                   <span className="tab-label">{label}</span>
+
                 </button>
+
               );
             })
           )}
         </div>
+
       </div>
 
-      {/* Command Form */}
       {activeCommand && allowedCommands.includes(activeCommand) && (
         <form onSubmit={handleSubmit} className="command-form">
           <div className="form-fields-grid">
-            {/* Read-Only Tracked OCC Expected Version Field */}
+
             <div className="form-field form-field--locked">
               <label htmlFor="occExpectedVersion">
                 <span className="field-label-text">EXPECTED AGGREGATE VERSION (OCC)</span>
+
                 <span className="field-lock-tag">🔒 LOCKED</span>
+
               </label>
+
               <div className="locked-input-wrapper">
                 <input
                   id="occExpectedVersion"
@@ -247,14 +257,16 @@ export default function CommandPanel({
                   className="locked-version-input"
                 />
               </div>
+
               <span className="field-help">Captured from query fetch; forwarded to prevent race conditions.</span>
+
             </div>
 
-            {/* Dynamic Inputs Based on Active Command */}
             {activeCommand === OCC_COMMAND_TYPES.LOAD_ON_SHIP && (
               <>
                 <div className="form-field">
                   <label htmlFor="vesselInput">VESSEL NAME</label>
+
                   <input
                     id="vesselInput"
                     type="text"
@@ -265,10 +277,12 @@ export default function CommandPanel({
                     required
                   />
                   <span className="field-help">Name of ocean freight vessel.</span>
+
                 </div>
 
                 <div className="form-field">
                   <label htmlFor="portInput">DEPARTURE / LOADING PORT</label>
+
                   <input
                     id="portInput"
                     type="text"
@@ -279,14 +293,18 @@ export default function CommandPanel({
                     required
                   />
                   <span className="field-help">Loading terminal location.</span>
+
                 </div>
+
               </>
+
             )}
 
             {activeCommand === OCC_COMMAND_TYPES.RECORD_TEMPERATURE_SPIKE && (
               <>
                 <div className="form-field">
                   <label htmlFor="tempInput">RECORDED TEMPERATURE (°C)</label>
+
                   <input
                     id="tempInput"
                     type="number"
@@ -298,10 +316,12 @@ export default function CommandPanel({
                     required
                   />
                   <span className="field-help">Sensor reading in degrees Celsius.</span>
+
                 </div>
 
                 <div className="form-field">
                   <label htmlFor="thresholdInput">CRITICAL THRESHOLD (°C)</label>
+
                   <input
                     id="thresholdInput"
                     type="number"
@@ -313,10 +333,12 @@ export default function CommandPanel({
                     required
                   />
                   <span className="field-help">Acceptable maximum temperature.</span>
+
                 </div>
 
                 <div className="form-field">
                   <label htmlFor="sensorInput">SENSOR IDENTIFIER</label>
+
                   <input
                     id="sensorInput"
                     type="text"
@@ -327,10 +349,12 @@ export default function CommandPanel({
                     required
                   />
                   <span className="field-help">Hardware telemetry probe ID.</span>
+
                 </div>
 
                 <div className="form-field">
                   <label htmlFor="humidityInput">RELATIVE HUMIDITY (% RH)</label>
+
                   <input
                     id="humidityInput"
                     type="number"
@@ -341,10 +365,12 @@ export default function CommandPanel({
                     placeholder="e.g. 68.5"
                   />
                   <span className="field-help">Optional sensor humidity percentage.</span>
+
                 </div>
 
                 <div className="form-field">
                   <label htmlFor="voltageInput">BATTERY VOLTAGE (V)</label>
+
                   <input
                     id="voltageInput"
                     type="number"
@@ -355,10 +381,12 @@ export default function CommandPanel({
                     placeholder="e.g. 3.82"
                   />
                   <span className="field-help">IoT tracker battery reserve voltage.</span>
+
                 </div>
 
                 <div className="form-field">
                   <label htmlFor="ambientInput">AMBIENT TEMPERATURE (°C)</label>
+
                   <input
                     id="ambientInput"
                     type="number"
@@ -369,13 +397,17 @@ export default function CommandPanel({
                     placeholder="e.g. 24.1"
                   />
                   <span className="field-help">External container ambient temperature.</span>
+
                 </div>
+
               </>
+
             )}
 
             {activeCommand === OCC_COMMAND_TYPES.ARRIVE_AT_PORT && (
               <div className="form-field">
                 <label htmlFor="arrivePortInput">DESTINATION TERMINAL PORT</label>
+
                 <input
                   id="arrivePortInput"
                   type="text"
@@ -386,11 +418,12 @@ export default function CommandPanel({
                   required
                 />
                 <span className="field-help">Final arrival terminal hub.</span>
+
               </div>
+
             )}
           </div>
 
-          {/* OCC Payload Preview Toggle */}
           <div className="payload-preview-section">
             <button
               type="button"
@@ -398,27 +431,33 @@ export default function CommandPanel({
               onClick={() => setShowPayloadPreview(!showPayloadPreview)}
             >
               <span>{showPayloadPreview ? '▼ Hide' : '▶ Show'} Outgoing OCC Payload JSON</span>
+
               <span className="preview-badge">expectedVersion: {loadedVersion}</span>
+
             </button>
 
             {showPayloadPreview && currentPayload && (
               <pre className="payload-json-box">
                 <code>{JSON.stringify(currentPayload, null, 2)}</code>
+
               </pre>
+
             )}
           </div>
 
-          {/* Feedback Messages */}
           {feedback && (
             <div className={`command-feedback command-feedback--${feedback.type}`} role="alert">
               <span className="feedback-icon">{feedback.type === 'success' ? '✓' : '⚠'}</span>
+
               <div className="feedback-text">
                 <strong>{feedback.type === 'success' ? 'Execution Succeeded:' : 'Execution Rejected:'}</strong> {feedback.message}
+
               </div>
+
             </div>
+
           )}
 
-          {/* Submit Action */}
           <div className="form-actions-row">
             <button
               type="submit"
@@ -426,17 +465,21 @@ export default function CommandPanel({
               className="btn-dispatch-command"
             >
               <span className="btn-icon">⚡</span>
+
               <span>
                 {submitting
                   ? 'Dispatching Command...'
                   : `Dispatch ${activeCommand} with OCC Lock (v${loadedVersion})`}
               </span>
+
             </button>
+
           </div>
+
         </form>
+
       )}
 
-      {/* Concurrency Conflict Modal (Day 23) */}
       <ConcurrencyConflictModal
         isOpen={conflictModalOpen}
         conflict={conflictData}
@@ -449,5 +492,6 @@ export default function CommandPanel({
         onClose={() => setConflictModalOpen(false)}
       />
     </div>
+
   );
 }

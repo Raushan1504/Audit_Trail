@@ -48,6 +48,7 @@ function SearchBar({ onSearch }) {
           >
             ×
           </button>
+
         )}
 
         <button
@@ -57,10 +58,13 @@ function SearchBar({ onSearch }) {
         >
           Search
         </button>
+
       </div>
 
       {error && <p className="search-bar__error">{error}</p>}
+
     </form>
+
   );
 }
 

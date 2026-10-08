@@ -1,4 +1,4 @@
-/* Shipment Map Styles (Day 18) */
+
 
 .shipment-map-card {
   position: relative;
@@ -23,7 +23,6 @@
   pointer-events: none;
 }
 
-/* Header & Controls */
 .shipment-map-header {
   display: flex;
   justify-content: space-between;
@@ -126,7 +125,6 @@
   color: #38bdf8;
 }
 
-/* Viewport & SVG */
 .shipment-map-viewport {
   position: relative;
   width: 100%;
@@ -141,7 +139,6 @@
   display: block;
 }
 
-/* Ocean & Landmasses */
 .map-ocean {
   fill: #060b18;
 }
@@ -167,7 +164,6 @@
   font-family: monospace;
 }
 
-/* Shipping Lanes & Route */
 .route-pulse-dash {
   animation: dashAnimation 20s linear infinite;
 }
@@ -178,7 +174,6 @@
   }
 }
 
-/* Port Pins */
 .port-marker {
   cursor: pointer;
 }
@@ -236,7 +231,6 @@
   stroke-width: 2px;
 }
 
-/* Vessel Marker & Sweeper */
 .vessel-radar-halo {
   fill: none;
   stroke: #38bdf8;
@@ -277,7 +271,6 @@
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
 }
 
-/* Hover Tooltip */
 .map-port-tooltip {
   position: absolute;
   top: 1rem;
@@ -318,7 +311,6 @@
   color: #94a3b8;
 }
 
-/* Telemetry HUD Footer */
 .shipment-map-hud {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -433,7 +425,6 @@
   border-color: rgba(239, 68, 68, 0.4);
 }
 
-/* Responsive */
 @media (max-width: 768px) {
   .shipment-map-header {
     flex-direction: column;
@@ -450,7 +441,6 @@
   }
 }
 
-/* Day 21: High-Contrast Historical AIS Watermark & Map Overlay */
 .shipment-map-card--historical {
   border-color: rgba(245, 158, 11, 0.35);
   box-shadow: 0 0 24px rgba(245, 158, 11, 0.08), 0 8px 32px rgba(0, 0, 0, 0.4);
@@ -557,11 +547,6 @@
   }
 }
 
-/* ==========================================================================
-   Day 23: Prominent Route Location Names, Waypoints & Corridor Strip
-   ========================================================================== */
-
-/* High-Contrast SVG Location Badges */
 .map-location-tag {
   pointer-events: none;
   transition: opacity 0.25s ease;
@@ -591,7 +576,6 @@
   letter-spacing: 0.02em;
 }
 
-/* Intermediate Waypoint Markers */
 .waypoint-marker {
   cursor: pointer;
   transition: transform 0.2s ease;
@@ -608,7 +592,6 @@
   opacity: 0.6;
 }
 
-/* Voyage Route Locations & Waypoints Strip */
 .map-locations-strip {
   padding: 1rem 1.5rem;
   background: rgba(10, 15, 29, 0.65);
@@ -675,7 +658,6 @@
   animation: radarBlip 1.5s infinite;
 }
 
-/* Horizontal Track of Location Chips */
 .locations-strip__track {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -794,5 +776,4 @@
 .location-chip--upcoming .chip-state-label {
   color: #64748b;
 }
-
 

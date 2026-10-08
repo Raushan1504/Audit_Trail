@@ -1,9 +1,3 @@
-/**
- * Optimistic Concurrency Control (OCC) Utilities (Day 22)
- *
- * Provides functions for tracking aggregate versions in React form state,
- * validating expectedVersion guards, and building immutable command payloads.
- */
 
 export const OCC_COMMAND_TYPES = Object.freeze({
   CREATE_CONTAINER: 'CREATE_CONTAINER',
@@ -12,12 +6,6 @@ export const OCC_COMMAND_TYPES = Object.freeze({
   ARRIVE_AT_PORT: 'ARRIVE_AT_PORT'
 });
 
-/**
- * Returns allowed command types for a given shipment status.
- *
- * @param {string} status - Current shipment aggregate status
- * @returns {Array<string>} Allowed command type identifiers
- */
 export function getAllowedCommandsForStatus(status) {
   const s = (status || '').toUpperCase();
   switch (s) {
@@ -37,27 +25,12 @@ export function getAllowedCommandsForStatus(status) {
   }
 }
 
-/**
- * Validates that expectedVersion is a valid non-negative integer.
- *
- * @param {*} expectedVersion
- * @returns {boolean}
- */
 export function isValidExpectedVersion(expectedVersion) {
   if (expectedVersion === null || expectedVersion === undefined) return false;
   const num = Number(expectedVersion);
   return Number.isInteger(num) && num >= 0;
 }
 
-/**
- * Builds an OCC command payload ensuring expectedVersion is strictly forwarded.
- *
- * @param {string} commandType - One of OCC_COMMAND_TYPES
- * @param {string} shipmentId - The aggregate identity
- * @param {Object} formData - Form input values
- * @param {number} expectedVersion - The aggregate version captured during query fetch
- * @returns {Object} Complete command payload with expectedVersion guard
- */
 export function buildOccCommandPayload(commandType, shipmentId, formData = {}, expectedVersion = 0) {
   if (!shipmentId || typeof shipmentId !== 'string') {
     throw new Error('Aggregate shipmentId is required for command execution');
@@ -80,7 +53,7 @@ export function buildOccCommandPayload(commandType, shipmentId, formData = {}, e
         origin: formData.origin?.trim() || '',
         destination: formData.destination?.trim() || '',
         cargo: formData.cargo?.trim() || '',
-        expectedVersion: 0 // Genesis creation always expects version 0
+        expectedVersion: 0
       };
 
     case OCC_COMMAND_TYPES.LOAD_ON_SHIP:

@@ -1,4 +1,4 @@
-/* State Diff Indicator Styles (Day 18) */
+
 
 .state-diff-container {
   margin: 1.5rem 0;
@@ -38,7 +38,6 @@
   border-color: rgba(16, 185, 129, 0.4);
 }
 
-/* Header & Banner */
 .state-diff-header {
   display: flex;
   justify-content: space-between;
@@ -124,7 +123,6 @@
   color: var(--text-secondary, #94a3b8);
 }
 
-/* Header Metrics & Actions */
 .state-diff-header__metrics {
   display: flex;
   align-items: center;
@@ -221,7 +219,6 @@
   background: rgba(255, 255, 255, 0.14);
 }
 
-/* Event Context Bar */
 .diff-event-context {
   display: flex;
   align-items: center;
@@ -258,7 +255,6 @@
   margin-left: auto;
 }
 
-/* Diff Matrix Grid */
 .state-diff-matrix {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -326,7 +322,6 @@
   border: 1px solid rgba(148, 163, 184, 0.25);
 }
 
-/* Comparison View */
 .diff-card__comparison {
   display: flex;
   align-items: center;
@@ -400,7 +395,6 @@
   }
 }
 
-/* Footer Navigator */
 .diff-nav-footer {
   margin-top: 1.25rem;
   padding-top: 1rem;

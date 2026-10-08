@@ -1,14 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-/**
- * Playback Controller simulating Day 19 automated step-by-step playback engine
- */
 class PlaybackController {
   constructor(totalEvents = 4, initialStep = 4) {
     this.totalEvents = Math.max(1, totalEvents);
     this.currentStep = initialStep;
-    this.viewMode = 'live'; // 'live' | 'historical'
+    this.viewMode = 'live';
     this.isPlaying = false;
     this.speed = 1.0;
     this.isLooping = false;
@@ -75,7 +72,6 @@ class PlaybackController {
     this.isLooping = !this.isLooping;
   }
 
-  // Simulate one playback tick
   tick() {
     if (!this.isPlaying) return;
 
@@ -153,7 +149,6 @@ test('Day 19 Step-by-Step Playback: Play, Pause, and Rewind Lifecycle', async (t
     player.tick();
     assert.strictEqual(player.currentStep, 4);
 
-    // Terminal step reached with loop false -> automatically pauses
     player.tick();
     assert.strictEqual(player.isPlaying, false);
     assert.strictEqual(player.currentStep, 4);
@@ -162,13 +157,12 @@ test('Day 19 Step-by-Step Playback: Play, Pause, and Rewind Lifecycle', async (t
   await t.test('pause halts playback at intermediate version without losing position', () => {
     const player = new PlaybackController(4, 1);
     player.play();
-    player.tick(); // Step 2
+    player.tick();
 
     assert.strictEqual(player.currentStep, 2);
     player.pause();
     assert.strictEqual(player.isPlaying, false);
 
-    // Subsequent tick when paused should not mutate step
     player.tick();
     assert.strictEqual(player.currentStep, 2);
   });
@@ -190,13 +184,12 @@ test('Day 19 Step-by-Step Playback: Loop Mode & Boundary Wrap-Around', async (t)
     player.play();
     assert.strictEqual(player.currentStep, 1);
 
-    player.tick(); // step 2
+    player.tick();
     assert.strictEqual(player.currentStep, 2);
 
-    player.tick(); // step 3 (terminal)
+    player.tick();
     assert.strictEqual(player.currentStep, 3);
 
-    // Tick at terminal step with loop enabled wraps to 1 and keeps playing
     player.tick();
     assert.strictEqual(player.currentStep, 1);
     assert.strictEqual(player.isPlaying, true);

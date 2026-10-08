@@ -1,26 +1,11 @@
-/**
- * Historical Inspection Alert & High-Contrast Banner Utilities (Day 21)
- *
- * Provides deterministic calculation of historical alert levels, operator warning copy,
- * past-value card badges, and version lag metrics to prevent operators from mistaking
- * past states for live operational data.
- */
 
-/**
- * Calculates historical alert metadata for the top warning banner and operator HUD.
- *
- * @param {number} currentVersion - The currently scrubbed event sequence number
- * @param {number} totalVersions - The latest confirmed ledger sequence height
- * @param {Object} [activeEvent] - The domain event corresponding to currentVersion
- * @returns {Object} Alert metadata object
- */
 export function getHistoricalAlertMeta(currentVersion, totalVersions, activeEvent = null) {
   const current = Number(currentVersion) || 1;
   const total = Number(totalVersions) || 1;
   const versionsBehind = Math.max(0, total - current);
   const isAtHead = versionsBehind === 0;
 
-  let severity = 'warning'; // 'warning' | 'critical' | 'info'
+  let severity = 'warning';
   if (versionsBehind > 2 || activeEvent?.eventType === 'TEMPERATURE_SPIKE') {
     severity = 'critical';
   } else if (isAtHead) {
@@ -56,15 +41,6 @@ export function getHistoricalAlertMeta(currentVersion, totalVersions, activeEven
   };
 }
 
-/**
- * Resolves high-contrast past value badge attributes for individual telemetry cards.
- *
- * @param {string} field - The card category ('status' | 'location' | 'version' | 'temperature')
- * @param {*} value - The historical value
- * @param {boolean} isHistorical - Whether historical mode is active
- * @param {Object} [options] - Additional context like isAnomaly or version
- * @returns {Object} Badge definition { showBadge, badgeText, badgeClass, isAnomaly }
- */
 export function getPastValueBadge(field, value, isHistorical = false, options = {}) {
   if (!isHistorical) {
     return {
@@ -130,14 +106,6 @@ export function getPastValueBadge(field, value, isHistorical = false, options = 
   }
 }
 
-/**
- * Determines whether the maritime AIS map should display the historical watermark.
- *
- * @param {number} currentStep - The current scrubbed version
- * @param {number} totalEvents - Total events in stream
- * @param {boolean} isHistoricalMode - True if historical view mode is active
- * @returns {boolean} True if historical watermark should be rendered
- */
 export function shouldShowHistoricalWatermark(currentStep, totalEvents, isHistoricalMode = false) {
   if (isHistoricalMode) return true;
   if (currentStep !== null && totalEvents > 0 && currentStep < totalEvents) {

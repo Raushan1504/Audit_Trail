@@ -1,4 +1,4 @@
-/* Home / Landing Page Styles (Theme-Compliant) */
+
 
 .home-container {
   position: relative;
@@ -7,7 +7,6 @@
   padding-bottom: 2rem;
 }
 
-/* Ambient 3D Lights */
 .home-glow {
   position: absolute;
   border-radius: 50%;
@@ -33,7 +32,6 @@
   background: rgba(99, 102, 241, 0.2);
 }
 
-/* Hero Section */
 .home-hero {
   position: relative;
   z-index: 1;
@@ -93,7 +91,6 @@
   margin: 0 0 2rem 0;
 }
 
-/* Quick Search Box */
 .hero-search-form {
   width: 100%;
   max-width: 640px;
@@ -163,7 +160,6 @@
   transform: translateX(2px);
 }
 
-/* CTAs */
 .hero-actions {
   display: flex;
   align-items: center;
@@ -224,7 +220,6 @@
   transform: translateY(-2px);
 }
 
-/* Metrics Strip */
 .metrics-strip {
   display: flex;
   align-items: center;
@@ -280,7 +275,6 @@
   background: #e2e8f0;
 }
 
-/* Section Common */
 .section-header {
   text-align: center;
   max-width: 700px;
@@ -311,7 +305,6 @@
   margin: 0;
 }
 
-/* Architectural Pillars */
 .home-pillars {
   position: relative;
   z-index: 1;
@@ -377,7 +370,6 @@
   margin: 0;
 }
 
-/* Showcase Shipments */
 .home-showcase {
   position: relative;
   z-index: 1;
@@ -514,7 +506,6 @@
   border-top-color: #f1f5f9;
 }
 
-/* End-to-End Workflow */
 .home-workflow {
   position: relative;
   z-index: 1;
@@ -580,7 +571,6 @@
   }
 }
 
-/* Footer */
 .home-footer {
   margin-top: 6rem;
   border-top: 1px solid rgba(255, 255, 255, 0.08);

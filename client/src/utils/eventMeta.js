@@ -1,6 +1,3 @@
-/**
- * Event Metadata Resolver for Audit Trail Forensic State Scrubber
- */
 
 export function formatEventName(type) {
   if (!type) return 'Unknown Event';

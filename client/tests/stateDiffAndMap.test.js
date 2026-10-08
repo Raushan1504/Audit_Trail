@@ -43,16 +43,14 @@ test('Day 18 State Diff & Geolocation: Maritime Port Resolution', async (t) => {
 
 test('Day 18 State Diff & Geolocation: SVG Projection & Interpolation', async (t) => {
   await t.test('projects latitude/longitude into 2D equirectangular SVG space', () => {
-    // Equator & Prime Meridian (0, 0) -> (500, 250) on a 1000x500 canvas
+
     const center = latLonToSvg(0, 0);
     assert.strictEqual(center.x, 500);
     assert.strictEqual(center.y, 250);
 
-    // North pole (+90 lat) -> y: 0
     const north = latLonToSvg(90, 0);
     assert.strictEqual(north.y, 0);
 
-    // South pole (-90 lat) -> y: 500
     const south = latLonToSvg(-90, 0);
     assert.strictEqual(south.y, 500);
   });
@@ -61,17 +59,14 @@ test('Day 18 State Diff & Geolocation: SVG Projection & Interpolation', async (t
     const origin = MAJOR_PORTS.SHANGHAI;
     const dest = MAJOR_PORTS.ROTTERDAM;
 
-    // Progress 0.0 (Step 1 / Genesis) -> at Origin
     const startPos = interpolateVesselPosition(origin, dest, 0.0);
     assert.strictEqual(startPos.lat, origin.lat);
     assert.strictEqual(startPos.lon, origin.lon);
 
-    // Progress 1.0 (Terminal / Arrived) -> at Destination
     const endPos = interpolateVesselPosition(origin, dest, 1.0);
     assert.strictEqual(endPos.lat, dest.lat);
     assert.strictEqual(endPos.lon, dest.lon);
 
-    // Mid-voyage (50%) -> between origin and destination
     const midPos = interpolateVesselPosition(origin, dest, 0.5);
     assert.ok(midPos.lat > 0, 'Latitude should remain valid in northern hemisphere');
     assert.ok(midPos.heading >= 0 && midPos.heading <= 360, 'Heading should be valid angle');
@@ -86,7 +81,6 @@ test('Day 18 State Diff & Geolocation: SVG Projection & Interpolation', async (t
     assert.ok(westSouth.includes('23°33\' S'));
     assert.ok(westSouth.includes('46°38\' W'));
 
-    // Safe fallback for null/undefined
     assert.strictEqual(formatNauticalCoordinates(null, null), '00°00\' N, 00°00\' E');
   });
 });

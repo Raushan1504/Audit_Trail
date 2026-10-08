@@ -23,18 +23,15 @@ describe('Day 23 Features: Map Location Names, Route Corridor & Waypoints', () =
     assert.ok(Array.isArray(locations));
     assert.ok(locations.length >= 3, 'Should contain origin, waypoints, and destination');
 
-    // Verify Origin is first
     assert.equal(locations[0].type, 'ORIGIN');
     assert.equal(locations[0].name, 'Port of Shanghai');
     assert.equal(locations[0].country, 'China');
 
-    // Verify Destination is last
     const last = locations[locations.length - 1];
     assert.equal(last.type, 'DESTINATION');
     assert.equal(last.name, 'Port of Rotterdam');
     assert.equal(last.country, 'Netherlands');
 
-    // Verify intermediate waypoints exist and have valid coordinates
     const waypoints = locations.filter((loc) => loc.type === 'WAYPOINT');
     assert.ok(waypoints.length > 0, 'Must have intermediate corridor waypoints');
     waypoints.forEach((wp) => {
@@ -43,7 +40,6 @@ describe('Day 23 Features: Map Location Names, Route Corridor & Waypoints', () =
       assert.ok(typeof wp.lat === 'number');
       assert.ok(typeof wp.lon === 'number');
 
-      // Verify SVG projection succeeds
       const svgPt = latLonToSvg(wp.lat, wp.lon);
       assert.ok(svgPt.x >= 0 && svgPt.x <= 1000);
       assert.ok(svgPt.y >= 0 && svgPt.y <= 500);
@@ -84,15 +80,12 @@ describe('Day 23 Features: Map Location Names, Route Corridor & Waypoints', () =
     const origin = MAJOR_PORTS.SHANGHAI;
     const dest = MAJOR_PORTS.ROTTERDAM;
 
-    // In East Asia sector
     const loc1 = resolveVesselCurrentLocationName({ lat: 25.0, lon: 120.0 }, origin, dest, 0.15, { status: 'IN_TRANSIT' });
     assert.ok(loc1.includes('East China Sea'));
 
-    // In Indian Ocean sector (open sea)
     const loc2 = resolveVesselCurrentLocationName({ lat: -5.0, lon: 65.0 }, origin, dest, 0.45, { status: 'IN_TRANSIT' });
     assert.ok(loc2.includes('Indian Ocean'));
 
-    // In Red Sea sector
     const loc3 = resolveVesselCurrentLocationName({ lat: 22.0, lon: 38.0 }, origin, dest, 0.6, { status: 'IN_TRANSIT' });
     assert.ok(loc3.includes('Red Sea'));
   });

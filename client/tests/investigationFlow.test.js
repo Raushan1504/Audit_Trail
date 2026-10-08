@@ -1,7 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-// Helper extracting UI error message logic from ShipmentDetails
 function getErrorMessage(err) {
   if (!err) return 'Something went wrong.';
   if (err.status === 404) {
@@ -16,13 +15,11 @@ function getErrorMessage(err) {
   return err.message || 'Something went wrong.';
 }
 
-// Search input sanitizer
 function sanitizeShipmentQuery(input) {
   if (typeof input !== 'string') return '';
   return input.trim().toUpperCase();
 }
 
-// Event chronological validator
 function validateEventSequence(events) {
   if (!Array.isArray(events) || events.length === 0) {
     return { valid: true, count: 0 };
@@ -44,7 +41,6 @@ function validateEventSequence(events) {
   return { valid: true, count: events.length };
 }
 
-// UI State card model resolver
 function resolveShipmentDisplayModel(data, events = []) {
   if (!data) return null;
 
@@ -115,7 +111,7 @@ test('Investigation Flow — Event Sequence & Immutability Verification', async 
   await t.test('detects version gaps or out-of-order events', () => {
     const corruptedEvents = [
       { aggregateId: 'SHIP-001', eventType: 'CONTAINER_CREATED', version: 1 },
-      { aggregateId: 'SHIP-001', eventType: 'LOADED_ON_SHIP', version: 3 }, // Skipped version 2
+      { aggregateId: 'SHIP-001', eventType: 'LOADED_ON_SHIP', version: 3 },
     ];
 
     const result = validateEventSequence(corruptedEvents);

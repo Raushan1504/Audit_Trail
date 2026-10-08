@@ -14,7 +14,6 @@ test('Day 22 OCC: isValidExpectedVersion validates non-negative integer versions
   assert.strictEqual(isValidExpectedVersion('5'), true);
   assert.strictEqual(isValidExpectedVersion('0'), true);
 
-  // Invalid cases
   assert.strictEqual(isValidExpectedVersion(-1), false);
   assert.strictEqual(isValidExpectedVersion('-5'), false);
   assert.strictEqual(isValidExpectedVersion(1.5), false);
@@ -25,29 +24,25 @@ test('Day 22 OCC: isValidExpectedVersion validates non-negative integer versions
 });
 
 test('Day 22 OCC: getAllowedCommandsForStatus returns compliant domain transitions', () => {
-  // 1. Initial Container Inception (CREATED) -> Must be loaded onto vessel
+
   const createdAllowed = getAllowedCommandsForStatus('CREATED');
   assert.deepStrictEqual(createdAllowed, [OCC_COMMAND_TYPES.LOAD_ON_SHIP]);
 
-  // 2. Active Maritime Voyage (LOADED) -> Sensor anomalies or port arrival
   const loadedAllowed = getAllowedCommandsForStatus('LOADED');
   assert.deepStrictEqual(loadedAllowed, [
     OCC_COMMAND_TYPES.RECORD_TEMPERATURE_SPIKE,
     OCC_COMMAND_TYPES.ARRIVE_AT_PORT
   ]);
 
-  // 3. Thermal Anomaly State (ALERT / TEMPERATURE_SPIKE)
   const alertAllowed = getAllowedCommandsForStatus('ALERT');
   assert.deepStrictEqual(alertAllowed, [
     OCC_COMMAND_TYPES.RECORD_TEMPERATURE_SPIKE,
     OCC_COMMAND_TYPES.ARRIVE_AT_PORT
   ]);
 
-  // 4. Voyage Terminated (ARRIVED) -> Terminal state, no further transitions
   const arrivedAllowed = getAllowedCommandsForStatus('ARRIVED');
   assert.deepStrictEqual(arrivedAllowed, []);
 
-  // 5. Unknown or Empty Status
   assert.deepStrictEqual(getAllowedCommandsForStatus('UNKNOWN'), []);
   assert.deepStrictEqual(getAllowedCommandsForStatus(null), []);
 });
@@ -73,7 +68,7 @@ test('Day 22 OCC: buildOccCommandPayload constructs CREATE_CONTAINER with expect
 });
 
 test('Day 22 OCC: buildOccCommandPayload constructs LOAD_ON_SHIP forwarding tracked loadedVersion', () => {
-  const loadedVersion = 1; // Created aggregate at version 1
+  const loadedVersion = 1;
   const payload = buildOccCommandPayload(
     OCC_COMMAND_TYPES.LOAD_ON_SHIP,
     'SHIP-2026-OCC-01',
@@ -92,7 +87,7 @@ test('Day 22 OCC: buildOccCommandPayload constructs LOAD_ON_SHIP forwarding trac
 });
 
 test('Day 22 OCC: buildOccCommandPayload constructs RECORD_TEMPERATURE_SPIKE with numeric fields and expectedVersion', () => {
-  const loadedVersion = 2; // Loaded aggregate at version 2
+  const loadedVersion = 2;
   const payload = buildOccCommandPayload(
     OCC_COMMAND_TYPES.RECORD_TEMPERATURE_SPIKE,
     'SHIP-2026-OCC-01',
@@ -128,19 +123,16 @@ test('Day 22 OCC: buildOccCommandPayload constructs ARRIVE_AT_PORT and validates
   assert.strictEqual(payload.port, 'Port of Singapore Berth 4');
   assert.strictEqual(payload.expectedVersion, 3);
 
-  // Missing shipmentId error
   assert.throws(
     () => buildOccCommandPayload(OCC_COMMAND_TYPES.ARRIVE_AT_PORT, '', {}, 3),
     /shipmentId is required/
   );
 
-  // Invalid expectedVersion error
   assert.throws(
     () => buildOccCommandPayload(OCC_COMMAND_TYPES.ARRIVE_AT_PORT, 'SHIP-01', {}, -1),
     /Invalid OCC expectedVersion/
   );
 
-  // Unsupported command type error
   assert.throws(
     () => buildOccCommandPayload('UNKNOWN_COMMAND', 'SHIP-01', {}, 1),
     /Unsupported OCC command type/
@@ -148,7 +140,7 @@ test('Day 22 OCC: buildOccCommandPayload constructs ARRIVE_AT_PORT and validates
 });
 
 test('Day 22 OCC: simulates React form state tracking and optimistic lock advancement', () => {
-  // 1. Initial Query Fetch: Shipment is at version 1 (CREATED)
+
   let trackedVersion = 1;
   const formPayloadV1 = buildOccCommandPayload(
     OCC_COMMAND_TYPES.LOAD_ON_SHIP,
@@ -158,11 +150,9 @@ test('Day 22 OCC: simulates React form state tracking and optimistic lock advanc
   );
   assert.strictEqual(formPayloadV1.expectedVersion, 1);
 
-  // 2. Command succeeds and appends event -> Ledger height advances to 2
   trackedVersion = trackedVersion + 1;
   assert.strictEqual(trackedVersion, 2);
 
-  // 3. Subsequent command automatically locks to new version 2
   const formPayloadV2 = buildOccCommandPayload(
     OCC_COMMAND_TYPES.RECORD_TEMPERATURE_SPIKE,
     'SHIP-001',
@@ -171,12 +161,11 @@ test('Day 22 OCC: simulates React form state tracking and optimistic lock advanc
   );
   assert.strictEqual(formPayloadV2.expectedVersion, 2);
 
-  // 4. Stale version check: If user form was stuck at version 1, payload reflects version 1
   const stalePayload = buildOccCommandPayload(
     OCC_COMMAND_TYPES.RECORD_TEMPERATURE_SPIKE,
     'SHIP-001',
     { temperature: '12.5', threshold: '4.0', sensorId: 'IOT-01' },
-    1 // Stale!
+    1
   );
   assert.notStrictEqual(stalePayload.expectedVersion, trackedVersion);
   assert.strictEqual(stalePayload.expectedVersion, 1);

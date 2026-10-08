@@ -13,9 +13,9 @@ export function AuthProvider({ children }) {
         return JSON.parse(stored);
       }
     } catch {
-      // Fallback if localStorage is inaccessible
+
     }
-    // Default operator session for seamless demo experience
+
     return DEMO_OPERATORS[0];
   });
 
@@ -66,6 +66,7 @@ export function AuthProvider({ children }) {
     >
       {children}
     </AuthContext.Provider>
+
   );
 }
 

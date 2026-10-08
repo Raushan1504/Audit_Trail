@@ -22,7 +22,6 @@
   font-size: 32px;
 }
 
-/* Control & Replay Header */
 .event-timeline-3d__controls {
   display: flex;
   align-items: center;
@@ -67,7 +66,6 @@
   font-family: monospace;
 }
 
-/* Replay Controls */
 .replay-controls {
   display: flex;
   align-items: center;
@@ -142,7 +140,6 @@
   border-radius: 6px;
 }
 
-/* Stream List */
 .event-timeline-3d__stream {
   display: flex;
   flex-direction: column;
@@ -151,7 +148,6 @@
   padding-left: 20px;
 }
 
-/* Timeline Item */
 .timeline-item-3d {
   position: relative;
   display: flex;
@@ -166,7 +162,6 @@
   filter: grayscale(0.6);
 }
 
-/* Connecting Line */
 .timeline-item-3d__line {
   position: absolute;
   left: 17px;
@@ -183,7 +178,6 @@
   box-shadow: 0 0 8px var(--theme-accent-glow, rgba(0, 240, 255, 0.4));
 }
 
-/* Marker */
 .timeline-item-3d__marker {
   position: relative;
   width: 36px;
@@ -218,7 +212,6 @@
   color: var(--theme-accent, #ffffff);
 }
 
-/* 3D Glassmorphic Card */
 .timeline-item-3d__card {
   position: relative;
   flex: 1;
@@ -271,7 +264,6 @@
   opacity: 0.4;
 }
 
-/* Card Content Details */
 .timeline-card__top {
   display: flex;
   align-items: center;
@@ -391,9 +383,6 @@
   font-family: monospace;
 }
 
-/* Day 20: Timeline Event Jump Interaction Styles */
-
-/* Jump Toast Notification */
 .timeline-jump-toast {
   display: flex;
   align-items: center;
@@ -428,7 +417,6 @@
   letter-spacing: 0.02em;
 }
 
-/* Dedicated Jump Button on Event Card */
 .timeline-jump-btn {
   display: inline-flex;
   align-items: center;
@@ -468,7 +456,6 @@
   letter-spacing: 0.02em;
 }
 
-/* Active Scrubber Moment Badge */
 .badge-pill--scrubber-active {
   background: rgba(16, 185, 129, 0.2);
   color: #34d399;
@@ -483,7 +470,6 @@
   50% { opacity: 1; box-shadow: 0 0 14px rgba(16, 185, 129, 0.45); }
 }
 
-/* Just Jumped Flash Ripple */
 .timeline-item-3d--just-jumped .timeline-item-3d__card {
   animation: cardJumpFlash 0.7s ease-out;
 }
@@ -500,7 +486,6 @@
   }
 }
 
-/* Keyboard Focus Accessibility */
 .timeline-item-3d:focus-visible {
   outline: none;
 }
@@ -510,7 +495,6 @@
   box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.4), 0 8px 24px rgba(0, 0, 0, 0.5);
 }
 
-/* Day 25: Recharts Telemetry Hover Synchronization */
 .timeline-item-3d--chart-hovered .timeline-item-3d__card {
   border-color: #38bdf8 !important;
   box-shadow: 0 0 25px rgba(56, 189, 248, 0.4), inset 0 0 15px rgba(56, 189, 248, 0.12) !important;
@@ -550,4 +534,4 @@
   font-weight: 800;
   box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
   animation: pulseGlow 1.2s infinite;
-}
+}

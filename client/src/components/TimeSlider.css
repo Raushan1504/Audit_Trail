@@ -31,7 +31,6 @@
   opacity: 0.8;
 }
 
-/* Header & Mode Switcher */
 .time-travel-bar__header {
   display: flex;
   align-items: center;
@@ -92,7 +91,6 @@
   color: #f59e0b;
 }
 
-/* Quick Play/Pause Header Action (Day 19) */
 .time-travel-bar__quick-playback {
   display: flex;
   align-items: center;
@@ -140,7 +138,6 @@
   50% { transform: scale(1.2); }
 }
 
-/* Status Badges */
 .time-travel-bar__status {
   display: flex;
   align-items: center;
@@ -241,7 +238,6 @@
   border-radius: 3px;
 }
 
-/* Scrubber Drawer */
 .time-travel-bar__scrubber {
   margin-top: 18px;
   padding-top: 18px;
@@ -252,7 +248,6 @@
   animation: slide-down 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-/* Day 19: Playback Transport Deck */
 .playback-transport-deck {
   display: flex;
   align-items: center;
@@ -301,7 +296,6 @@
   color: #fbbf24;
 }
 
-/* Master Play / Pause Button */
 .transport-btn--master-play {
   background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(52, 211, 153, 0.25) 100%);
   border: 1px solid rgba(16, 185, 129, 0.5);
@@ -340,7 +334,6 @@
   animation: playIconPulse 1.2s infinite ease-in-out;
 }
 
-/* Playback Config Group */
 .playback-config-group {
   display: flex;
   align-items: center;
@@ -417,7 +410,6 @@
   box-shadow: 0 0 8px rgba(56, 189, 248, 0.25);
 }
 
-/* Active Playback Ticker Banner (Day 19) */
 .playback-active-ticker {
   display: flex;
   align-items: center;
@@ -570,7 +562,6 @@
   color: var(--theme-text-muted);
 }
 
-/* Slider Track */
 .slider-track-container {
   display: flex;
   flex-direction: column;
@@ -653,7 +644,6 @@
   cursor: pointer;
 }
 
-/* Discrete Version Ticks with Tooltips */
 .discrete-ticks {
   display: flex;
   justify-content: space-between;
@@ -750,7 +740,6 @@
   font-weight: 800;
 }
 
-/* Floating Tooltip */
 .tick-tooltip {
   position: absolute;
   bottom: calc(100% + 10px);
@@ -838,7 +827,6 @@
   to { opacity: 1; transform: translate(-50%, 0); }
 }
 
-/* Day 21: High-Contrast Slider Hazard Track & Live Head Tick Styles */
 .slider-wrapper--hazard {
   background: repeating-linear-gradient(
     -45deg,

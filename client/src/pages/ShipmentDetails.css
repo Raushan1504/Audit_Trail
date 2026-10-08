@@ -8,7 +8,6 @@
   gap: 24px;
 }
 
-/* Ambient Background Lights */
 .details-ambient {
   position: absolute;
   border-radius: 50%;
@@ -34,7 +33,6 @@
   background: radial-gradient(circle, var(--theme-badge-bg, rgba(99, 102, 241, 0.1)) 0%, transparent 70%);
 }
 
-/* Navigation Bar */
 .details-nav {
   display: flex;
   align-items: center;
@@ -95,7 +93,6 @@
   font-weight: 700;
 }
 
-/* Header Card */
 .details-header-card {
   position: relative;
   background: var(--theme-card-bg, rgba(30, 41, 59, 0.7));
@@ -176,7 +173,6 @@
   font-family: monospace;
 }
 
-/* Error Card */
 .details-error-card {
   display: flex;
   align-items: center;
@@ -207,7 +203,6 @@
   color: #cbd5e1;
 }
 
-/* Timeline Section Header */
 .details-timeline-section {
   display: flex;
   flex-direction: column;
@@ -227,7 +222,6 @@
   margin: 0;
 }
 
-/* Day 26: Responsive Layout Audit & Mobile Optimization */
 @media (max-width: 1024px) {
   .details-container {
     padding: 16px 20px 48px;
@@ -257,4 +251,4 @@
     align-items: flex-start;
     padding: 16px;
   }
-}
+}

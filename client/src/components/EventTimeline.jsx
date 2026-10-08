@@ -14,12 +14,6 @@ function formatPayload(payload) {
     .join(' · ');
 }
 
-/**
- * EventTimeline Component (Day 20)
- *
- * Renders the vertical chronological event stream with interactive timeline event jump interactions.
- * Users can click any event card or jump button to immediately jump the time scrubber to that exact point in time.
- */
 function EventTimeline({
   events = [],
   onStepChange,
@@ -28,15 +22,13 @@ function EventTimeline({
   onEventHover
 }) {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [activeStep, setActiveStep] = useState(null); // null means showing full latest state
+  const [activeStep, setActiveStep] = useState(null);
   const [justJumpedStep, setJustJumpedStep] = useState(null);
   const [jumpFeedbackMessage, setJumpFeedbackMessage] = useState(null);
   const feedbackTimeoutRef = useRef(null);
 
-  // Sync with prop if provided
   const effectiveStep = currentReplayStep !== undefined && currentReplayStep !== null ? currentReplayStep : activeStep;
 
-  // Clear timeout on unmount
   useEffect(() => {
     return () => {
       if (feedbackTimeoutRef.current) {
@@ -45,7 +37,6 @@ function EventTimeline({
     };
   }, []);
 
-  // Auto-replay timer
   useEffect(() => {
     let timer;
     if (isPlaying && events.length > 0) {
@@ -130,28 +121,35 @@ function EventTimeline({
     return (
       <div className="event-timeline-3d event-timeline-3d--empty">
         <span className="empty-icon">📂</span>
+
         <p>No historical events found for this shipment ledger.</p>
+
       </div>
+
     );
   }
 
   return (
     <div className="event-timeline-3d">
-      {/* 3D Immutability & Replay Controller Banner */}
+
       <div className="event-timeline-3d__controls">
         <div className="timeline-info-badge">
           <span className="lock-icon">🔒</span>
+
           <div>
             <span className="timeline-info-title">IMMUTABLE EVENT STREAM</span>
+
             <span className="timeline-info-sub">
               {events.length} Historical Blocks · Click any card to jump scrubber
             </span>
+
           </div>
+
         </div>
 
-        {/* Interactive Event Replay Scrubber */}
         <div className="replay-controls">
           <span className="replay-label">EVENT REPLAY ENGINE:</span>
+
           <div className="replay-buttons">
             <button
               type="button"
@@ -162,6 +160,7 @@ function EventTimeline({
             >
               ⏮ Step
             </button>
+
             <button
               type="button"
               className={`replay-btn replay-btn--play ${isPlaying ? 'replay-btn--active' : ''}`}
@@ -170,6 +169,7 @@ function EventTimeline({
             >
               {isPlaying ? '⏸ Pause' : '▶ Replay Sequence'}
             </button>
+
             <button
               type="button"
               className="replay-btn"
@@ -179,6 +179,7 @@ function EventTimeline({
             >
               Step ⏭
             </button>
+
             <button
               type="button"
               className="replay-btn replay-btn--reset"
@@ -187,24 +188,28 @@ function EventTimeline({
             >
               ↺ Live Head
             </button>
+
           </div>
+
           {effectiveStep !== null && (
             <span className="replay-status-pill">
               Replaying: Event {effectiveStep} / {events.length}
             </span>
+
           )}
         </div>
+
       </div>
 
-      {/* Jump Interaction Toast Notification */}
       {jumpFeedbackMessage && (
         <div className="timeline-jump-toast" role="status" aria-live="polite">
           <span className="toast-radar-dot" />
           <span className="toast-text">{jumpFeedbackMessage}</span>
+
         </div>
+
       )}
 
-      {/* Stream List */}
       <div className="event-timeline-3d__stream" role="feed" aria-label="Chronological events list">
         {events.map((event, index) => {
           const stepNumber = index + 1;
@@ -220,8 +225,8 @@ function EventTimeline({
 
           return (
             <div
-              className={`timeline-item-3d 
-                ${isTempSpike ? 'timeline-item-3d--anomaly' : ''} 
+              className={`timeline-item-3d
+                ${isTempSpike ? 'timeline-item-3d--anomaly' : ''}
                 ${isCurrentReplayPoint ? 'timeline-item-3d--active-step' : ''}
                 ${isFutureReplayPoint ? 'timeline-item-3d--future' : ''}
                 ${isJustJumped ? 'timeline-item-3d--just-jumped' : ''}
@@ -247,21 +252,20 @@ function EventTimeline({
               aria-pressed={isCurrentReplayPoint}
               title="Click to jump time slider to this event snapshot"
             >
-              {/* 3D Connecting Line */}
+
               {index !== events.length - 1 && (
                 <div
                   className={`timeline-item-3d__line ${isPastReplayPoint ? 'timeline-item-3d__line--active' : ''}`}
                 />
               )}
 
-              {/* Glowing Marker */}
               <div
                 className={`timeline-item-3d__marker ${isCurrentReplayPoint ? 'marker--pulsing' : ''} ${isChartHovered ? 'marker--synced' : ''}`}
               >
                 <span className="marker-inner">{eventVersion}</span>
+
               </div>
 
-              {/* 3D Glassmorphic Card */}
               <div className="timeline-item-3d__card">
                 <div className="timeline-item-3d__glare" />
 
@@ -270,29 +274,35 @@ function EventTimeline({
                     <span className="timeline-card__type">
                       {formatEventType(event.eventType)}
                     </span>
+
                     {isGenesis && (
                       <span className="badge-pill badge-pill--genesis">Genesis Block</span>
+
                     )}
                     {isTempSpike && (
                       <span className="badge-pill badge-pill--anomaly">🔥 Thermal Spike Anomaly</span>
+
                     )}
                     {isChartHovered && (
                       <span className={`badge-pill ${isTempSpike ? 'badge-pill--spike-synced' : 'badge-pill--chart-synced'}`}>
                         {isTempSpike ? '🔥 ANOMALY CORRELATED' : '📡 TELEMETRY SYNCED'}
                       </span>
+
                     )}
                     {isTerminal && (
                       <span className="badge-pill badge-pill--terminal">🏁 Final Destination</span>
+
                     )}
                     {isCurrentReplayPoint && (
                       <span className="badge-pill badge-pill--scrubber-active">
                         📍 ACTIVE SCRUBBER MOMENT
                       </span>
+
                     )}
                   </div>
 
                   <div className="timeline-card__tags">
-                    {/* Day 20: Dedicated Jump Interaction Trigger */}
+
                     <button
                       type="button"
                       className={`timeline-jump-btn ${isCurrentReplayPoint ? 'timeline-jump-btn--active' : ''}`}
@@ -303,39 +313,55 @@ function EventTimeline({
                       title={`Jump time slider to Version ${event.version ?? stepNumber}`}
                     >
                       <span className="jump-icon">{isCurrentReplayPoint ? '✓' : '⚡'}</span>
+
                       <span className="jump-label">
                         {isCurrentReplayPoint ? 'Active Point' : `Jump to v${event.version ?? stepNumber}`}
                       </span>
+
                     </button>
 
                     <span className="immutable-tag" title="Immutable append-only ledger record">
                       <span>🔒</span> Immutable
+
                     </span>
+
                     <span className="version-pill">v{event.version ?? '?'}</span>
+
                   </div>
+
                 </div>
 
                 <div className="timeline-card__meta">
                   <span className="timestamp">
                     ⏱ {event.timestamp ? new Date(event.timestamp).toLocaleString() : 'Unknown'}
                   </span>
+
                   <span className="block-id">
                     Block Hash: <code>#{(event._id || event.version || '0').toString().slice(-8)}</code>
+
                   </span>
+
                 </div>
 
                 {formatPayload(event.payload) && (
                   <div className="timeline-card__payload">
                     <span className="payload-tag">PAYLOAD</span>
+
                     <span className="payload-content">{formatPayload(event.payload)}</span>
+
                   </div>
+
                 )}
               </div>
+
             </div>
+
           );
         })}
       </div>
+
     </div>
+
   );
 }
 

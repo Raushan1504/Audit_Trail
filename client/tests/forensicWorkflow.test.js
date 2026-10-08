@@ -1,7 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-// Canonical event types from backend contract
 const EVENT_TYPES = {
   CONTAINER_CREATED: 'CONTAINER_CREATED',
   LOADED_ON_SHIP: 'LOADED_ON_SHIP',
@@ -9,7 +8,6 @@ const EVENT_TYPES = {
   ARRIVED_AT_PORT: 'ARRIVED_AT_PORT'
 };
 
-// Pure Event Sourcing fold/reducer mirroring domain replay for forensic verification
 function replayEvents(events) {
   const initialState = {
     shipmentId: null,
@@ -58,7 +56,6 @@ function replayEvents(events) {
   }, initialState);
 }
 
-// Forensic Workflow Integration Simulator: Search -> Fetch Events -> Replay State -> UI Model
 function runForensicInvestigation(searchQuery, mockEventStore) {
   const sanitizedQuery = (searchQuery || '').trim().toUpperCase();
 
@@ -73,7 +70,6 @@ function runForensicInvestigation(searchQuery, mockEventStore) {
     throw notFoundError;
   }
 
-  // 1. Verify append-only chronological order
   const sortedEvents = [...events].sort((a, b) => a.version - b.version);
   for (let i = 0; i < sortedEvents.length; i++) {
     if (sortedEvents[i].version !== i + 1) {
@@ -81,10 +77,8 @@ function runForensicInvestigation(searchQuery, mockEventStore) {
     }
   }
 
-  // 2. Replay events into current state
   const reconstructedState = replayEvents(sortedEvents);
 
-  // 3. Generate Forensic Dashboard UI Payload
   const uiPresentation = {
     header: {
       shipmentId: sanitizedQuery,
@@ -150,21 +144,18 @@ test('Forensic Dashboard Workflow — End-to-End Investigation', async (t) => {
   await t.test('executes Search -> API -> Events -> Replay -> UI Presentation', () => {
     const result = runForensicInvestigation('ship-pacific-99', mockEventStore);
 
-    // Verify UI Presentation Output
     assert.strictEqual(result.header.shipmentId, 'SHIP-PACIFIC-99');
     assert.strictEqual(result.header.status, 'ARRIVED');
     assert.strictEqual(result.header.version, 4);
     assert.strictEqual(result.header.isReconstructed, true);
     assert.strictEqual(result.header.immutableVerified, true);
 
-    // Verify State Card Values Reconstructed from Events
     assert.strictEqual(result.stateCard.location, 'Port of Long Beach');
     assert.strictEqual(result.stateCard.vessel, 'MV PACIFIC STAR');
     assert.strictEqual(result.stateCard.temperature, 14.5);
     assert.strictEqual(result.stateCard.cargo, 'Semiconductor Wafers');
     assert.strictEqual(result.stateCard.eventCount, 4);
 
-    // Verify Chronological Timeline Integrity
     assert.strictEqual(result.timeline.length, 4);
     assert.strictEqual(result.timeline[0].eventType, EVENT_TYPES.CONTAINER_CREATED);
     assert.strictEqual(result.timeline[1].eventType, EVENT_TYPES.LOADED_ON_SHIP);
@@ -191,7 +182,7 @@ test('Forensic Dashboard Workflow — End-to-End Investigation', async (t) => {
     const tamperedStore = {
       'SHIP-TAMPERED': [
         { aggregateId: 'SHIP-TAMPERED', eventType: EVENT_TYPES.CONTAINER_CREATED, version: 1 },
-        { aggregateId: 'SHIP-TAMPERED', eventType: EVENT_TYPES.ARRIVED_AT_PORT, version: 3 } // Version 2 missing
+        { aggregateId: 'SHIP-TAMPERED', eventType: EVENT_TYPES.ARRIVED_AT_PORT, version: 3 }
       ]
     };
 

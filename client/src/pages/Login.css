@@ -1,4 +1,4 @@
-/* Login Page Styles (Theme-Compliant) */
+
 
 .login-container {
   position: relative;
@@ -10,7 +10,6 @@
   overflow: hidden;
 }
 
-/* Ambient 3D Glows */
 .login-glow {
   position: absolute;
   border-radius: 50%;
@@ -36,7 +35,6 @@
   background: rgba(99, 102, 241, 0.2);
 }
 
-/* Glassmorphic Terminal Card */
 .login-card {
   position: relative;
   z-index: 1;
@@ -69,7 +67,6 @@
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
 }
 
-/* Header */
 .login-card__header {
   margin-bottom: 2rem;
   text-align: center;
@@ -120,7 +117,6 @@
   line-height: 1.5;
 }
 
-/* Demo Presets */
 .login-presets {
   margin-bottom: 1.75rem;
   padding: 1rem;
@@ -202,7 +198,6 @@
   text-overflow: ellipsis;
 }
 
-/* Form */
 .login-form {
   display: flex;
   flex-direction: column;
@@ -265,7 +260,6 @@
   cursor: pointer;
 }
 
-/* Checkbox */
 .form-checkbox-group {
   margin-top: 0.25rem;
 }
@@ -289,7 +283,6 @@
   line-height: 1.4;
 }
 
-/* Alerts */
 .login-alert {
   display: flex;
   align-items: center;
@@ -313,7 +306,6 @@
   color: #6ee7b7;
 }
 
-/* Submit Button */
 .login-submit-btn {
   display: flex;
   align-items: center;
@@ -352,7 +344,6 @@
   transform: translateX(4px);
 }
 
-/* Footer */
 .login-card__footer {
   display: flex;
   flex-direction: column;

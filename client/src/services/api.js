@@ -18,8 +18,6 @@ async function handleResponse(response) {
   return json.data !== undefined ? json.data : json;
 }
 
-// --- Query Functions (CQRS Read Side) ---
-
 export async function getShipmentState(shipmentId) {
   const response = await fetch(`${BASE_URL}/queries/shipments/${shipmentId}`);
   return handleResponse(response);
@@ -40,8 +38,6 @@ export async function getShipmentTelemetry(shipmentId) {
   return handleResponse(response);
 }
 
-// --- Command Functions (CQRS Write Side with OCC expectedVersion) ---
-
 async function sendCommand(endpoint, payload) {
   const response = await fetch(`${BASE_URL}${endpoint}`, {
     method: 'POST',
@@ -53,10 +49,6 @@ async function sendCommand(endpoint, payload) {
   return handleResponse(response);
 }
 
-/**
- * Dispatches CreateShipment command (Genesis Inception).
- * Always expects version 0 for uncreated aggregates.
- */
 export async function createShipmentCommand(payload) {
   return sendCommand('/commands/shipments/create', {
     ...payload,
@@ -64,23 +56,14 @@ export async function createShipmentCommand(payload) {
   });
 }
 
-/**
- * Dispatches LoadShipment command with tracked aggregate expectedVersion.
- */
 export async function loadShipmentCommand(shipmentId, payload) {
   return sendCommand(`/commands/shipments/${encodeURIComponent(shipmentId)}/load`, payload);
 }
 
-/**
- * Dispatches RecordTemperatureSpike command with tracked aggregate expectedVersion.
- */
 export async function recordTemperatureSpikeCommand(shipmentId, payload) {
   return sendCommand(`/commands/shipments/${encodeURIComponent(shipmentId)}/temperature-spike`, payload);
 }
 
-/**
- * Dispatches ArriveAtPort command with tracked aggregate expectedVersion.
- */
 export async function arriveAtPortCommand(shipmentId, payload) {
   return sendCommand(`/commands/shipments/${encodeURIComponent(shipmentId)}/arrive`, payload);
 }

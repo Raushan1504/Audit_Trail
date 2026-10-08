@@ -29,7 +29,6 @@ test('Day 23: OCC Conflict Contract & Resolution Hint Formatting', async (t) => 
     let conflictModalOpen = false;
     let conflictPayload = null;
 
-    // Dispatch command with stale expectedVersion 2
     const commandPayload = buildOccCommandPayload(
       OCC_COMMAND_TYPES.RECORD_TEMPERATURE_SPIKE,
       'SHIP-CONC-200',
@@ -39,7 +38,6 @@ test('Day 23: OCC Conflict Contract & Resolution Hint Formatting', async (t) => 
 
     assert.equal(commandPayload.expectedVersion, 2);
 
-    // Backend returns 409 conflict: current is 3
     const server409Response = {
       status: 409,
       data: {
@@ -54,7 +52,6 @@ test('Day 23: OCC Conflict Contract & Resolution Hint Formatting', async (t) => 
       }
     };
 
-    // Client catches 409 and triggers modal
     if (server409Response.status === 409) {
       conflictModalOpen = true;
       conflictPayload = server409Response.data.conflict;
@@ -63,7 +60,6 @@ test('Day 23: OCC Conflict Contract & Resolution Hint Formatting', async (t) => 
     assert.equal(conflictModalOpen, true);
     assert.equal(conflictPayload.currentVersion, 3);
 
-    // Operator clicks "Refresh with Latest State (v3)"
     currentLoadedVersion = conflictPayload.currentVersion;
     conflictModalOpen = false;
     conflictPayload = null;
@@ -71,7 +67,6 @@ test('Day 23: OCC Conflict Contract & Resolution Hint Formatting', async (t) => 
     assert.equal(conflictModalOpen, false);
     assert.equal(currentLoadedVersion, 3);
 
-    // Next command is now bound to latest version 3
     const refreshedCommandPayload = buildOccCommandPayload(
       OCC_COMMAND_TYPES.RECORD_TEMPERATURE_SPIKE,
       'SHIP-CONC-200',

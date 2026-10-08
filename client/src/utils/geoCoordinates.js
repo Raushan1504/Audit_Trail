@@ -1,7 +1,3 @@
-/**
- * Global Maritime Ports Database & Coordinate Projection Utilities
- * Maps real-world ports and logistics hubs to geographic coordinates and SVG projection space.
- */
 
 export const MAJOR_PORTS = {
   SHANGHAI: {
@@ -123,12 +119,6 @@ export const MAJOR_PORTS = {
   }
 };
 
-/**
- * Resolves a text location name or string to a canonical port definition.
- *
- * @param {string} locationStr - E.g. "Port of Shanghai", "Shanghai Marine Terminal"
- * @returns {Object|null} Matched port entry or null
- */
 export function resolvePortLocation(locationStr) {
   if (!locationStr || typeof locationStr !== 'string') return null;
 
@@ -143,15 +133,6 @@ export function resolvePortLocation(locationStr) {
   return null;
 }
 
-/**
- * Projects latitude and longitude coordinates to 2D equirectangular SVG space.
- *
- * @param {number} lat - Latitude (-90 to 90)
- * @param {number} lon - Longitude (-180 to 180)
- * @param {number} width - Target SVG width in pixels (default: 1000)
- * @param {number} height - Target SVG height in pixels (default: 500)
- * @returns {{x: number, y: number}} SVG coordinate point
- */
 export function latLonToSvg(lat, lon, width = 1000, height = 500) {
   const clampedLat = Math.max(-90, Math.min(90, lat));
   const clampedLon = Math.max(-180, Math.min(180, lon));
@@ -165,14 +146,6 @@ export function latLonToSvg(lat, lon, width = 1000, height = 500) {
   };
 }
 
-/**
- * Interpolates vessel coordinates between origin and destination based on version progression.
- *
- * @param {Object} originPort - Starting port
- * @param {Object} destPort - Ending port
- * @param {number} progress - Normalised progress between 0.0 (origin) and 1.0 (destination)
- * @returns {{lat: number, lon: number, heading: number}}
- */
 export function interpolateVesselPosition(originPort, destPort, progress = 0) {
   const p = Math.max(0, Math.min(1, progress));
 
@@ -196,17 +169,14 @@ export function interpolateVesselPosition(originPort, destPort, progress = 0) {
     return { lat: destPort.lat, lon: destPort.lon, heading: 0 };
   }
 
-  // Handle longitudinal wraparound across the 180th meridian if needed
   let dLon = destPort.lon - originPort.lon;
   if (dLon > 180) dLon -= 360;
   if (dLon < -180) dLon += 360;
 
-  // Great-circle style slight curved arc in latitude
   const latArc = Math.sin(p * Math.PI) * 6.0;
   const lat = originPort.lat + (destPort.lat - originPort.lat) * p + latArc;
   const lon = originPort.lon + dLon * p;
 
-  // Approximate heading in degrees
   const angleRad = Math.atan2(destPort.lat - originPort.lat, dLon);
   const heading = Math.round(((angleRad * 180) / Math.PI + 360) % 360);
 
@@ -217,14 +187,6 @@ export function interpolateVesselPosition(originPort, destPort, progress = 0) {
   };
 }
 
-/**
- * Formats decimal latitude and longitude into standard nautical format (DMS).
- * E.g. "31°14' N, 121°28' E"
- *
- * @param {number} lat - Decimal latitude
- * @param {number} lon - Decimal longitude
- * @returns {string} Nautical coordinates string
- */
 export function formatNauticalCoordinates(lat, lon) {
   if (lat == null || lon == null || isNaN(lat) || isNaN(lon)) {
     return '00°00\' N, 00°00\' E';
@@ -241,9 +203,6 @@ export function formatNauticalCoordinates(lat, lon) {
   return `${latDeg}°${latMin.toString().padStart(2, '0')}' ${latDir}, ${lonDeg}°${lonMin.toString().padStart(2, '0')}' ${lonDir}`;
 }
 
-/**
- * Global Maritime Corridor Transit Waypoints & Chokepoints
- */
 export const CORRIDOR_WAYPOINTS = [
   {
     id: 'WP_MALACCA',
@@ -301,13 +260,6 @@ export const CORRIDOR_WAYPOINTS = [
   }
 ];
 
-/**
- * Returns key named locations and waypoints along the route between origin and destination.
- *
- * @param {Object} originPort - Starting port object
- * @param {Object} destPort - Terminating port object
- * @returns {Array<Object>} Ordered list of locations (Origin, Waypoints, Destination)
- */
 export function getRouteCorridorLocations(originPort, destPort) {
   const origin = originPort || MAJOR_PORTS.SHANGHAI;
   const dest = destPort || MAJOR_PORTS.ROTTERDAM;
@@ -324,7 +276,6 @@ export function getRouteCorridorLocations(originPort, destPort) {
     }
   ];
 
-  // If sailing between East Asia / South Asia and Europe / West, insert relevant corridor waypoints
   const isAsiaToEurope = (origin.lon > 60 && dest.lon < 20) || (origin.lon < 20 && dest.lon > 60);
 
   if (isAsiaToEurope) {
@@ -340,7 +291,7 @@ export function getRouteCorridorLocations(originPort, destPort) {
       });
     });
   } else {
-    // Generate synthetic mid-route waypoints based on interpolation
+
     const mid1 = interpolateVesselPosition(origin, dest, 0.33);
     const mid2 = interpolateVesselPosition(origin, dest, 0.67);
     locations.push({
@@ -376,16 +327,6 @@ export function getRouteCorridorLocations(originPort, destPort) {
   return locations;
 }
 
-/**
- * Resolves a human-readable location and sector name for the vessel's current position.
- *
- * @param {Object} vesselGeo - Current coordinates { lat, lon }
- * @param {Object} originPort - Starting port
- * @param {Object} destPort - Destination port
- * @param {number} progressRatio - 0.0 to 1.0
- * @param {Object} activeState - Current state from event fold
- * @returns {string} Human-readable current location name
- */
 export function resolveVesselCurrentLocationName(vesselGeo, originPort, destPort, progressRatio, activeState) {
   if (activeState?.status === 'CREATED' || progressRatio <= 0.02) {
     return `${originPort?.name || 'Origin Port'} (Berthed)`;
@@ -394,7 +335,6 @@ export function resolveVesselCurrentLocationName(vesselGeo, originPort, destPort
     return `${destPort?.name || 'Destination Port'} (Discharged)`;
   }
 
-  // Check proximity to any corridor waypoint (within ~15 degrees)
   for (const wp of CORRIDOR_WAYPOINTS) {
     const dLat = Math.abs(vesselGeo.lat - wp.lat);
     const dLon = Math.abs(vesselGeo.lon - wp.lon);
@@ -403,7 +343,6 @@ export function resolveVesselCurrentLocationName(vesselGeo, originPort, destPort
     }
   }
 
-  // Geographic sector determination
   const { lat, lon } = vesselGeo;
   if (lon > 100 && lat > 10) return 'East China Sea / South China Sea';
   if (lon > 90 && lat <= 15) return 'Strait of Malacca Approach';
@@ -416,4 +355,3 @@ export function resolveVesselCurrentLocationName(vesselGeo, originPort, destPort
 
   return `Oceanic Corridor (${formatNauticalCoordinates(lat, lon)})`;
 }
-

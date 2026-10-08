@@ -2,12 +2,6 @@ import { useState, useEffect } from 'react';
 import { getEventMeta, formatEventName } from '../utils/eventMeta';
 import './TimeSlider.css';
 
-/**
- * TimeSlider Component (Day 15, Day 16, Day 17, Day 19)
- *
- * Provides granular state scrubbing and automated step-by-step playback controls (Play/Pause/Rewind)
- * allowing logistics analysts to watch historical domain events fold in real time.
- */
 function TimeSlider({
   viewMode = 'live',
   onViewModeChange,
@@ -24,7 +18,6 @@ function TimeSlider({
 }) {
   const [hoveredStep, setHoveredStep] = useState(null);
 
-  // Internal playback state if not controlled externally
   const [internalIsPlaying, setInternalIsPlaying] = useState(false);
   const [internalSpeed, setInternalSpeed] = useState(1);
   const [internalLoop, setInternalLoop] = useState(false);
@@ -67,7 +60,6 @@ function TimeSlider({
   const activeMeta = getEventMeta(activeEvent);
   const stepsBehind = maxStep - currentStep;
 
-  // Automated Step-by-Step Playback Loop
   useEffect(() => {
     if (!isPlaying) return;
 
@@ -83,7 +75,7 @@ function TimeSlider({
           onStepChange(currentStep + 1);
         }
       } else {
-        // Reached terminal version of voyage
+
         if (isLooping) {
           if (onStepChange) {
             onStepChange(1);
@@ -228,7 +220,6 @@ function TimeSlider({
     >
       <div className="time-travel-bar__glow" />
 
-      {/* Top Controls: Mode Switcher, Quick Play & Status Badges */}
       <div className="time-travel-bar__header">
         <div className="mode-toggle-group" role="group" aria-label="Temporal View Modes">
           <button
@@ -239,6 +230,7 @@ function TimeSlider({
           >
             <span className="live-indicator-dot" />
             <span className="mode-text">Live Current State</span>
+
           </button>
 
           <button
@@ -248,11 +240,13 @@ function TimeSlider({
             title="Inspect historical state by rewinding events"
           >
             <span className="history-icon">⏮</span>
+
             <span className="mode-text">Historical Inspection Mode</span>
+
           </button>
+
         </div>
 
-        {/* Quick Play/Pause Header Action */}
         <div className="time-travel-bar__quick-playback">
           <button
             type="button"
@@ -263,10 +257,13 @@ function TimeSlider({
             <span className={`playback-play-icon ${isPlaying ? 'playback-play-icon--pulse' : ''}`}>
               {isPlaying ? '⏸' : currentStep >= maxStep ? '↺' : '▶'}
             </span>
+
             <span className="quick-play-text">
               {isPlaying ? 'Pause' : currentStep >= maxStep ? 'Replay' : 'Play Voyage'}
             </span>
+
           </button>
+
         </div>
 
         <div className="time-travel-bar__status">
@@ -274,21 +271,29 @@ function TimeSlider({
             <div className="live-badge">
               <span className="pulse-beacon" />
               <span className="badge-title">REAL-TIME LEDGER</span>
+
               <span className="badge-meta">Confirmed Head (v{maxStep})</span>
+
             </div>
+
           ) : (
             <div className="historical-badge">
               <span className="warning-icon">⏳</span>
+
               <span className="badge-title">HISTORICAL SCRUBBER ACTIVE</span>
+
               <span className="badge-meta">
                 Inspecting Version {currentStep} of {maxStep}
               </span>
+
               {stepsBehind > 0 ? (
                 <span className="lag-indicator">
                   ({stepsBehind} {stepsBehind === 1 ? 'event' : 'events'} behind live)
                 </span>
+
               ) : (
                 <span className="head-sync-indicator">✓ In sync with head</span>
+
               )}
               <button
                 type="button"
@@ -297,20 +302,24 @@ function TimeSlider({
                 title="Return to live state [Esc]"
               >
                 <span>Return to Live ⚡</span>
+
                 <kbd className="btn-kbd">Esc</kbd>
+
               </button>
+
             </div>
+
           )}
         </div>
+
       </div>
 
-      {/* Day 16 & Day 19: Interactive Scrubber & Step-by-Step Playback Deck */}
       {isHistorical && (
         <div className="time-travel-bar__scrubber">
-          {/* Day 19: Full Playback Transport Control Deck */}
+
           <div className="playback-transport-deck">
             <div className="transport-nav-buttons">
-              {/* Rewind */}
+
               <button
                 type="button"
                 className="transport-btn transport-btn--rewind"
@@ -320,7 +329,6 @@ function TimeSlider({
                 ⏮ Rewind
               </button>
 
-              {/* Step Prev */}
               <button
                 type="button"
                 className="transport-btn transport-btn--step"
@@ -331,7 +339,6 @@ function TimeSlider({
                 ◀ Step
               </button>
 
-              {/* Master Play / Pause */}
               <button
                 type="button"
                 className={`transport-btn transport-btn--master-play ${isPlaying ? 'transport-btn--playing' : ''}`}
@@ -341,10 +348,11 @@ function TimeSlider({
                 <span className={`master-play-icon ${isPlaying ? 'master-play-icon--pulse' : ''}`}>
                   {isPlaying ? '⏸' : currentStep >= maxStep ? '↺' : '▶'}
                 </span>
+
                 <span>{isPlaying ? 'Pause' : currentStep >= maxStep ? 'Replay' : 'Play'}</span>
+
               </button>
 
-              {/* Step Next */}
               <button
                 type="button"
                 className="transport-btn transport-btn--step"
@@ -355,7 +363,6 @@ function TimeSlider({
                 Step ▶
               </button>
 
-              {/* Latest */}
               <button
                 type="button"
                 className="transport-btn transport-btn--latest"
@@ -365,12 +372,13 @@ function TimeSlider({
               >
                 Latest ⏭
               </button>
+
             </div>
 
-            {/* Playback Configuration: Speed Selector & Loop Toggle */}
             <div className="playback-config-group">
               <div className="playback-speed-selector" role="group" aria-label="Playback Speed">
                 <span className="config-label">SPEED:</span>
+
                 {[0.5, 1, 2].map((s) => (
                   <button
                     key={s}
@@ -381,6 +389,7 @@ function TimeSlider({
                   >
                     {s}x
                   </button>
+
                 ))}
               </div>
 
@@ -391,22 +400,30 @@ function TimeSlider({
                 title="Toggle continuous playback loop [L]"
               >
                 <span className="loop-icon">🔁</span>
+
                 <span>Loop {isLooping ? 'ON' : 'OFF'}</span>
+
               </button>
+
             </div>
 
-            {/* Current Scrubbed Snapshot Meta */}
             <div className="snapshot-meta-card">
               <div className="snapshot-version-tag">
                 <span className="version-label">POINT IN TIME:</span>
+
                 <span className="version-value">v{currentStep}</span>
+
               </div>
+
               <div className="snapshot-event-info">
                 <span className="event-icon">{activeMeta.icon}</span>
+
                 <span className={`event-type-badge ${activeMeta.typeClass}`}>
                   {activeMeta.label}
                 </span>
+
                 <span className="event-snippet">{activeMeta.snippet}</span>
+
                 {activeEvent?.timestamp && (
                   <span className="event-time-stamp">
                     {new Date(activeEvent.timestamp).toLocaleTimeString([], {
@@ -415,34 +432,44 @@ function TimeSlider({
                       second: '2-digit'
                     })}
                   </span>
+
                 )}
               </div>
+
             </div>
+
           </div>
 
-          {/* Active Automated Playback Ticker Banner */}
           {isPlaying && (
             <div className="playback-active-ticker">
               <div className="ticker-pulse-group">
                 <span className="ticker-pulse-dot" />
                 <span className="ticker-title">AUTOMATED VOYAGE PLAYBACK ACTIVE</span>
+
               </div>
+
               <span className="ticker-status">
                 Simulating event stream · Version {currentStep} of {maxStep} ({playbackSpeed}x Speed)
               </span>
+
               <span className="ticker-hint">Press Space or click Pause to freeze</span>
+
             </div>
+
           )}
 
-          {/* Interactive Range Slider with Discrete Event Ticks */}
           <div className="slider-track-container">
             <div className="slider-ticks-labels">
               <span className="tick-label">
                 <span className="tick-icon">📦</span> v1 (Genesis)
+
               </span>
+
               <span className="tick-label">
                 <span className="tick-icon">🏁</span> v{maxStep} (Latest)
+
               </span>
+
             </div>
 
             <div className={`slider-wrapper ${isHistorical && currentStep < maxStep ? 'slider-wrapper--hazard' : ''}`}>
@@ -469,7 +496,6 @@ function TimeSlider({
               />
             </div>
 
-            {/* Discrete Version Tick Marks with Event Indicators & Hover Tooltips */}
             <div className="discrete-ticks" role="tablist" aria-label="Version Snapshots">
               {Array.from({ length: maxStep }, (_, idx) => {
                 const stepNum = idx + 1;
@@ -487,20 +513,27 @@ function TimeSlider({
                     onMouseEnter={() => setHoveredStep(stepNum)}
                     onMouseLeave={() => setHoveredStep(null)}
                   >
-                    {/* Rich Floating Tooltip */}
+
                     {isHovered && (
                       <div className="tick-tooltip" role="tooltip">
                         <div className="tooltip-top">
                           <span className="tooltip-icon">{meta.icon}</span>
+
                           <span className="tooltip-version">Version {stepNum}</span>
+
                           {isHead ? (
                             <span className="tooltip-status-tag tooltip-status-tag--head">LIVE HEAD</span>
+
                           ) : (
                             <span className="tooltip-status-tag tooltip-status-tag--past">PAST STATE</span>
+
                           )}
                         </div>
+
                         <span className="tooltip-title">{meta.label}</span>
+
                         <span className="tooltip-snippet">{meta.snippet}</span>
+
                         {stepEvent?.timestamp && (
                           <span className="tooltip-time">
                             {new Date(stepEvent.timestamp).toLocaleDateString()}{' '}
@@ -509,14 +542,17 @@ function TimeSlider({
                               minute: '2-digit'
                             })}
                           </span>
+
                         )}
                         {!isHead && (
                           <span className="tooltip-lag-note">
                             ⚠ Rewound: {maxStep - stepNum} {maxStep - stepNum === 1 ? 'version' : 'versions'} behind live
                           </span>
+
                         )}
                         <span className="tooltip-arrow" />
                       </div>
+
                     )}
 
                     <button
@@ -532,20 +568,31 @@ function TimeSlider({
                       <span className="tick-pip">
                         <span className="tick-pip-inner" />
                       </span>
+
                       <div className="tick-meta-col">
                         <span className="tick-icon-mini">{meta.icon}</span>
+
                         <span className="tick-number">v{stepNum}</span>
+
                         {isHead && <span className="tick-head-pill">HEAD</span>}
+
                       </div>
+
                     </button>
+
                   </div>
+
                 );
               })}
             </div>
+
           </div>
+
         </div>
+
       )}
     </div>
+
   );
 }
 

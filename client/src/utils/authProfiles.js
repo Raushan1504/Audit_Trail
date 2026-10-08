@@ -1,6 +1,3 @@
-/**
- * Forensic Operator Identity Profiles & Authentication Helpers
- */
 
 export const DEMO_OPERATORS = [
   {
@@ -41,13 +38,6 @@ export const DEMO_OPERATORS = [
   }
 ];
 
-/**
- * Validates operator authentication credentials.
- *
- * @param {string} email - Operator email or username
- * @param {string} passcode - Security passcode
- * @returns {{ valid: boolean, error?: string, operator?: Object }}
- */
 export function validateOperatorCredentials(email, passcode) {
   if (!email || typeof email !== 'string' || !email.trim()) {
     return { valid: false, error: 'Operator email is required.' };
@@ -76,12 +66,6 @@ export function validateOperatorCredentials(email, passcode) {
   };
 }
 
-/**
- * Generates an append-only operator session token.
- *
- * @param {string} operatorId - E.g. 'op_aman'
- * @returns {string} Session token string
- */
 export function createSessionToken(operatorId) {
   const nonce = Math.random().toString(36).substring(2, 10);
   const ts = Date.now().toString(36);

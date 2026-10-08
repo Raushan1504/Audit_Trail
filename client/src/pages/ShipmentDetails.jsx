@@ -26,7 +26,6 @@ function getErrorMessage(err) {
   return err.message || 'Something went wrong.';
 }
 
-// Client-side fold for interactive replay simulation
 function foldEventsUpTo(events, step) {
   if (!Array.isArray(events) || events.length === 0) return null;
   const slice = step !== null ? events.slice(0, step) : events;
@@ -86,15 +85,15 @@ function ShipmentDetails() {
   const { shipmentId } = useParams();
   const [shipmentData, setShipmentData] = useState(null);
   const [events, setEvents] = useState([]);
-  const [aggregateVersion, setAggregateVersion] = useState(0); // Day 22: Track loaded aggregate version for OCC
+  const [aggregateVersion, setAggregateVersion] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [viewMode, setViewMode] = useState('live'); // 'live' | 'historical'
-  const [replayStep, setReplayStep] = useState(null); // null = full state
+  const [viewMode, setViewMode] = useState('live');
+  const [replayStep, setReplayStep] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [isLooping, setIsLooping] = useState(false);
-  const [hoveredEventVersion, setHoveredEventVersion] = useState(null); // Day 25: Telemetry <-> Timeline synchronization
+  const [hoveredEventVersion, setHoveredEventVersion] = useState(null);
 
   const refreshShipmentData = () => {
     if (!shipmentId) return Promise.resolve();
@@ -139,7 +138,7 @@ function ShipmentDetails() {
         setEvents(Array.isArray(eventsData) ? eventsData : []);
       })
       .catch((err) => {
-        // Resilient Fallback: if server is unreachable or 404, check if this is a known demo preset
+
         const fallback = DEMO_FALLBACKS[normId] || DEMO_FALLBACKS[shipmentId];
         if (fallback && fallback.length > 0) {
           const reconstructed = foldEventsUpTo(fallback, null);
@@ -162,7 +161,7 @@ function ShipmentDetails() {
       setIsPlaying(false);
       setReplayStep(null);
     } else if (newMode === 'historical') {
-      // Default to the first step or latest step when entering historical mode
+
       setReplayStep(events.length > 0 ? events.length : 1);
     }
   };
@@ -197,13 +196,11 @@ function ShipmentDetails() {
     }
   };
 
-  // Determine what state data to show: folded replay or backend reconstructed
   const isHistoricalActive = viewMode === 'historical' && replayStep !== null;
   const displayedState = isHistoricalActive
     ? foldEventsUpTo(events, replayStep)
     : shipmentData;
 
-  // Day 21: Global keyboard shortcut (Escape key returns to live confirmed head)
   useEffect(() => {
     const handleGlobalKeyDown = (e) => {
       if (e.key === 'Escape' && isHistoricalActive) {
@@ -217,58 +214,73 @@ function ShipmentDetails() {
 
   return (
     <div className="shipment-details-cinematic">
-      {/* 3D Ambient Lighting */}
+
       <div className="details-ambient details-ambient--left" />
       <div className="details-ambient details-ambient--right" />
 
-      {/* Top Navigation & Breadcrumbs */}
       <div className="details-nav">
         <Link to="/dashboard" className="details-nav__back">
           <span className="back-arrow">←</span>
+
           <span>Back to Console</span>
+
         </Link>
+
         <div className="details-nav__breadcrumb">
           <span>FORENSIC LEDGER</span>
+
           <span className="bc-sep">/</span>
           <span className="bc-id">{shipmentId}</span>
+
         </div>
+
       </div>
 
-      {/* Cinematic Shipment Header */}
       <div className="details-header-card">
         <div className="details-header-card__glare" />
         <div className="details-header__main">
           <div className="details-header__title-group">
             <span className="details-header__label">AGGREGATE IDENTITY</span>
+
             <h1 className="details-header__id">{shipmentId}</h1>
+
           </div>
+
           <div className="details-header__audit-badge">
             <span className="audit-icon">🛡</span>
+
             <div>
               <span className="audit-title">CRYPTOGRAPHIC AUDIT CHAIN</span>
+
               <span className="audit-sub">SHA-256 Ledger Node · Tamper-Proof</span>
+
             </div>
+
           </div>
+
         </div>
+
       </div>
 
-      {/* Loading State */}
       {loading && (
         <LoadingState message={`Replaying Event Stream for ${shipmentId}...`} />
       )}
 
-      {/* Error State */}
       {!loading && error && (
         <div className="details-error-card">
           <span className="error-icon">⚠</span>
+
           <div className="error-content">
             <h3>Investigation Halted</h3>
+
             <p>{getErrorMessage(error)}</p>
+
           </div>
+
         </div>
+
       )}
 
-      {/* Day 15 & Day 19: Time-Travel Control Bar & Automated Playback Controls */}
       {!loading && !error && events.length > 0 && (
         <TimeSlider
           viewMode={viewMode}
@@ -286,7 +298,6 @@ function ShipmentDetails() {
         />
       )}
 
-      {/* Day 21: High-Contrast Historical Warning Banner */}
       {!loading && !error && isHistoricalActive && (
         <HistoricalWarningBanner
           currentVersion={replayStep || events.length}
@@ -298,7 +309,6 @@ function ShipmentDetails() {
         />
       )}
 
-      {/* Day 18 & Day 19: Visual Historical State Diff Indicator & Simulation Controls */}
       {!loading && !error && displayedState && shipmentData && isHistoricalActive && (
         <StateDiffIndicator
           historicalState={displayedState}
@@ -314,7 +324,6 @@ function ShipmentDetails() {
         />
       )}
 
-      {/* Main Forensic Content */}
       {!loading && !error && displayedState && (
         <ShipmentState
           data={displayedState}
@@ -326,7 +335,6 @@ function ShipmentDetails() {
         />
       )}
 
-      {/* Day 18 & Day 21: Global Maritime Route & Live Location Radar Map */}
       {!loading && !error && displayedState && (
         <ShipmentMap
           shipment={shipmentId}
@@ -338,7 +346,6 @@ function ShipmentDetails() {
         />
       )}
 
-      {/* Day 24 & Day 25: Recharts Sensor Telemetry & Event Timeline Overlay Synchronization */}
       {!loading && !error && shipmentData && (
         <SensorTelemetryChart
           shipmentId={shipmentId}
@@ -355,7 +362,6 @@ function ShipmentDetails() {
         />
       )}
 
-      {/* Day 22: Optimistic Concurrency Control (OCC) Command Panel */}
       {!loading && !error && shipmentData && (
         <CommandPanel
           shipmentId={shipmentId}
@@ -372,9 +378,13 @@ function ShipmentDetails() {
           <div className="timeline-section-header">
             <div>
               <h2>Chronological Event Stream</h2>
+
               <p>Reconstruct current status by stepping through append-only domain events</p>
+
             </div>
+
           </div>
+
           <EventTimeline
             events={events}
             currentReplayStep={replayStep}
@@ -385,8 +395,10 @@ function ShipmentDetails() {
             }}
           />
         </div>
+
       )}
     </div>
+
   );
 }
 

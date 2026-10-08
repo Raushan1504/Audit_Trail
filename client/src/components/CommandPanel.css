@@ -1,4 +1,4 @@
-/* Day 22: CommandPanel Styles (Optimistic Concurrency Control) */
+
 .command-panel-card {
   position: relative;
   background: var(--theme-card-bg, linear-gradient(145deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.85) 100%));
@@ -24,7 +24,6 @@
   opacity: 0.6;
 }
 
-/* Header */
 .command-panel-header {
   display: flex;
   flex-direction: column;
@@ -108,7 +107,6 @@
   border-radius: 4px;
 }
 
-/* Historical Warning */
 .command-historical-warning {
   display: flex;
   align-items: center;
@@ -153,7 +151,6 @@
   box-shadow: 0 2px 10px rgba(245, 158, 11, 0.4);
 }
 
-/* Tabs */
 .command-tabs-container {
   display: flex;
   flex-direction: column;
@@ -215,7 +212,6 @@
   font-weight: 600;
 }
 
-/* Form */
 .command-form {
   display: flex;
   flex-direction: column;
@@ -272,7 +268,6 @@
   color: var(--theme-text-muted, #64748b);
 }
 
-/* Locked Version Field */
 .form-field--locked input {
   background: rgba(0, 0, 0, 0.35);
   border-color: rgba(52, 211, 153, 0.4);
@@ -291,7 +286,6 @@
   color: #34d399;
 }
 
-/* Payload Preview */
 .payload-preview-section {
   display: flex;
   flex-direction: column;
@@ -335,7 +329,6 @@
   overflow-x: auto;
 }
 
-/* Feedback */
 .command-feedback {
   display: flex;
   align-items: flex-start;
@@ -359,7 +352,6 @@
   color: #fca5a5;
 }
 
-/* Dispatch Button */
 .form-actions-row {
   display: flex;
   justify-content: flex-end;

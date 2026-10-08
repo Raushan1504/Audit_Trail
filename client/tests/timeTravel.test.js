@@ -1,7 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-// Helper extracting client-side event fold logic
 function foldEventsUpTo(events, step) {
   if (!Array.isArray(events) || events.length === 0) return null;
   const slice = step !== null ? events.slice(0, step) : events;
@@ -40,11 +39,10 @@ function foldEventsUpTo(events, step) {
   }, initialState);
 }
 
-// Helper simulating TimeSlider mode and step manager
 class TimeTravelController {
   constructor(events = []) {
     this.events = events;
-    this.viewMode = 'live'; // 'live' | 'historical'
+    this.viewMode = 'live';
     this.currentStep = events.length;
   }
 
@@ -149,7 +147,6 @@ test('Day 15 Time-Travel: toggles to historical inspection mode and rewinds stat
   ctrl.setMode('historical');
   assert.strictEqual(ctrl.viewMode, 'historical');
 
-  // Rewind to Genesis (v1)
   ctrl.jumpGenesis();
   assert.strictEqual(ctrl.currentStep, 1);
   assert.strictEqual(ctrl.isPastSnapshot(), true);
@@ -166,7 +163,6 @@ test('Day 15 Time-Travel: toggles to historical inspection mode and rewinds stat
 test('Day 15 Time-Travel: step navigation handles intermediate snapshots', () => {
   const ctrl = new TimeTravelController(mockShipmentEvents);
 
-  // Rewind to v1 then step forward to v2 (LOADED)
   ctrl.jumpGenesis();
   ctrl.stepNext();
   assert.strictEqual(ctrl.currentStep, 2);
@@ -177,7 +173,6 @@ test('Day 15 Time-Travel: step navigation handles intermediate snapshots', () =>
   assert.strictEqual(v2State.vessel, 'MV ARCTIC VOYAGER');
   assert.strictEqual(v2State.temperature, null);
 
-  // Step forward to v3 (TEMPERATURE_SPIKE)
   ctrl.stepNext();
   assert.strictEqual(ctrl.currentStep, 3);
 
@@ -190,11 +185,9 @@ test('Day 15 Time-Travel: step navigation handles intermediate snapshots', () =>
 test('Day 15 Time-Travel: prevents out-of-bounds slider inputs', () => {
   const ctrl = new TimeTravelController(mockShipmentEvents);
 
-  // Clamps negative or zero to 1
   ctrl.setStep(-5);
   assert.strictEqual(ctrl.currentStep, 1);
 
-  // Clamps greater than event count to max
   ctrl.setStep(999);
   assert.strictEqual(ctrl.currentStep, 4);
 });
@@ -206,7 +199,6 @@ test('Day 15 Time-Travel: returns to live operational state cleanly', () => {
   ctrl.jumpGenesis();
   assert.strictEqual(ctrl.isPastSnapshot(), true);
 
-  // Switch back to live mode
   ctrl.setMode('live');
   assert.strictEqual(ctrl.viewMode, 'live');
   assert.strictEqual(ctrl.isPastSnapshot(), false);

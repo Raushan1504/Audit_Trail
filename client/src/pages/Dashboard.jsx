@@ -42,73 +42,93 @@ function Dashboard() {
 
   return (
     <div className="dashboard-cinematic">
-      {/* 3D Ambient Background Lights */}
+
       <div className="ambient-glow ambient-glow--top" />
       <div className="ambient-glow ambient-glow--bottom" />
 
-      {/* Cinematic Hero */}
       <header className="dashboard-hero">
         <div className="dashboard-hero__badge">
           <span className="badge-pulse" />
           <span>EVENT SOURCING & CQRS FORENSIC LEDGER</span>
+
         </div>
 
         <h1 className="dashboard-hero__title">
           AUDIT <span className="text-gradient">TRAIL</span>
+
         </h1>
 
         <p className="dashboard-hero__subtitle">
           Next-generation immutable inventory & logistics ledger. Shipment states are never mutated — they are reconstructed on-demand by replaying historical events.
         </p>
 
-        {/* Live Architecture Status Bar */}
         <div className="architecture-bar">
           <div className="arch-item">
             <span className="arch-icon">🔒</span>
+
             <div>
               <span className="arch-title">IMMUTABLE LOG</span>
+
               <span className="arch-detail">Append-Only / No Updates</span>
+
             </div>
+
           </div>
+
           <div className="arch-divider" />
           <div className="arch-item">
             <span className="arch-icon">⚡</span>
+
             <div>
               <span className="arch-title">CQRS SEPARATION</span>
+
               <span className="arch-detail">Command & Query Routes</span>
+
             </div>
+
           </div>
+
           <div className="arch-divider" />
           <div className="arch-item">
             <span className="arch-icon">🔄</span>
+
             <div>
               <span className="arch-title">EVENT REPLAY</span>
+
               <span className="arch-detail">Pure State Reconstruction</span>
+
             </div>
+
           </div>
+
         </div>
+
       </header>
 
-      {/* Center Search Console */}
       <section className="dashboard-search-section">
         <SearchBar onSearch={handleSearch} />
       </section>
 
-      {/* Tracked Shipment Presets */}
       <section className="dashboard-presets">
         <div className="presets-header">
           <div>
             <span className="presets-tag">ACTIVE SHIPMENT LEDGERS</span>
+
             <h2>Quick Access Shipments</h2>
+
           </div>
+
           <button
             type="button"
             className="btn-create-genesis"
             onClick={() => setIsCreateOpen(true)}
           >
             <span className="btn-icon">⚡</span>
+
             <span>Initialize New Shipment (OCC v0)</span>
+
           </button>
+
         </div>
 
         <div className="presets-grid">
@@ -121,25 +141,35 @@ function Dashboard() {
               <div className="preset-card-3d__glare" />
               <div className="preset-card-3d__top">
                 <span className="preset-card__id">{preset.id}</span>
+
                 <span className="preset-card__tag">{preset.tag}</span>
+
               </div>
+
               <h3 className="preset-card__title">{preset.title}</h3>
+
               <p className="preset-card__desc">{preset.desc}</p>
+
               <div className="preset-card__action">
                 <span>Inspect Ledger</span>
+
                 <span className="arrow">→</span>
+
               </div>
+
             </div>
+
           ))}
         </div>
+
       </section>
 
-      {/* Day 22: OCC Genesis Shipment Modal */}
       <CreateShipmentModal
         isOpen={isCreateOpen}
         onClose={() => setIsCreateOpen(false)}
       />
     </div>
+
   );
 }
 

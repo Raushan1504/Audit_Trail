@@ -122,12 +122,12 @@ test('Day 16 State Scrubber: keyboard navigation logic', () => {
   handleKey('Home');
   assert.strictEqual(currentStep, 1);
 
-  handleKey('ArrowLeft'); // Bound check at lower limit
+  handleKey('ArrowLeft');
   assert.strictEqual(currentStep, 1);
 
   handleKey('End');
   assert.strictEqual(currentStep, 4);
 
-  handleKey('ArrowRight'); // Bound check at upper limit
+  handleKey('ArrowRight');
   assert.strictEqual(currentStep, 4);
 });

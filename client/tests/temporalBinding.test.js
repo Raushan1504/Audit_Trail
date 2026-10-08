@@ -1,7 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-// Helper reproducing the deterministic folding logic
 function foldEventsUpTo(events, step) {
   if (!Array.isArray(events) || events.length === 0) return null;
   const slice = step !== null ? events.slice(0, step) : events;
@@ -40,7 +39,6 @@ function foldEventsUpTo(events, step) {
   }, initialState);
 }
 
-// Simulates the timeline event partition based on the scrubbed step
 function partitionTimelineEvents(events, currentStep) {
   if (!Array.isArray(events)) return { applied: [], current: null, future: [] };
   if (currentStep === null || currentStep >= events.length) {
@@ -125,7 +123,7 @@ test('Day 17 Temporal Binding: slider step 4 reflects terminal port arrival', ()
 });
 
 test('Day 17 Temporal Binding: partitions timeline into past, current head, and future events', () => {
-  // When scrubbed to step 2:
+
   const p = partitionTimelineEvents(mockEvents, 2);
   assert.strictEqual(p.applied.length, 2);
   assert.strictEqual(p.current.version, 2);
@@ -134,7 +132,6 @@ test('Day 17 Temporal Binding: partitions timeline into past, current head, and 
   assert.strictEqual(p.future[0].eventType, 'TEMPERATURE_SPIKE');
   assert.strictEqual(p.future[1].eventType, 'ARRIVED_AT_PORT');
 
-  // When reset to live state (null step):
   const live = partitionTimelineEvents(mockEvents, null);
   assert.strictEqual(live.applied.length, 4);
   assert.strictEqual(live.future.length, 0);

@@ -10,11 +10,16 @@ function LoadingState({ message = 'Replaying Event Store Stream...' }) {
         <div className="loading-state-3d__core" />
         <div className="loading-state-3d__sweep" />
       </div>
+
       <div className="loading-state-3d__info">
         <span className="loading-state-3d__title">{message}</span>
+
         <span className="loading-state-3d__sub">Querying MongoDB Append-Only Log & Executing Replay Fold</span>
+
       </div>
+
     </div>
+
   );
 }
 

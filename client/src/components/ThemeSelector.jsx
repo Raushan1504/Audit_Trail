@@ -33,14 +33,18 @@ function ThemeSelector() {
           style={{ backgroundColor: activeTheme.color, boxShadow: `0 0 8px ${activeTheme.color}` }}
         />
         <span className="theme-name">{activeTheme.name}</span>
+
         <span className="theme-caret">{isOpen ? '▲' : '▼'}</span>
+
       </button>
 
       {isOpen && (
         <div className="theme-selector__menu">
           <div className="theme-menu__header">
             <span>DASHBOARD THEMES</span>
+
           </div>
+
           {themes.map((t) => {
             const isCurrent = t.id === theme;
             return (
@@ -58,13 +62,18 @@ function ThemeSelector() {
                   style={{ backgroundColor: t.color, boxShadow: isCurrent ? `0 0 10px ${t.color}` : 'none' }}
                 />
                 <span className="theme-option__label">{t.name}</span>
+
                 {isCurrent && <span className="theme-option__check">✓</span>}
+
               </button>
+
             );
           })}
         </div>
+
       )}
     </div>
+
   );
 }
 

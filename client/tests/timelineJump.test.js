@@ -70,9 +70,6 @@ function foldEventsUpTo(events, step) {
   }, initialState);
 }
 
-/**
- * Controller simulating Day 20 timeline card click and jump behavior
- */
 class TimelineJumpController {
   constructor(events = [], initialStep = null) {
     this.events = events;
