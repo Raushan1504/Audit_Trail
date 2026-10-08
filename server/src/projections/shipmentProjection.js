@@ -2,10 +2,6 @@ const Event = require('../models/Event');
 const ShipmentReadModel = require('../models/ShipmentReadModel');
 const { EVENT_TYPES } = require('../events/eventTypes');
 
-/**
- * Normalizes cargo data into a string format suitable for ShipmentReadModel.
- * Accepts strings or objects (e.g., { description: '...' }, { name: '...' }).
- */
 function normalizeCargo(cargoVal) {
   if (cargoVal === null || cargoVal === undefined) return null;
 
@@ -25,13 +21,6 @@ function normalizeCargo(cargoVal) {
   return String(cargoVal).trim();
 }
 
-/**
- * Pure state transformer projecting a single domain event into the shipment read model state.
- *
- * @param {Object|null} priorState - The existing snapshot of the shipment read model
- * @param {Object} event - The domain event to project
- * @returns {Object} Updated read model state
- */
 function projectEvent(priorState, event) {
   if (!event || typeof event !== 'object') {
     throw new Error('event is required');
@@ -57,15 +46,12 @@ function projectEvent(priorState, event) {
       priorState?.location ??
       null,
 
-    // Existing temperature telemetry
     temperature: priorState?.temperature ?? null,
 
-    // Day 24: Environmental telemetry
     humidity: priorState?.humidity ?? null,
     batteryVoltage: priorState?.batteryVoltage ?? null,
     ambientTemp: priorState?.ambientTemp ?? null,
 
-    // Day 24: GPS telemetry
     coordinates: priorState?.coordinates ?? null,
 
     lastAppliedVersion:
@@ -127,12 +113,10 @@ function projectEvent(priorState, event) {
         ...base,
         status: 'TEMPERATURE_SPIKE',
 
-        // Existing temperature telemetry
         temperature:
           event.payload?.temperature ??
           base.temperature,
 
-        // Day 24: Environmental telemetry
         humidity:
           event.payload?.humidity ??
           base.humidity,
@@ -145,9 +129,6 @@ function projectEvent(priorState, event) {
           event.payload?.ambientTemp ??
           base.ambientTemp,
 
-        // Day 24: GPS telemetry
-        // `coordinates` is the canonical read-model field.
-        // `gps` is supported as a fallback for existing event payloads.
         coordinates:
           event.payload?.coordinates ??
           event.payload?.gps ??
@@ -184,19 +165,6 @@ function projectEvent(priorState, event) {
   }
 }
 
-/**
- * Idempotently applies a domain event to the persistent ShipmentReadModel.
- * Enforces idempotency and catches up version gaps if out-of-order events occur.
- *
- * @param {Object} event - The domain event to apply
- * @returns {Promise<{
- *   applied: boolean,
- *   reason: string,
- *   version: number,
- *   shipmentId: string,
- *   readModel: Object
- * }>}
- */
 async function applyEventToReadModel(event) {
   if (!event || !event.aggregateId || !event.eventType) {
     throw new Error(
@@ -210,7 +178,6 @@ async function applyEventToReadModel(event) {
     shipmentId
   });
 
-  // 1. Idempotency Check: if this version was already processed, skip
   if (
     readModel &&
     readModel.lastAppliedVersion >= event.version
@@ -224,8 +191,6 @@ async function applyEventToReadModel(event) {
     };
   }
 
-  // 2. Version Gap Detection: if event.version > lastAppliedVersion + 1,
-  // catch up intermediate events
   const currentVersion = readModel
     ? readModel.lastAppliedVersion
     : 0;
@@ -257,7 +222,6 @@ async function applyEventToReadModel(event) {
     }
   }
 
-  // 3. Normal sequential application
   readModel = await applySingleEvent(
     readModel,
     event
@@ -272,9 +236,6 @@ async function applyEventToReadModel(event) {
   };
 }
 
-/**
- * Internal helper to project a single event into a Mongoose ShipmentReadModel document.
- */
 async function applySingleEvent(readModel, event) {
   const currentSnapshot = readModel
     ? (
@@ -324,13 +285,6 @@ async function applySingleEvent(readModel, event) {
   return await readModel.save();
 }
 
-/**
- * Replays all historical events for a shipmentId from scratch
- * and rebuilds its read model.
- *
- * @param {string} shipmentId - Shipment aggregate ID
- * @returns {Promise<Object|null>} Rebuilt read model document
- */
 async function rebuildShipmentReadModel(shipmentId) {
   if (!shipmentId) {
     throw new Error('shipmentId is required');
@@ -376,21 +330,6 @@ async function rebuildShipmentReadModel(shipmentId) {
   return await readModel.save();
 }
 
-/**
- * Rebuilds read models for all shipments stored in the Event Store.
- * Replays all canonical domain events sequentially to restore read model consistency.
- *
- * @param {Object} [options]
- * @param {boolean} [options.clean=false] - Whether to wipe the read model collection before replay
- * @param {string} [options.shipmentId] - If provided, rebuilds only this specific shipment
- * @param {boolean} [options.dryRun=false] - If true, computes projection without saving to DB
- * @returns {Promise<{
- *   totalShipments: number,
- *   rebuiltCount: number,
- *   totalEventsReplayed: number,
- *   shipments: Array
- * }>}
- */
 async function rebuildAllReadModels(options = {}) {
   if (options.clean && !options.dryRun) {
     await ShipmentReadModel.deleteMany({});

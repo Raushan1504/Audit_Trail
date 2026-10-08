@@ -1,10 +1,3 @@
-/**
- * Day 26: Security Headers & CORS Hardening Middleware
- * Person 2 (Backend): Raushan Kumar <rashukumar1504@gmail.com>
- *
- * Enforces production HTTP headers (CSP, HSTS, frameguard, sniff protection)
- * and restricts allowed methods and headers for hardened enterprise runtime.
- */
 
 function securityHeadersMiddleware(req, res, next) {
   res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -17,7 +10,6 @@ function securityHeadersMiddleware(req, res, next) {
     res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
   }
 
-  // Handle CORS preflight explicitly with hardened headers
   if (req.method === 'OPTIONS') {
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, If-None-Match');

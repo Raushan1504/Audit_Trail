@@ -52,7 +52,6 @@ describe('Day 26: Person 1 Domain - Logistics Scenario Seed Generator', () => {
       assert.ok(sc.cargo);
       assert.equal(sc.events.length, 4);
 
-      // Verify strict sequential versioning
       sc.events.forEach((e, idx) => {
         assert.equal(e.version, idx + 1);
       });

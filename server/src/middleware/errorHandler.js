@@ -1,43 +1,23 @@
 const { AppError } = require('../utils/errors');
 
-/**
- * Global Express Error Handling Middleware
- *
- * Catches all errors forwarded by next(err) or thrown in async handlers,
- * formats them into a predictable and standardized JSON structure,
- * and sets the appropriate HTTP status code.
- *
- * Standard Error Response Shape:
- * {
- *   "success": false,
- *   "error": "Error message",
- *   "message": "Error message",
- *   "code": "ERROR_CODE",
- *   "statusCode": 400,
- *   "details": null | [ ... ]
- * }
- */
-function errorHandler(err, req, res, next) { // eslint-disable-line no-unused-vars
+function errorHandler(err, req, res, next) {
   let statusCode = err.statusCode || err.status || 500;
   let message = err.message || 'Internal server error';
   let code = err.code || (statusCode === 500 ? 'INTERNAL_SERVER_ERROR' : 'BAD_REQUEST');
   let details = err.details || null;
 
-  // Handle Event Store Immutability Violations (Append-only enforcement)
   if (err.message && err.message.includes('append-only')) {
     statusCode = 403;
     code = 'IMMUTABLE_EVENT_STORE';
     message = err.message;
   }
 
-  // Handle express/body-parser JSON parse errors
   if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
     statusCode = 400;
     code = 'INVALID_JSON';
     message = 'Malformed JSON in request payload';
   }
 
-  // Handle Mongoose / MongoDB validation errors
   if (err.name === 'ValidationError' && err.errors) {
     statusCode = 400;
     code = 'VALIDATION_ERROR';
@@ -48,14 +28,12 @@ function errorHandler(err, req, res, next) { // eslint-disable-line no-unused-va
     }));
   }
 
-  // Handle Mongoose CastError (e.g. invalid ObjectId/type)
   if (err.name === 'CastError') {
     statusCode = 400;
     code = 'INVALID_FORMAT';
     message = `Invalid format for field '${err.path}': ${err.value}`;
   }
 
-  // Handle ConcurrencyException / Optimistic Concurrency Violations
   let conflict = null;
   if (err.name === 'ConcurrencyException' || err.code === 'CONCURRENCY_CONFLICT' || (err.statusCode === 409 && err.details?.expectedVersion !== undefined)) {
     statusCode = 409;
@@ -70,7 +48,6 @@ function errorHandler(err, req, res, next) { // eslint-disable-line no-unused-va
     };
   }
 
-  // Handle MongoDB duplicate key errors (code 11000)
   if (err.code === 11000) {
     statusCode = 409;
     const isVersionConflict = (err.keyPattern && err.keyPattern.aggregateId && err.keyPattern.version) ||
@@ -91,7 +68,6 @@ function errorHandler(err, req, res, next) { // eslint-disable-line no-unused-va
     }
   }
 
-  // Handle Domain Command & State Transition Errors (operational client errors)
   if (err.message && (
     err.message.startsWith('Invalid command') ||
     err.message.includes('must be created first') ||
@@ -105,14 +81,12 @@ function errorHandler(err, req, res, next) { // eslint-disable-line no-unused-va
     message = err.message;
   }
 
-  // Handle MongoDB Connection / Server Selection Errors gracefully
   if (err.name === 'MongoServerSelectionError' || err.name === 'MongoNetworkError') {
     statusCode = 503;
     code = 'DATABASE_UNAVAILABLE';
     message = 'Database connection temporarily unavailable. Please check connectivity and retry.';
   }
 
-  // Fallback for default Error instances with message indicating bad request / validation
   if (statusCode === 500 && !err.isOperational && process.env.NODE_ENV !== 'test') {
     console.error('Unhandled Server Error:', err);
   }

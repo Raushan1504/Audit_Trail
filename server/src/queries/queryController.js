@@ -1,19 +1,6 @@
-/**
- * Query Controller
- *
- * Handles HTTP requests on the query (read) side of the CQRS boundary.
- * Each handler fetches or reconstructs state and returns it to the caller.
- * Query handlers must NEVER produce side-effects or mutate state —
- * that is the command side's job.
- */
 
 const queryService = require('./queryService');
 
-/**
- * GET /api/queries/shipments/:id
- * GET /api/queries/shipments/:shipmentId
- * Returns the current state of a shipment directly from the high-speed ShipmentReadModel.
- */
 const getShipmentState = async (request, response, next) => {
 	try {
 		const shipmentId = request.params.id || request.params.shipmentId;
@@ -42,10 +29,6 @@ const getShipmentState = async (request, response, next) => {
 	}
 };
 
-/**
- * GET /api/queries/shipments/:shipmentId/events
- * Returns the raw chronological event history for a shipment.
- */
 const getShipmentEvents = async (request, response, next) => {
 	try {
 		const shipmentId = request.params.shipmentId || request.params.id;
@@ -61,10 +44,6 @@ const getShipmentEvents = async (request, response, next) => {
 	}
 };
 
-/**
- * GET /api/queries/shipments
- * Returns a list of all shipment summaries (from the read model, when available).
- */
 const listShipments = async (request, response, next) => {
 	try {
 		const shipments = await queryService.listShipments();
@@ -78,12 +57,6 @@ const listShipments = async (request, response, next) => {
 	}
 };
 
-/**
- * GET /api/queries/shipments/:id/as-of/:target
- * GET /api/queries/shipments/:shipmentId/as-of/:target
- * Returns the historical reconstructed state of a shipment as of a target version or timestamp
- * without mutating the live ShipmentReadModel.
- */
 const getShipmentStateAsOf = async (request, response, next) => {
 	try {
 		const shipmentId = request.params.id || request.params.shipmentId;
@@ -113,12 +86,6 @@ const getShipmentStateAsOf = async (request, response, next) => {
 	}
 };
 
-/**
- * GET /api/queries/shipments/:id/telemetry
- * GET /api/queries/shipments/:shipmentId/telemetry
- * Returns structured sensor telemetry time-series points and metrics for Recharts visualization.
- * Supports query parameters: ?filter=anomalies | ?anomaliesOnly=true | ?severity=CRITICAL
- */
 const getShipmentTelemetry = async (request, response, next) => {
 	try {
 		const shipmentId = request.params.id || request.params.shipmentId;
@@ -145,11 +112,6 @@ const getShipmentTelemetry = async (request, response, next) => {
 	}
 };
 
-/**
- * GET /api/queries/shipments/:id/anomalies
- * GET /api/queries/shipments/:shipmentId/anomalies
- * Day 25: Returns only sensor anomalies correlated with domain events.
- */
 const getShipmentAnomalies = async (request, response, next) => {
 	try {
 		const shipmentId = request.params.id || request.params.shipmentId;
@@ -183,4 +145,3 @@ module.exports = {
 	getShipmentAnomalies,
 	listShipments,
 };
-

@@ -1,10 +1,3 @@
-/**
- * Day 26: Logistics Scenario Generator
- * Person 1 (Domain): Yash Kamble <yk3144779@gmail.com>
- *
- * Builds deterministic, production-grade enterprise logistics event sequences
- * for cold-chain pharmaceuticals, trans-oceanic shipping, and hazardous cargo.
- */
 
 const SCENARIO_TYPES = Object.freeze({
   PHARMA: 'PHARMA',
@@ -210,16 +203,10 @@ const SCENARIO_TEMPLATES = Object.freeze({
   }
 });
 
-/**
- * Generates an event stream for a requested logistics scenario.
- * @param {string} type - SCENARIO_TYPES key
- * @param {string} [customShipmentId] - Optional override for aggregate ID
- * @returns {Array<Object>} Chronological domain events
- */
 function generateScenarioEvents(type, customShipmentId = null) {
   const template = SCENARIO_TEMPLATES[type] || SCENARIO_TEMPLATES[SCENARIO_TYPES.PHARMA];
   const aggregateId = customShipmentId || template.defaultId;
-  const baseTime = Date.now() - 4 * 24 * 60 * 60 * 1000; // 4 days ago
+  const baseTime = Date.now() - 4 * 24 * 60 * 60 * 1000;
 
   return template.events.map((templateEvent, index) => {
     return {
@@ -232,10 +219,6 @@ function generateScenarioEvents(type, customShipmentId = null) {
   });
 }
 
-/**
- * Builds all enterprise logistics scenarios ready for database seeding or testing.
- * @returns {Array<{ shipmentId: string, type: string, events: Array<Object> }>}
- */
 function buildAllEnterpriseScenarios() {
   return Object.keys(SCENARIO_TEMPLATES).map((key) => {
     const template = SCENARIO_TEMPLATES[key];

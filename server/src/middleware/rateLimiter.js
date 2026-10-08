@@ -1,14 +1,7 @@
-/**
- * Day 26: API Rate Limiter Middleware
- * Person 2 (Backend): Raushan Kumar <rashukumar1504@gmail.com>
- *
- * Implements a memory-efficient sliding-window rate limiter protecting API
- * endpoints from burst floods with standard RFC 6585 headers.
- */
 
 function createRateLimiter({
-  windowMs = 60 * 1000, // 1 minute
-  maxRequests = 120,    // 120 requests per window
+  windowMs = 60 * 1000,
+  maxRequests = 120,
   message = 'Too many requests, please try again later.'
 } = {}) {
   const requestLogs = new Map();

@@ -16,7 +16,6 @@ const {
 const app = express();
 const port = Number(process.env.PORT) || 5000;
 
-// Security and performance middleware (Day 26)
 app.use(securityHeadersMiddleware);
 app.use(cacheControlMiddleware);
 app.use(createRateLimiter({ maxRequests: 200 }));
@@ -28,17 +27,14 @@ app.get('/health', (_request, response) => {
 	response.status(200).json({ status: 'ok' });
 });
 
-// Guard all mutating HTTP verbs (PUT, PATCH, DELETE) against the event log
 app.use(['/api/events', '/api/commands', '/api/queries', '/api/audit'], immutabilityGuard);
 
 app.use('/api/commands', commandRoutes);
 app.use('/api/queries', queryRoutes);
 app.use('/api/audit', auditRoutes);
 
-// Catch-all 404 handler for unmatched routes
 app.use(notFoundHandler);
 
-// Centralized error-handling middleware
 app.use(errorHandler);
 if (require.main === module) {
 	connectDB()

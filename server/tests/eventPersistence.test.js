@@ -124,7 +124,6 @@ test('Event Store Retrieval - getEventsByAggregateId', async (t) => {
   await t.test('ensures retrieved events are strictly in ascending version order even if unordered in storage', async () => {
     const originalFind = Event.find;
 
-    // Simulate in-memory database storage containing unordered events across aggregates
     const inMemoryDb = [
       { aggregateId: 'SHIP-200', version: 3, eventType: EVENT_TYPES.TEMPERATURE_SPIKE, payload: { temperature: 30 } },
       { aggregateId: 'SHIP-999', version: 1, eventType: EVENT_TYPES.CONTAINER_CREATED, payload: {} },
@@ -248,7 +247,6 @@ test('End-to-End Event Append and Ordered Retrieval Lifecycle', async () => {
   try {
     const shipmentId = 'SHIP-E2E-999';
 
-    // 1. Append CONTAINER_CREATED
     const ev1 = createDomainEvent(shipmentId, EVENT_TYPES.CONTAINER_CREATED, {
       origin: 'Tokyo',
       destination: 'Los Angeles',
@@ -256,14 +254,12 @@ test('End-to-End Event Append and Ordered Retrieval Lifecycle', async () => {
     }, 1);
     await appendEvent(ev1);
 
-    // 2. Append LOADED_ON_SHIP
     const ev2 = createDomainEvent(shipmentId, EVENT_TYPES.LOADED_ON_SHIP, {
       vessel: 'Pacific Voyager',
       port: 'Yokohama Port'
     }, 2);
     await appendEvent(ev2);
 
-    // 3. Append TEMPERATURE_SPIKE
     const ev3 = createDomainEvent(shipmentId, EVENT_TYPES.TEMPERATURE_SPIKE, {
       temperature: 29.4,
       threshold: 22.0,
@@ -271,18 +267,15 @@ test('End-to-End Event Append and Ordered Retrieval Lifecycle', async () => {
     }, 3);
     await appendEvent(ev3);
 
-    // 4. Append ARRIVED_AT_PORT
     const ev4 = createDomainEvent(shipmentId, EVENT_TYPES.ARRIVED_AT_PORT, {
       port: 'Port of Los Angeles'
     }, 4);
     await appendEvent(ev4);
 
-    // Retrieve events
     const retrievedEvents = await getEventsByAggregateId(shipmentId);
 
     assert.strictEqual(retrievedEvents.length, 4, 'Should retrieve all 4 appended events');
 
-    // Verify ordering and content
     assert.deepStrictEqual(
       retrievedEvents.map((e) => ({ version: e.version, eventType: e.eventType })),
       [
@@ -303,10 +296,6 @@ test('End-to-End Event Append and Ordered Retrieval Lifecycle', async () => {
     Event.find = originalFind;
   }
 });
-
-// ═══════════════════════════════════════════════════════════════════════
-// Append-only enforcement tests
-// ═══════════════════════════════════════════════════════════════════════
 
 test('Append-Only Enforcement - Event Store module surface', async (t) => {
   const eventStore = require('../src/events/eventStore');
@@ -350,11 +339,8 @@ test('Append-Only Enforcement - Schema rejects update operations', async (t) => 
     const originalUpdateOne = Event.updateOne;
     let middlewareError = null;
 
-    // Mongoose pre-hooks fire inside the model method, so we need to actually call it
-    // and let the hook throw. We stub the underlying exec to avoid hitting a real DB,
-    // but the pre-hook fires first.
     try {
-      // The pre-hook should throw before any DB call is attempted
+
       await Event.updateOne(
         { aggregateId: 'SHIP-IMMUTABLE' },
         { $set: { eventType: 'TAMPERED' } }
@@ -502,7 +488,6 @@ test('Append-Only Enforcement - events remain immutable after persistence', asyn
   try {
     const shipmentId = 'SHIP-IMMUTABLE-LIFECYCLE';
 
-    // 1. Append an event
     const ev = createDomainEvent(shipmentId, EVENT_TYPES.CONTAINER_CREATED, {
       origin: 'Hamburg',
       destination: 'New York',
@@ -510,7 +495,6 @@ test('Append-Only Enforcement - events remain immutable after persistence', asyn
     }, 1);
     await appendEvent(ev);
 
-    // 2. Attempt to update via Mongoose — must throw
     let updateRejected = false;
     try {
       await Event.updateOne(
@@ -522,7 +506,6 @@ test('Append-Only Enforcement - events remain immutable after persistence', asyn
     }
     assert.ok(updateRejected, 'Update attempt must be rejected');
 
-    // 3. Attempt to delete via Mongoose — must throw
     let deleteRejected = false;
     try {
       await Event.deleteOne({ aggregateId: shipmentId });
@@ -531,7 +514,6 @@ test('Append-Only Enforcement - events remain immutable after persistence', asyn
     }
     assert.ok(deleteRejected, 'Delete attempt must be rejected');
 
-    // 4. Verify event is still intact and untouched
     const events = await getEventsByAggregateId(shipmentId);
     assert.strictEqual(events.length, 1, 'Event must still exist after failed mutation attempts');
     assert.strictEqual(events[0].aggregateId, shipmentId);

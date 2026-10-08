@@ -1,19 +1,3 @@
-/**
- * ════════════════════════════════════════════════════════════════════════
- * Week 3 — Day 21: Background Worker Real-Time Sync Verification Test Suite
- * ════════════════════════════════════════════════════════════════════════
- *
- * Mandate:
- *   Demonstrate that dispatching a new command immediately updates the
- *   ShipmentReadModel within the 200ms real-time SLA threshold.
- *
- * Verification Matrix:
- *   1. Real-Time Latency SLA: Create, Load, TemperatureSpike, Arrive < 200ms
- *   2. Fast O(1) Query Consistency: getShipmentState returns _source: 'read_model' immediately
- *   3. Rapid Burst Concurrency: 20 sequential/concurrent commands all sync < 200ms (P95 < 200ms)
- *   4. Dual-Mode Resiliency: Push Hook (sub-ms) + Pull Poller catch-up upon missed events
- *   5. Observability & SLA Timeout: eventProjected telemetry and waitForVersion error handling
- */
 
 const test = require('node:test');
 const assert = require('node:assert');
@@ -32,8 +16,6 @@ const { ProjectionWorker } = require('../src/projections/projectionWorker');
 const { eventBus } = require('../src/events/eventHandlers');
 
 const SLA_THRESHOLD_MS = 200;
-
-// ── In-Memory Persistence Harness ────────────────────────────────────────
 
 function setupHarness() {
   const eventLog = [];
@@ -174,10 +156,6 @@ function setupHarness() {
   };
 }
 
-// ═══════════════════════════════════════════════════════════════════════
-// Suite 1: Command-to-Read-Model Real-Time Latency SLA (< 200ms)
-// ═══════════════════════════════════════════════════════════════════════
-
 test('Worker Real-Time Sync — Latency SLA (< 200ms) Across All Command Types', async (t) => {
   const harness = setupHarness();
   const worker = new ProjectionWorker({ autoPoll: false });
@@ -285,10 +263,6 @@ test('Worker Real-Time Sync — Latency SLA (< 200ms) Across All Command Types',
   });
 });
 
-// ═══════════════════════════════════════════════════════════════════════
-// Suite 2: Immediate Read Model Consistency & O(1) Query Verification
-// ═══════════════════════════════════════════════════════════════════════
-
 test('Worker Real-Time Sync — Fast O(1) Query Immediate Read Model Availability', async (t) => {
   const harness = setupHarness();
   const worker = new ProjectionWorker({ autoPoll: false });
@@ -337,10 +311,6 @@ test('Worker Real-Time Sync — Fast O(1) Query Immediate Read Model Availabilit
   });
 });
 
-// ═══════════════════════════════════════════════════════════════════════
-// Suite 3: Rapid High-Throughput Burst & Statistical SLA Guarantee
-// ═══════════════════════════════════════════════════════════════════════
-
 test('Worker Real-Time Sync — Rapid High-Throughput Burst SLA Conformance', async (t) => {
   const harness = setupHarness();
   const worker = new ProjectionWorker({ autoPoll: false });
@@ -358,7 +328,6 @@ test('Worker Real-Time Sync — Rapid High-Throughput Burst SLA Conformance', as
     for (let i = 1; i <= NUM_SHIPMENTS; i++) {
       const id = `BURST-SHIPMENT-${String(i).padStart(3, '0')}`;
 
-      // 1. Create
       let t0 = performance.now();
       await handleCreateShipment({
         shipmentId: id,
@@ -369,7 +338,6 @@ test('Worker Real-Time Sync — Rapid High-Throughput Burst SLA Conformance', as
       await worker.waitForVersion(id, 1, SLA_THRESHOLD_MS);
       latencies.push(performance.now() - t0);
 
-      // 2. Load
       t0 = performance.now();
       await handleLoadShipment({
         shipmentId: id,
@@ -379,7 +347,6 @@ test('Worker Real-Time Sync — Rapid High-Throughput Burst SLA Conformance', as
       await worker.waitForVersion(id, 2, SLA_THRESHOLD_MS);
       latencies.push(performance.now() - t0);
 
-      // 3. Temp Spike
       t0 = performance.now();
       await handleTemperatureSpike({
         shipmentId: id,
@@ -390,7 +357,6 @@ test('Worker Real-Time Sync — Rapid High-Throughput Burst SLA Conformance', as
       await worker.waitForVersion(id, 3, SLA_THRESHOLD_MS);
       latencies.push(performance.now() - t0);
 
-      // 4. Arrive
       t0 = performance.now();
       await handleArriveAtPort({
         shipmentId: id,
@@ -402,7 +368,6 @@ test('Worker Real-Time Sync — Rapid High-Throughput Burst SLA Conformance', as
 
     assert.strictEqual(latencies.length, 20, 'Must record 20 distinct command-to-projection latencies');
 
-    // Calculate statistical metrics
     latencies.sort((a, b) => a - b);
     const min = latencies[0];
     const max = latencies[latencies.length - 1];
@@ -415,7 +380,6 @@ test('Worker Real-Time Sync — Rapid High-Throughput Burst SLA Conformance', as
     assert.ok(p95 < SLA_THRESHOLD_MS, `P95 latency ${p95.toFixed(2)}ms breached ${SLA_THRESHOLD_MS}ms SLA`);
     assert.ok(mean < 50, `Mean latency ${mean.toFixed(2)}ms is exceptionally low (< 50ms)`);
 
-    // Verify all read models reached version 4
     for (let i = 1; i <= NUM_SHIPMENTS; i++) {
       const id = `BURST-SHIPMENT-${String(i).padStart(3, '0')}`;
       const state = await getShipmentState(id);
@@ -425,10 +389,6 @@ test('Worker Real-Time Sync — Rapid High-Throughput Burst SLA Conformance', as
     }
   });
 });
-
-// ═══════════════════════════════════════════════════════════════════════
-// Suite 4: Push-Hook vs Pull-Polling Resiliency & Catch-Up
-// ═══════════════════════════════════════════════════════════════════════
 
 test('Worker Real-Time Sync — Push Hook vs Pull Polling Resiliency', async (t) => {
   const harness = setupHarness();
@@ -442,7 +402,6 @@ test('Worker Real-Time Sync — Push Hook vs Pull Polling Resiliency', async (t)
   await t.test('catches up pending events via pollOnce() when hook is temporarily detached', async () => {
     const shipmentId = 'CATCHUP-RECOVER-01';
 
-    // 1. Worker is running without hook (simulating detached hook or network partition)
     worker.detachHook();
 
     await handleCreateShipment({
@@ -458,17 +417,14 @@ test('Worker Real-Time Sync — Push Hook vs Pull Polling Resiliency', async (t)
       port: 'Dubai Port'
     });
 
-    // Read model should NOT be updated yet because hook was disabled
     let prematureDoc = harness.readModelStore.get(shipmentId);
     assert.strictEqual(prematureDoc, undefined, 'Read model should not exist yet without active hook or poll');
 
-    // 2. Worker executes background catch-up poll
     const pollResult = await worker.pollOnce();
 
     assert.strictEqual(pollResult.status, 'success');
     assert.strictEqual(pollResult.processedCount, 2);
 
-    // 3. Read model is now fully up to date at version 2
     const recoveredDoc = harness.readModelStore.get(shipmentId);
     assert.ok(recoveredDoc);
     assert.strictEqual(recoveredDoc.status, 'LOADED');
@@ -476,10 +432,6 @@ test('Worker Real-Time Sync — Push Hook vs Pull Polling Resiliency', async (t)
     assert.strictEqual(recoveredDoc.lastAppliedVersion, 2);
   });
 });
-
-// ═══════════════════════════════════════════════════════════════════════
-// Suite 5: Worker Observability & SLA Timeout Safety
-// ═══════════════════════════════════════════════════════════════════════
 
 test('Worker Real-Time Sync — Observability & Timeout SLA Safety', async (t) => {
   const harness = setupHarness();
@@ -520,7 +472,7 @@ test('Worker Real-Time Sync — Observability & Timeout SLA Safety', async (t) =
 
     await assert.rejects(
       async () => {
-        // Expect version 99 with a short 30ms timeout
+
         await worker.waitForVersion(unproducedShipmentId, 99, 30);
       },
       (err) => {

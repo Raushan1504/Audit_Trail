@@ -1,19 +1,3 @@
-/**
- * ════════════════════════════════════════════════════════════════════════
- * Day 13 – Integration Test: Command → Domain → Event → MongoDB
- * ════════════════════════════════════════════════════════════════════════
- *
- * Validates the complete end-to-end workflow:
- *   1. Command is received and validated (commandService)
- *   2. Domain rules are enforced (commandValidation — state transitions)
- *   3. Domain event is created (createDomainEvent)
- *   4. Event is persisted to MongoDB via the event store (persistDomainEvent → eventStore)
- *   5. Persisted events can be retrieved and replayed to reconstruct state
- *
- * Uses an in-memory store that stubs Event.prototype.save and Event.find
- * to avoid requiring a live MongoDB connection while still exercising the
- * full code path through every layer.
- */
 
 const test = require('node:test');
 const assert = require('node:assert');
@@ -29,13 +13,6 @@ const { getEventsByAggregateId } = require('../src/events/eventStore');
 const { EVENT_TYPES } = require('../src/events/eventTypes');
 const { reconstructShipmentState } = require('../src/domain/shipmentReconstruction');
 
-// ── Helpers ─────────────────────────────────────────────────────────────
-
-/**
- * Creates an in-memory store and patches Mongoose's save / find so the
- * entire Command → Event → Persistence pipeline runs without a real DB.
- * Returns a teardown function to restore originals.
- */
 function createInMemoryStore() {
   const store = [];
   const originalSave = Event.prototype.save;
@@ -75,16 +52,12 @@ function createInMemoryStore() {
   };
 }
 
-// ═══════════════════════════════════════════════════════════════════════
-// 1. Full lifecycle: Create → Load → TempSpike → Arrive
-// ═══════════════════════════════════════════════════════════════════════
-
 test('Integration: full shipment lifecycle Command → Domain → Event → MongoDB', async (t) => {
   const { store, teardown } = createInMemoryStore();
   const SHIPMENT_ID = 'INTG-LIFECYCLE-001';
 
   try {
-    // ── Step 1: CreateShipment command ────────────────────────────────
+
     await t.test('CreateShipment command produces CONTAINER_CREATED event persisted to store', async () => {
       const result = await handleCreateShipment({
         shipmentId: SHIPMENT_ID,
@@ -97,7 +70,6 @@ test('Integration: full shipment lifecycle Command → Domain → Event → Mong
       assert.strictEqual(result.eventType, EVENT_TYPES.CONTAINER_CREATED);
       assert.strictEqual(result.version, 1);
 
-      // Verify persistence
       assert.strictEqual(store.length, 1);
       assert.strictEqual(store[0].aggregateId, SHIPMENT_ID);
       assert.strictEqual(store[0].eventType, EVENT_TYPES.CONTAINER_CREATED);
@@ -110,7 +82,6 @@ test('Integration: full shipment lifecycle Command → Domain → Event → Mong
       assert.ok(store[0].timestamp instanceof Date, 'timestamp must be a Date instance');
     });
 
-    // ── Step 2: LoadShipment command ─────────────────────────────────
     await t.test('LoadShipment command produces LOADED_ON_SHIP event at version 2', async () => {
       const result = await handleLoadShipment({
         shipmentId: SHIPMENT_ID,
@@ -122,13 +93,11 @@ test('Integration: full shipment lifecycle Command → Domain → Event → Mong
       assert.strictEqual(result.eventType, EVENT_TYPES.LOADED_ON_SHIP);
       assert.strictEqual(result.version, 2);
 
-      // Verify persistence
       assert.strictEqual(store.length, 2);
       assert.strictEqual(store[1].payload.vessel, 'MV Pacific Runner');
       assert.strictEqual(store[1].payload.port, 'Shanghai Port');
     });
 
-    // ── Step 3: TemperatureSpike command ─────────────────────────────
     await t.test('TemperatureSpike command produces TEMPERATURE_SPIKE event at version 3', async () => {
       const result = await handleTemperatureSpike({
         shipmentId: SHIPMENT_ID,
@@ -147,7 +116,6 @@ test('Integration: full shipment lifecycle Command → Domain → Event → Mong
       assert.strictEqual(store[2].payload.sensorId, 'SENSOR-A7');
     });
 
-    // ── Step 4: ArriveAtPort command ─────────────────────────────────
     await t.test('ArriveAtPort command produces ARRIVED_AT_PORT event at version 4', async () => {
       const result = await handleArriveAtPort({
         shipmentId: SHIPMENT_ID,
@@ -162,7 +130,6 @@ test('Integration: full shipment lifecycle Command → Domain → Event → Mong
       assert.strictEqual(store[3].payload.port, 'Port of Rotterdam');
     });
 
-    // ── Step 5: Retrieve all events and verify order ─────────────────
     await t.test('all 4 events are retrievable and in sequential version order', async () => {
       const events = await getEventsByAggregateId(SHIPMENT_ID);
 
@@ -178,7 +145,6 @@ test('Integration: full shipment lifecycle Command → Domain → Event → Mong
       );
     });
 
-    // ── Step 6: Reconstruct state from persisted events ──────────────
     await t.test('reconstructed state reflects the full event history', async () => {
       const events = await getEventsByAggregateId(SHIPMENT_ID);
       const state = reconstructShipmentState(SHIPMENT_ID, events);
@@ -193,16 +159,12 @@ test('Integration: full shipment lifecycle Command → Domain → Event → Mong
   }
 });
 
-// ═══════════════════════════════════════════════════════════════════════
-// 2. Domain validation rejects invalid state transitions
-// ═══════════════════════════════════════════════════════════════════════
-
 test('Integration: domain rejects invalid state transitions through command handlers', async (t) => {
   const { store, teardown } = createInMemoryStore();
   const SHIPMENT_ID = 'INTG-INVALID-TRANS-001';
 
   try {
-    // Bootstrap: create the shipment first
+
     await handleCreateShipment({
       shipmentId: SHIPMENT_ID,
       origin: 'Mumbai',
@@ -224,7 +186,7 @@ test('Integration: domain rejects invalid state transitions through command hand
           return true;
         }
       );
-      // Store should still have only 1 event (the original create)
+
       assert.strictEqual(store.length, 1);
     });
 
@@ -259,10 +221,6 @@ test('Integration: domain rejects invalid state transitions through command hand
   }
 });
 
-// ═══════════════════════════════════════════════════════════════════════
-// 3. Command validation rejects malformed input before touching the store
-// ═══════════════════════════════════════════════════════════════════════
-
 test('Integration: command validation prevents malformed commands from reaching the store', async (t) => {
   const { store, teardown } = createInMemoryStore();
 
@@ -273,7 +231,7 @@ test('Integration: command validation prevents malformed commands from reaching 
           shipmentId: 'INTG-BAD-001',
           destination: 'Hamburg',
           cargo: 'Steel'
-          // origin is missing
+
         }),
         (err) => {
           assert.match(err.message, /origin is required/);
@@ -299,7 +257,7 @@ test('Integration: command validation prevents malformed commands from reaching 
     });
 
     await t.test('rejects LoadShipment without vessel field', async () => {
-      // First create a valid shipment
+
       await handleCreateShipment({
         shipmentId: 'INTG-BAD-002',
         origin: 'Tokyo',
@@ -312,7 +270,7 @@ test('Integration: command validation prevents malformed commands from reaching 
         () => handleLoadShipment({
           shipmentId: 'INTG-BAD-002',
           port: 'Tokyo Port'
-          // vessel is missing
+
         }),
         (err) => {
           assert.match(err.message, /vessel is required/);
@@ -323,7 +281,7 @@ test('Integration: command validation prevents malformed commands from reaching 
     });
 
     await t.test('rejects TemperatureSpike without temperature field', async () => {
-      // Load the shipment first so it's in the right state
+
       await handleLoadShipment({
         shipmentId: 'INTG-BAD-002',
         vessel: 'MV Test',
@@ -336,7 +294,7 @@ test('Integration: command validation prevents malformed commands from reaching 
           shipmentId: 'INTG-BAD-002',
           threshold: 25,
           sensorId: 'S-1'
-          // temperature is missing
+
         }),
         (err) => {
           assert.match(err.message, /temperature is required/);
@@ -352,7 +310,7 @@ test('Integration: command validation prevents malformed commands from reaching 
       await assert.rejects(
         () => handleArriveAtPort({
           shipmentId: 'INTG-BAD-002'
-          // port is missing
+
         }),
         (err) => {
           assert.match(err.message, /port is required/);
@@ -365,10 +323,6 @@ test('Integration: command validation prevents malformed commands from reaching 
     teardown();
   }
 });
-
-// ═══════════════════════════════════════════════════════════════════════
-// 4. Command on non-existent shipment returns 404
-// ═══════════════════════════════════════════════════════════════════════
 
 test('Integration: commands on non-existent shipment return 404', async (t) => {
   const { store, teardown } = createInMemoryStore();
@@ -423,15 +377,11 @@ test('Integration: commands on non-existent shipment return 404', async (t) => {
   }
 });
 
-// ═══════════════════════════════════════════════════════════════════════
-// 5. Multi-aggregate isolation: events from one shipment don't leak
-// ═══════════════════════════════════════════════════════════════════════
-
 test('Integration: events from separate shipments are isolated in the store', async () => {
   const { store, teardown } = createInMemoryStore();
 
   try {
-    // Create two independent shipments
+
     await handleCreateShipment({
       shipmentId: 'INTG-ISO-A',
       origin: 'Hamburg',
@@ -446,7 +396,6 @@ test('Integration: events from separate shipments are isolated in the store', as
       cargo: 'Automobiles'
     });
 
-    // Progress shipment A further
     await handleLoadShipment({
       shipmentId: 'INTG-ISO-A',
       vessel: 'MV Atlantic',
@@ -455,14 +404,12 @@ test('Integration: events from separate shipments are isolated in the store', as
 
     assert.strictEqual(store.length, 3, 'total store should have 3 events across both aggregates');
 
-    // Query each aggregate independently
     const eventsA = await getEventsByAggregateId('INTG-ISO-A');
     const eventsB = await getEventsByAggregateId('INTG-ISO-B');
 
     assert.strictEqual(eventsA.length, 2, 'shipment A should have 2 events');
     assert.strictEqual(eventsB.length, 1, 'shipment B should have 1 event');
 
-    // Verify no cross-contamination
     assert.ok(
       eventsA.every((e) => e.aggregateId === 'INTG-ISO-A'),
       'all events for A must belong to A'
@@ -472,7 +419,6 @@ test('Integration: events from separate shipments are isolated in the store', as
       'all events for B must belong to B'
     );
 
-    // Reconstruct each aggregate independently
     const stateA = reconstructShipmentState('INTG-ISO-A', eventsA);
     const stateB = reconstructShipmentState('INTG-ISO-B', eventsB);
 
@@ -484,10 +430,6 @@ test('Integration: events from separate shipments are isolated in the store', as
     teardown();
   }
 });
-
-// ═══════════════════════════════════════════════════════════════════════
-// 6. Event metadata integrity
-// ═══════════════════════════════════════════════════════════════════════
 
 test('Integration: persisted events contain correct metadata (timestamp, version, type)', async () => {
   const { store, teardown } = createInMemoryStore();
@@ -505,20 +447,17 @@ test('Integration: persisted events contain correct metadata (timestamp, version
 
     const event = store[0];
 
-    // Verify all required fields are present
     assert.ok(event._id, 'persisted event must have an _id');
     assert.strictEqual(event.aggregateId, SHIPMENT_ID);
     assert.strictEqual(event.eventType, EVENT_TYPES.CONTAINER_CREATED);
     assert.strictEqual(event.version, 1);
     assert.ok(event.timestamp instanceof Date, 'timestamp must be a Date');
 
-    // Timestamp should be between before and after the call
     assert.ok(
       event.timestamp >= beforeCreate && event.timestamp <= afterCreate,
       'event timestamp must be within the execution window'
     );
 
-    // Payload should contain only the command-specific data
     assert.strictEqual(event.payload.origin, 'Singapore');
     assert.strictEqual(event.payload.destination, 'London');
     assert.strictEqual(event.payload.cargo, 'Pharmaceuticals');
@@ -528,16 +467,12 @@ test('Integration: persisted events contain correct metadata (timestamp, version
   }
 });
 
-// ═══════════════════════════════════════════════════════════════════════
-// 7. Terminal state enforcement (ARRIVED cannot accept more commands)
-// ═══════════════════════════════════════════════════════════════════════
-
 test('Integration: ARRIVED state is terminal — no further commands accepted', async () => {
   const { store, teardown } = createInMemoryStore();
   const SHIPMENT_ID = 'INTG-TERMINAL-001';
 
   try {
-    // Drive the shipment to ARRIVED state
+
     await handleCreateShipment({
       shipmentId: SHIPMENT_ID,
       origin: 'Busan',
@@ -557,7 +492,6 @@ test('Integration: ARRIVED state is terminal — no further commands accepted', 
     const countAtArrival = store.length;
     assert.strictEqual(countAtArrival, 3);
 
-    // Attempt to load again after arrival
     await assert.rejects(
       () => handleLoadShipment({
         shipmentId: SHIPMENT_ID,
@@ -570,7 +504,6 @@ test('Integration: ARRIVED state is terminal — no further commands accepted', 
       }
     );
 
-    // Attempt temperature spike after arrival
     await assert.rejects(
       () => handleTemperatureSpike({
         shipmentId: SHIPMENT_ID,
@@ -584,7 +517,6 @@ test('Integration: ARRIVED state is terminal — no further commands accepted', 
       }
     );
 
-    // Attempt another arrival
     await assert.rejects(
       () => handleArriveAtPort({
         shipmentId: SHIPMENT_ID,
@@ -596,7 +528,6 @@ test('Integration: ARRIVED state is terminal — no further commands accepted', 
       }
     );
 
-    // Store should still only have the original 3 events
     assert.strictEqual(store.length, countAtArrival, 'no events should be added after terminal state');
   } finally {
     teardown();

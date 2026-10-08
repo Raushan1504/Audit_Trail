@@ -29,7 +29,7 @@ test('Day 24: Enriched TEMPERATURE_SPIKE Command Validation', async (t) => {
           shipmentId: 'SHIP-VAL-002',
           temperature: 12.0,
           threshold: 4.0,
-          humidity: 105.0 // Invalid > 100
+          humidity: 105.0
         });
       },
       /humidity must be a valid percentage between 0 and 100/
@@ -42,7 +42,7 @@ test('Day 24: Enriched TEMPERATURE_SPIKE Command Validation', async (t) => {
           shipmentId: 'SHIP-VAL-002',
           temperature: 12.0,
           threshold: 4.0,
-          humidity: -5.0 // Invalid < 0
+          humidity: -5.0
         });
       },
       /humidity must be a valid percentage between 0 and 100/
@@ -111,7 +111,6 @@ test('Day 24: getShipmentTelemetry Query Service', async (t) => {
       }
     ];
 
-    // Temporarily mock eventStore.getEventsByAggregateId
     const originalGetEvents = eventStore.getEventsByAggregateId;
     eventStore.getEventsByAggregateId = async (id) => (id === shipmentId ? mockEvents : []);
 
@@ -122,13 +121,11 @@ test('Day 24: getShipmentTelemetry Query Service', async (t) => {
       assert.equal(telemetry.shipmentId, shipmentId);
       assert.equal(telemetry.totalDataPoints, 4);
 
-      // Verify Metrics
       assert.ok(telemetry.metrics);
       assert.equal(telemetry.metrics.maxTemperature, 16.5);
       assert.equal(telemetry.metrics.criticalThreshold, 4.0);
       assert.equal(telemetry.metrics.anomaliesDetected, 1);
 
-      // Verify Time-Series Items
       assert.equal(telemetry.timeSeries.length, 4);
 
       const v1 = telemetry.timeSeries[0];

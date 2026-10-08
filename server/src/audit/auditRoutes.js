@@ -3,17 +3,6 @@ const router = express.Router();
 const Event = require('../models/Event');
 const { EVENT_TYPES } = require('../events/eventTypes');
 
-/**
- * GET /api/audit/immutability
- *
- * Runs an active verification of the Event Store append-only integrity.
- * Safe & Idempotent (Pure Query):
- *   1. APPEND contract verified via schema validation probe
- *   2. READ contract verified via query interface and sorting indexes
- *   3. UPDATE mutations verified to be rejected (pre-hooks block before hitting DB)
- *   4. DELETE operations verified to be rejected (pre-hooks block before hitting DB)
- *   5. Document-level mutation protection verified (save & deleteOne blocked)
- */
 router.get('/immutability', async (req, res, next) => {
   try {
     const probeAggregateId = 'AUDIT-SPEC-PROBE';
@@ -31,7 +20,6 @@ router.get('/immutability', async (req, res, next) => {
       status: 'PASSED'
     };
 
-    // 1. APPEND Capability Verification
     try {
       const probeDoc = new Event({
         aggregateId: probeAggregateId,
@@ -59,7 +47,6 @@ router.get('/immutability', async (req, res, next) => {
       results.status = 'FAILED';
     }
 
-    // 2. READ Capability Verification
     try {
       const totalEvents = await Event.countDocuments();
       results.checks.read = {
@@ -76,7 +63,6 @@ router.get('/immutability', async (req, res, next) => {
       results.status = 'FAILED';
     }
 
-    // 3. UPDATE Rejection Verification (Query-level + Document-level)
     let updateBlockedCount = 0;
     const updateOperations = [
       () => Event.updateOne({ aggregateId: probeAggregateId }, { $set: { eventType: 'TAMPERED' } }),
@@ -112,7 +98,6 @@ router.get('/immutability', async (req, res, next) => {
     };
     if (!allUpdatesBlocked) results.status = 'FAILED';
 
-    // 4. DELETE Rejection Verification (Query-level + Document-level)
     let deleteBlockedCount = 0;
     const deleteOperations = [
       () => Event.deleteOne({ aggregateId: probeAggregateId }),
@@ -146,7 +131,6 @@ router.get('/immutability', async (req, res, next) => {
     };
     if (!allDeletesBlocked) results.status = 'FAILED';
 
-    // 5. Immutability Matrix Summary
     results.matrix = {
       append: 'PERMITTED',
       read: 'PERMITTED',

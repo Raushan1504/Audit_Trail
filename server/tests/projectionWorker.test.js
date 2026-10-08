@@ -114,10 +114,8 @@ test('ProjectionWorker - Real-Time Event Hook Processing', async (t) => {
       projectedNotification = payload;
     });
 
-    // Simulate eventStore emitting new appended event
     eventBus.emit(EVENT_HOOKS.EVENT_APPENDED, domainEvent);
 
-    // Give event loop tick for async hook
     await new Promise((resolve) => setTimeout(resolve, 50));
 
     assert.ok(projectedNotification, 'Worker should emit eventProjected on hook trigger');
@@ -208,7 +206,7 @@ test('ProjectionWorker - Background Polling Loop and Catch-Up', async (t) => {
   });
 
   await t.test('pollOnce() processes all unapplied events across shipments', async () => {
-    // Seed unapplied events directly into Event store
+
     eventLog.push(
       {
         aggregateId: 'SHP-POLL-1',
@@ -366,7 +364,6 @@ test('ProjectionWorker - End-to-End Command to Read Model Integration', async (t
     const worker = new ProjectionWorker({ autoPoll: false });
     worker.attachHook();
 
-    // 1. Dispatch CreateShipment command
     await handleCreateShipment({
       shipmentId: 'SHP-E2E-99',
       origin: 'Port of Tokyo',
@@ -374,7 +371,6 @@ test('ProjectionWorker - End-to-End Command to Read Model Integration', async (t
       cargo: 'Autonomous EV Batteries'
     });
 
-    // Allow event tick for async hook
     await new Promise((resolve) => setTimeout(resolve, 50));
 
     const v1Snapshot = readModelStore.get('SHP-E2E-99');
@@ -385,7 +381,6 @@ test('ProjectionWorker - End-to-End Command to Read Model Integration', async (t
     assert.strictEqual(v1Snapshot.currentLocation, 'Port of Tokyo');
     assert.strictEqual(v1Snapshot.lastAppliedVersion, 1);
 
-    // 2. Dispatch LoadShipment command
     await handleLoadShipment({
       shipmentId: 'SHP-E2E-99',
       vessel: 'Solaris Voyager',
@@ -403,4 +398,3 @@ test('ProjectionWorker - End-to-End Command to Read Model Integration', async (t
     worker.detachHook();
   });
 });
-

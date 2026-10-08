@@ -134,7 +134,7 @@ test('Projection Rebuild - rebuildShipmentReadModel Core Logic', async (t) => {
   });
 
   await t.test('overwrites and corrects out-of-sync existing read model with full canonical replay', async () => {
-    // Seed an out-of-sync stale read model (e.g. stuck at version 1 with wrong status)
+
     readModelStore.set('SHP-STALE-01', {
       shipmentId: 'SHP-STALE-01',
       status: 'CREATED',

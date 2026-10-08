@@ -38,7 +38,7 @@ test('validateCommand', async (t) => {
     const cmd = {
       shipmentId: 'ship-123',
       type: COMMAND_TYPES.CREATE_CONTAINER
-      // origin and destination missing
+
     };
     assert.throws(() => validateCommand(cmd), /origin is required/);
   });

@@ -334,7 +334,6 @@ test('queryService.getShipmentStateAsOf - Historical State Reconstruction withou
   await t.test('reconstructs historical state as of an ISO timestamp cutoff', async () => {
     eventStore.getEventsByAggregateId = async () => testEvents;
 
-    // Cutoff between event 2 (14:00) and event 3 (18:00)
     const state = await queryService.getShipmentStateAsOf('SHIP-ASOF-01', '2026-08-01T15:00:00.000Z');
 
     assert.strictEqual(state.shipmentId, 'SHIP-ASOF-01');
@@ -449,4 +448,3 @@ test('queryController.getShipmentStateAsOf - HTTP Response & Performance Headers
     assert.strictEqual(forwardError.message, 'Invalid target');
   });
 });
-

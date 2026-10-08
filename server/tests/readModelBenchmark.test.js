@@ -70,7 +70,6 @@ test('Benchmark - Empirical Read Model Latency SLA Conformance (<10ms)', async (
       iterations: 30
     });
 
-    // 1. Mandatory SLA Verification: Read model lookup must take < 10ms
     assert.ok(
       results.readModel.stats.mean < 10.0,
       `Read model mean latency (${results.readModel.stats.mean}ms) must be under 10.0ms`
@@ -80,24 +79,21 @@ test('Benchmark - Empirical Read Model Latency SLA Conformance (<10ms)', async (
       `Read model P95 latency (${results.readModel.stats.p95}ms) must be under 10.0ms`
     );
 
-    // 2. Performance Verification: Read model should be orders of magnitude faster than raw replay
     assert.ok(
       results.readModel.stats.mean < results.rawReplay.stats.mean,
       'Read model lookup must be faster than raw multi-event replay'
     );
 
-    // 3. Payload Reduction Verification: Materialized read model must be substantially smaller than raw event log
     assert.ok(
       results.payloadComparison.readModelBytes < results.payloadComparison.rawEventsBytes,
       'Read model wire payload must be smaller than multi-event raw array'
     );
 
-    // 4. Scaling analysis verification: As event depth increases, raw replay latency scales up while read model stays low
     const scaling = results.scalingAnalysis;
     assert.ok(scaling.length >= 4);
 
-    const firstTier = scaling[0]; // 10 events
-    const lastTier = scaling[scaling.length - 1]; // 500 events
+    const firstTier = scaling[0];
+    const lastTier = scaling[scaling.length - 1];
 
     assert.ok(
       lastTier.replayMeanMs > firstTier.replayMeanMs,

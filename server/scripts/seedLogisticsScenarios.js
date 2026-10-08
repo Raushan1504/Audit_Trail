@@ -1,16 +1,4 @@
 #!/usr/bin/env node
-/**
- * Day 26: CLI Logistics Scenario Seeder
- * Person 1 (Domain): Yash Kamble <yk3144779@gmail.com>
- *
- * Seeds comprehensive realistic scenarios (Pharma Cold-Chain, Trans-Oceanic Electronics, Sub-Zero Seafood)
- * directly into MongoDB Event Store and projects read models.
- *
- * Usage:
- *   node scripts/seedLogisticsScenarios.js
- *   node scripts/seedLogisticsScenarios.js --scenario=PHARMA
- *   node scripts/seedLogisticsScenarios.js --dry-run
- */
 
 const { connectDB, disconnectDB } = require('../src/config/db');
 const Event = require('../src/models/Event');
@@ -49,7 +37,7 @@ async function main() {
     console.log(`   Events Count: ${scenario.events.length}`);
 
     if (conn && !isDryRun) {
-      // Clear existing records for idempotency
+
       await Event.deleteMany({ aggregateId: scenario.shipmentId });
       await ShipmentReadModel.deleteMany({ shipmentId: scenario.shipmentId });
 

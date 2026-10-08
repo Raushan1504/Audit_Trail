@@ -1,9 +1,3 @@
-/**
- * Custom Application Error Hierarchy
- *
- * Defines standardized operational errors used across the backend
- * to ensure consistent HTTP status codes, error codes, and formats.
- */
 
 class AppError extends Error {
   constructor(
@@ -52,27 +46,6 @@ class ConflictError extends AppError {
   }
 }
 
-/**
- * Optimistic Concurrency Control exception.
- *
- * Supports both forms used by the application:
- *
- * 1. Aggregate version check:
- *    new ConcurrencyException({
- *      shipmentId,
- *      expectedVersion,
- *      currentVersion
- *    })
- *
- * 2. Persistence collision:
- *    new ConcurrencyException(message, {
- *      shipmentId,
- *      expectedVersion,
- *      currentVersion,
- *      modifiedBy,
- *      resolutionHint
- *    })
- */
 class ConcurrencyException extends ConflictError {
   constructor(input, options = {}) {
     let message;
@@ -82,7 +55,6 @@ class ConcurrencyException extends ConflictError {
     let modifiedBy;
     let resolutionHint;
 
-    // Object-style constructor used by ShipmentAggregate.
     if (
       input &&
       typeof input === 'object' &&
@@ -95,7 +67,7 @@ class ConcurrencyException extends ConflictError {
       resolutionHint = input.resolutionHint;
       message = input.message;
     } else {
-      // Message + details constructor used by persistence collision handling.
+
       message = input;
 
       shipmentId = options?.shipmentId;

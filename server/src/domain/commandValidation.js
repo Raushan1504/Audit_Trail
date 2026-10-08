@@ -4,10 +4,7 @@ const COMMAND_TYPES = Object.freeze({
   RECORD_TEMPERATURE_SPIKE: 'RECORD_TEMPERATURE_SPIKE',
   ARRIVE_AT_PORT: 'ARRIVE_AT_PORT'
 });
-/**
- * Validates the structure and required payload fields of a command.
- * @param {Object} command - The command object to validate.
- */
+
 function validateCommand(command) {
   if (!command || typeof command !== 'object') {
     throw new Error('command is required');

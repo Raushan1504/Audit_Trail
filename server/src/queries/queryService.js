@@ -8,14 +8,6 @@ const Event = require('../models/Event');
 const ShipmentReadModel = require('../models/ShipmentReadModel');
 const { BadRequestError } = require('../utils/errors');
 
-/**
- * Fast O(1) read model query for shipment state.
- * Direct lookup against the indexed ShipmentReadModel collection for sub-millisecond response.
- * Falls back to deterministic event replay if the aggregate is not yet projected.
- *
- * @param {string} shipmentId - The aggregate ID of the shipment.
- * @returns {Promise<Object|null>} The shipment state or null if not found.
- */
 const getShipmentState = async (shipmentId) => {
 	if (!shipmentId || typeof shipmentId !== 'string') {
 		return null;
@@ -23,7 +15,6 @@ const getShipmentState = async (shipmentId) => {
 
 	const normalizedId = shipmentId.trim();
 
-	// 1. Direct O(1) lookup on indexed ShipmentReadModel (sub-millisecond)
 	const readModel = await ShipmentReadModel.findOne({ shipmentId: normalizedId });
 	if (readModel) {
 		const doc = typeof readModel.toObject === 'function' ? readModel.toObject() : readModel;
@@ -44,7 +35,6 @@ const getShipmentState = async (shipmentId) => {
 		};
 	}
 
-	// 2. Resilient fallback: reconstruct from event store if not yet projected
 	const events = await eventStore.getEventsByAggregateId(normalizedId);
 	if (!events || events.length === 0) {
 		return null;
@@ -59,11 +49,6 @@ const getShipmentState = async (shipmentId) => {
 	};
 };
 
-/**
- * Retrieve the raw chronological event history for a shipment.
- * @param {string} shipmentId - The aggregate ID of the shipment.
- * @returns {Promise<Array>} The ordered list of domain events.
- */
 const getShipmentEvents = async (shipmentId) => {
 	if (!shipmentId || typeof shipmentId !== 'string') {
 		return [];
@@ -71,12 +56,6 @@ const getShipmentEvents = async (shipmentId) => {
 	return await eventStore.getEventsByAggregateId(shipmentId.trim());
 };
 
-/**
- * List all shipment summaries directly from ShipmentReadModel for high performance.
- * Falls back to Event Store distinct aggregation if the read model collection is empty.
- *
- * @returns {Promise<Array>} A list of shipment summary objects.
- */
 const listShipments = async () => {
 	const readModels = await ShipmentReadModel.find().sort({ updatedAt: -1 });
 	if (readModels && readModels.length > 0) {
@@ -100,7 +79,6 @@ const listShipments = async () => {
 		});
 	}
 
-	// Fallback to event store replay if read model hasn't been seeded or projected
 	const aggregateIds = await Event.distinct('aggregateId');
 	const shipments = [];
 	for (const shipmentId of aggregateIds) {
@@ -118,14 +96,6 @@ const listShipments = async () => {
 	return shipments;
 };
 
-/**
- * Reconstruct historical shipment state as of a target version or timestamp.
- * Reads solely from the immutable Event Store without mutating the live ShipmentReadModel.
- *
- * @param {string} shipmentId - The aggregate ID of the shipment.
- * @param {string|number} target - The target version (e.g. 2, "2", "v2") or ISO timestamp.
- * @returns {Promise<Object|null>} The historical reconstructed shipment state.
- */
 const getShipmentStateAsOf = async (shipmentId, target) => {
 	if (!shipmentId || typeof shipmentId !== 'string') {
 		return null;
@@ -138,13 +108,11 @@ const getShipmentStateAsOf = async (shipmentId, target) => {
 	const normalizedId = shipmentId.trim();
 	const targetStr = String(target).trim();
 
-	// Fetch raw immutable events from EventStore
 	const events = await eventStore.getEventsByAggregateId(normalizedId);
 	if (!events || events.length === 0) {
 		return null;
 	}
 
-	// Ensure plain objects and sort sequentially by version
 	const sortedEvents = events
 		.map((e) => (typeof e.toObject === 'function' ? e.toObject() : e))
 		.sort((a, b) => a.version - b.version);
@@ -154,7 +122,6 @@ const getShipmentStateAsOf = async (shipmentId, target) => {
 	let targetVersionNum;
 	let targetTimestampIso;
 
-	// Check if target is a version (e.g. "2", "0", "v2")
 	const isVersionPattern = /^v?([0-9]+)$/i;
 	const versionMatch = targetStr.match(isVersionPattern);
 
@@ -168,7 +135,7 @@ const getShipmentStateAsOf = async (shipmentId, target) => {
 			throw new BadRequestError(err.message);
 		}
 	} else {
-		// Attempt timestamp-based historical cutoff
+
 		const parsedDate = new Date(targetStr);
 		if (Number.isNaN(parsedDate.getTime())) {
 			throw new BadRequestError(
@@ -223,15 +190,6 @@ const getShipmentStateAsOf = async (shipmentId, target) => {
 
 const { detectEventAnomaly, resolveCargoProfile } = require('../domain/anomalyDetector');
 
-/**
- * Retrieve structured sensor telemetry time-series data for Recharts visualization (Day 24 & Day 25).
- * Returns chronological data points covering temperature, threshold, humidity, battery voltage,
- * ambient temperature, and automated anomaly event correlations across lifecycle events.
- *
- * @param {string} shipmentId - The aggregate ID of the shipment.
- * @param {Object} [options] - Optional query filters (anomaliesOnly, severity, cargoHint).
- * @returns {Promise<Object|null>} Telemetry dataset with summary metrics or null if not found.
- */
 const getShipmentTelemetry = async (shipmentId, options = {}) => {
 	if (!shipmentId || typeof shipmentId !== 'string') {
 		return null;
@@ -247,7 +205,6 @@ const getShipmentTelemetry = async (shipmentId, options = {}) => {
 		.map((e) => (typeof e.toObject === 'function' ? e.toObject() : e))
 		.sort((a, b) => a.version - b.version);
 
-	// Extract cargo profile hint from creation event or options
 	const creationEvent = sortedEvents.find((e) => e.eventType === 'CONTAINER_CREATED');
 	const cargoHint = options.cargoHint || creationEvent?.payload?.cargo || 'PERISHABLE';
 	const cargoProfile = resolveCargoProfile(cargoHint);
@@ -296,7 +253,6 @@ const getShipmentTelemetry = async (shipmentId, options = {}) => {
 		const explicitTemp = payload.temperature !== undefined && payload.temperature !== null ? Number(payload.temperature) : null;
 		const effectiveThreshold = payload.threshold !== undefined && payload.threshold !== null ? Number(payload.threshold) : lastKnownThreshold;
 
-		// Day 25: Automated anomaly threshold detection and event correlation
 		const anomalyMeta = detectEventAnomaly(event, cargoProfile.type);
 		const isAnomaly = isSpike || anomalyMeta.isAnomaly || (explicitTemp !== null && explicitTemp > effectiveThreshold);
 		const severity = isAnomaly ? (anomalyMeta.severity !== 'NORMAL' ? anomalyMeta.severity : 'CRITICAL') : 'NORMAL';
@@ -321,7 +277,7 @@ const getShipmentTelemetry = async (shipmentId, options = {}) => {
 			cargoProfile: cargoProfile.type,
 			breaches: anomalyMeta.breaches || [],
 			anomalySummary: anomalyMeta.summary,
-			// Day 25 Coincidence Linkage to domain event
+
 			coincidence: {
 				eventId: eventIdStr,
 				eventType: event.eventType,
@@ -334,7 +290,6 @@ const getShipmentTelemetry = async (shipmentId, options = {}) => {
 		};
 	});
 
-	// Apply optional query filters
 	if (options.anomaliesOnly || options.filter === 'anomalies') {
 		timeSeries = timeSeries.filter((p) => p.isAnomaly);
 	}
@@ -367,12 +322,6 @@ const getShipmentTelemetry = async (shipmentId, options = {}) => {
 	};
 };
 
-/**
- * Day 25: Retrieve only correlated anomalies for a shipment.
- * @param {string} shipmentId - The aggregate ID of the shipment.
- * @param {Object} [options] - Optional filter options.
- * @returns {Promise<Object|null>} Anomaly correlation dataset.
- */
 const getCorrelatedAnomalies = async (shipmentId, options = {}) => {
 	const telemetry = await getShipmentTelemetry(shipmentId, { ...options, anomaliesOnly: true });
 	if (!telemetry) {

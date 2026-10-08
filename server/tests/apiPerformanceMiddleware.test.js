@@ -101,19 +101,16 @@ describe('Day 26: Person 2 Backend - HTTP Response Caching, Compression & Securi
       let nextCalled = 0;
       const next = () => { nextCalled++; };
 
-      // Request 1
       limiter(req, res, next);
       assert.equal(nextCalled, 1);
 
-      // Request 2
       limiter(req, res, next);
       assert.equal(nextCalled, 2);
 
-      // Request 3 (exceeds limit)
       limiter(req, res, next);
       assert.equal(statusCode, 429);
       assert.equal(jsonBody?.code, 'RATE_LIMIT_EXCEEDED');
-      assert.equal(nextCalled, 2); // next should not be called
+      assert.equal(nextCalled, 2);
     });
   });
 });

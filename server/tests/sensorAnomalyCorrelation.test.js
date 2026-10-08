@@ -7,7 +7,7 @@ describe('Day 25: Person 2 Backend - Correlate Sensor Anomalies with Historical 
   const shipmentId = 'SHIP-DAY25-CORRELATE-01';
 
   beforeEach(async () => {
-    // Populate in-memory / mock events for test
+
     const mockEvents = [
       {
         aggregateId: shipmentId,

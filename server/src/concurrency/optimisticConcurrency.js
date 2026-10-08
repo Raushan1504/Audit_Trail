@@ -1,24 +1,6 @@
-/**
- * Optimistic Concurrency Control (OCC) Module (Day 23)
- *
- * Implements version checking, conflict detection, resolution hints,
- * and standard 409 response shaping for concurrent domain commands.
- */
 
 const { ConcurrencyException, ValidationError, ConflictError } = require('../utils/errors');
 
-/**
- * Validates optimistic lock between expectedVersion and current aggregate version.
- *
- * @param {Object} params
- * @param {number} params.currentVersion - The live aggregate version in the event store.
- * @param {*} params.expectedVersion - The version the client asserts when issuing the command.
- * @param {string} params.shipmentId - The aggregate ID.
- * @param {string} [params.modifiedBy] - The operator or service that performed the update.
- * @returns {boolean} true if version matches.
- * @throws {ValidationError} if expectedVersion is not a non-negative integer.
- * @throws {ConcurrencyException} if expectedVersion does not match currentVersion.
- */
 function validateOptimisticLock({ currentVersion, expectedVersion, shipmentId, modifiedBy }) {
   if (expectedVersion === undefined || expectedVersion === null) {
     throw new ValidationError('expectedVersion is required for optimistic concurrency check');
@@ -42,13 +24,6 @@ function validateOptimisticLock({ currentVersion, expectedVersion, shipmentId, m
   return true;
 }
 
-/**
- * Formats a standardized HTTP 409 Conflict payload for OCC violations.
- *
- * @param {Error|ConcurrencyException} err
- * @param {number} [fallbackCurrentVersion]
- * @returns {Object} Standardized 409 response object.
- */
 function formatConflictResponse(err, fallbackCurrentVersion = null) {
   const currentVersion = err.currentVersion ?? err.details?.currentVersion ?? fallbackCurrentVersion;
   const expectedVersion = err.expectedVersion ?? err.details?.expectedVersion ?? null;

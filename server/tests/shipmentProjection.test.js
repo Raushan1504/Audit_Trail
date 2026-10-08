@@ -54,7 +54,6 @@ test('shipmentProjection - pure projectEvent transformer', async (t) => {
     assert.strictEqual(state.cargo, 'Electronics & Semiconductors');
     assert.strictEqual(state.temperature, null);
 
-    // Day 24 telemetry fields start empty.
     assert.strictEqual(state.humidity, null);
     assert.strictEqual(state.batteryVoltage, null);
     assert.strictEqual(state.ambientTemp, null);
@@ -307,7 +306,6 @@ test('shipmentProjection - pure projectEvent transformer', async (t) => {
         'Port of Rotterdam Terminals'
       );
 
-      // Telemetry must survive later lifecycle events.
       assert.strictEqual(nextState.temperature, 14.8);
       assert.strictEqual(nextState.humidity, 72.5);
       assert.strictEqual(nextState.batteryVoltage, 3.78);
@@ -344,7 +342,7 @@ test('shipmentProjection - pure projectEvent transformer', async (t) => {
 test(
   'shipmentProjection - applyEventToReadModel persistence & idempotency',
   async (t) => {
-    // Setup in-memory mock store for ShipmentReadModel.
+
     let readModelStore = new Map();
 
     const originalFindOne = ShipmentReadModel.findOne;
@@ -385,7 +383,6 @@ test(
           currentLocation: this.currentLocation,
           temperature: this.temperature,
 
-          // Day 24 telemetry
           humidity: this.humidity,
           batteryVoltage: this.batteryVoltage,
           ambientTemp: this.ambientTemp,
@@ -468,8 +465,6 @@ test(
         assert.strictEqual(saved.batteryVoltage, null);
         assert.strictEqual(saved.ambientTemp, null);
 
-        // Mongoose represents nested coordinates as a
-        // subdocument even when no values are supplied.
         assert.ok(saved.coordinates);
         assert.strictEqual(
           saved.coordinates.lat,

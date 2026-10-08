@@ -1,13 +1,5 @@
 const mongoose = require('mongoose');
 
-/**
- * ShipmentReadModel Schema
- *
- * Denormalized read-optimized projection model for shipments in the CQRS architecture.
- * Maintains the current snapshot state (location, status, telemetry, temperature, version)
- * to serve high-speed O(1) queries on the dashboard without requiring full chronological
- * event replay.
- */
 const ShipmentReadModelSchema = new mongoose.Schema(
   {
     shipmentId: {
@@ -39,7 +31,6 @@ const ShipmentReadModelSchema = new mongoose.Schema(
       default: null
     },
 
-    // ── Day 24: Environmental Telemetry ──────────────────────────────
     humidity: {
       type: Number,
       default: null,
@@ -58,7 +49,6 @@ const ShipmentReadModelSchema = new mongoose.Schema(
       default: null
     },
 
-    // ── Day 24: GPS Coordinates ───────────────────────────────────────
     coordinates: {
       lat: {
         type: Number,
@@ -120,33 +110,24 @@ const ShipmentReadModelSchema = new mongoose.Schema(
   }
 );
 
-// ── Indexes for High-Performance Queries ──────────────────────────────
-
-// Primary unique index for fast O(1) shipment lookups by aggregate/shipment ID
 ShipmentReadModelSchema.index(
   { shipmentId: 1 },
   { unique: true }
 );
 
-// Index for filtering shipments by operational status (CREATED, LOADED, etc.)
 ShipmentReadModelSchema.index({ status: 1 });
 
-// Index for geographic / port location filtering
 ShipmentReadModelSchema.index({ currentLocation: 1 });
 
-// Index for sensor telemetry threshold and anomaly filtering
 ShipmentReadModelSchema.index({ temperature: 1 });
 
-// Index for projection worker sync verification & lag tracking
 ShipmentReadModelSchema.index({ lastAppliedVersion: 1 });
 
-// Compound index for dashboard views filtered by status and sorted by latest update
 ShipmentReadModelSchema.index({
   status: 1,
   updatedAt: -1
 });
 
-// Compound index for idempotency and version check during projection updates
 ShipmentReadModelSchema.index({
   shipmentId: 1,
   lastAppliedVersion: 1

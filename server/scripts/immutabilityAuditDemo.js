@@ -1,16 +1,3 @@
-/**
- * Mid-Project Review — Day 14: Immutability Audit Demonstration Script
- *
- * Demonstrates the core Event Sourcing invariant:
- *   APPEND  → ✓ (Allowed)
- *   READ    → ✓ (Allowed)
- *   UPDATE  → ✗ (Rejected & Prevented)
- *   DELETE  → ✗ (Rejected & Prevented)
- *
- * Run directly via:
- *   node scripts/immutabilityAuditDemo.js
- *   npm run audit:immutability
- */
 
 require('dotenv').config();
 const mongoose = require('mongoose');
@@ -19,7 +6,6 @@ const { appendEvent, getEventsByAggregateId } = require('../src/events/eventStor
 const { createDomainEvent } = require('../src/events/createDomainEvent');
 const { EVENT_TYPES } = require('../src/events/eventTypes');
 
-// ANSI Color Helpers
 const colors = {
   reset: '\x1b[0m',
   bold: '\x1b[1m',
@@ -44,7 +30,6 @@ async function runImmutabilityAudit() {
   console.log(`${colors.gray}Target: MongoDB Append-Only Event Store${colors.reset}`);
   console.log(`${colors.gray}Audit Mandate: Prove APPEND & READ work; UPDATE & DELETE are strictly rejected.${colors.reset}\n`);
 
-  // Connect to DB if connection string exists, else fallback to mock
   const isLive = process.argv.includes('--live');
   let isConnectedToDb = false;
   if (isLive && process.env.MONGODB_URI) {
@@ -63,9 +48,6 @@ async function runImmutabilityAudit() {
   const shipmentId = `AUDIT-SHIPMENT-${Date.now().toString().slice(-4)}`;
   console.log(info(`Test Aggregate ID: ${colors.bold}${shipmentId}${colors.reset}\n`));
 
-  // ─────────────────────────────────────────────────────────────────────
-  // 1. APPEND AUDIT
-  // ─────────────────────────────────────────────────────────────────────
   console.log(`${colors.bold}${colors.yellow}[CHECK 1/4] APPEND OPERATIONS${colors.reset}`);
   const lifecycleEvents = [
     createDomainEvent(shipmentId, EVENT_TYPES.CONTAINER_CREATED, { origin: 'Tokyo Port', destination: 'Rotterdam', cargo: 'Cryo-Vaccines' }, 1),
@@ -87,9 +69,6 @@ async function runImmutabilityAudit() {
     }
   }
 
-  // ─────────────────────────────────────────────────────────────────────
-  // 2. READ AUDIT
-  // ─────────────────────────────────────────────────────────────────────
   console.log(`\n${colors.bold}${colors.yellow}[CHECK 2/4] READ OPERATIONS (ORDERED RETRIEVAL)${colors.reset}`);
   let retrievedEvents = [];
   try {
@@ -106,9 +85,6 @@ async function runImmutabilityAudit() {
     console.log(`  ${colors.red}Failed to retrieve events: ${err.message}${colors.reset}`);
   }
 
-  // ─────────────────────────────────────────────────────────────────────
-  // 3. UPDATE AUDIT (MUST BE REJECTED)
-  // ─────────────────────────────────────────────────────────────────────
   console.log(`\n${colors.bold}${colors.yellow}[CHECK 3/4] UPDATE OPERATIONS (ADVERSARIAL TAMPERING)${colors.reset}`);
   console.log(`  ${colors.gray}Testing 5 Mongoose query mutation methods + 1 document mutation method...${colors.reset}`);
 
@@ -142,7 +118,7 @@ async function runImmutabilityAudit() {
           payload: { temperature: 34.2 },
           version: 3
         });
-        doc.isNew = false; // Flag as existing document
+        doc.isNew = false;
         return doc.save();
       }
     }
@@ -163,9 +139,6 @@ async function runImmutabilityAudit() {
     }
   }
 
-  // ─────────────────────────────────────────────────────────────────────
-  // 4. DELETE AUDIT (MUST BE REJECTED)
-  // ─────────────────────────────────────────────────────────────────────
   console.log(`\n${colors.bold}${colors.yellow}[CHECK 4/4] DELETE OPERATIONS (ADVERSARIAL PURGE)${colors.reset}`);
   console.log(`  ${colors.gray}Testing 3 Mongoose query deletion methods + 1 document deletion method...${colors.reset}`);
 
@@ -207,9 +180,6 @@ async function runImmutabilityAudit() {
     }
   }
 
-  // ─────────────────────────────────────────────────────────────────────
-  // 5. POST-AUDIT INTEGRITY CHECK
-  // ─────────────────────────────────────────────────────────────────────
   console.log(`\n${colors.bold}${colors.yellow}[FINAL] DATA INTEGRITY CONFIRMATION${colors.reset}`);
   let finalEvents = [];
   if (isConnectedToDb) {
@@ -228,9 +198,6 @@ async function runImmutabilityAudit() {
     console.log(`  ${colors.red}✗ INTEGRITY COMPROMISED${colors.reset}`);
   }
 
-  // ─────────────────────────────────────────────────────────────────────
-  // AUDIT SUMMARY SCORECARD
-  // ─────────────────────────────────────────────────────────────────────
   console.log('\n' + colors.bold + colors.cyan + '═'.repeat(72) + colors.reset);
   console.log(colors.bold + '   MID-PROJECT REVIEW IMMUTABILITY AUDIT SCORECARD' + colors.reset);
   console.log(colors.bold + colors.cyan + '═'.repeat(72) + colors.reset);

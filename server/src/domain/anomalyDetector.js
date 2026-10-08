@@ -1,10 +1,3 @@
-/**
- * Day 25: Automated Anomaly Threshold Detection
- * Person 1 (Domain): Yash Kamble <yk3144779@gmail.com>
- *
- * Implements domain rules for evaluating cold-chain, environmental, and hardware telemetry
- * against strict cargo safety profiles (e.g. Frozen cargo <= -18°C, Pharma 2-8°C).
- */
 
 const CARGO_PROFILES = Object.freeze({
   FROZEN: Object.freeze({
@@ -43,11 +36,6 @@ const CARGO_PROFILES = Object.freeze({
 
 const DEFAULT_PROFILE = CARGO_PROFILES.PERISHABLE;
 
-/**
- * Resolves cargo profile based on cargo description or explicit type.
- * @param {string|Object} cargo - Cargo name or profile indicator
- * @returns {Object} Cargo safety profile
- */
 function resolveCargoProfile(cargo) {
   if (!cargo) return DEFAULT_PROFILE;
 
@@ -70,13 +58,6 @@ function resolveCargoProfile(cargo) {
   return DEFAULT_PROFILE;
 }
 
-/**
- * Evaluates whether an environmental sensor reading breaches safe thresholds.
- *
- * @param {Object} reading - Sensor telemetry payload
- * @param {string|Object} [cargoHint] - Optional cargo type description
- * @returns {Object} Anomaly evaluation result
- */
 function evaluateThresholdBreach(reading = {}, cargoHint = null) {
   const profile = resolveCargoProfile(cargoHint);
   const temperature = reading.temperature !== undefined && reading.temperature !== null ? Number(reading.temperature) : null;
@@ -87,7 +68,6 @@ function evaluateThresholdBreach(reading = {}, cargoHint = null) {
   const breaches = [];
   let severity = 'NORMAL';
 
-  // 1. Temperature Breach Check
   if (temperature !== null) {
     if (reading.threshold !== undefined && reading.threshold !== null && temperature > Number(reading.threshold)) {
       const explicit = Number(reading.threshold);
@@ -126,7 +106,6 @@ function evaluateThresholdBreach(reading = {}, cargoHint = null) {
     }
   }
 
-  // 2. Humidity Breach Check
   if (humidity !== null && humidity > profile.maxHumidity) {
     const delta = Number((humidity - profile.maxHumidity).toFixed(1));
     severity = severity === 'CRITICAL' ? 'CRITICAL' : 'WARNING';
@@ -140,7 +119,6 @@ function evaluateThresholdBreach(reading = {}, cargoHint = null) {
     });
   }
 
-  // 3. Battery Reserve Depletion Check
   if (batteryVoltage !== null && batteryVoltage < profile.minBatteryVoltage) {
     const delta = Number((profile.minBatteryVoltage - batteryVoltage).toFixed(2));
     severity = severity === 'CRITICAL' ? 'CRITICAL' : 'WARNING';
@@ -166,13 +144,6 @@ function evaluateThresholdBreach(reading = {}, cargoHint = null) {
   };
 }
 
-/**
- * Detects whether a domain event represents an anomaly according to automated domain rules.
- *
- * @param {Object} event - Domain event object
- * @param {string|Object} [cargoHint] - Optional cargo profile hint
- * @returns {Object} Enriched anomaly metadata for the event
- */
 function detectEventAnomaly(event, cargoHint = null) {
   if (!event || typeof event !== 'object') {
     return { isAnomaly: false, severity: 'NORMAL', breaches: [] };
@@ -183,7 +154,7 @@ function detectEventAnomaly(event, cargoHint = null) {
   const evaluation = evaluateThresholdBreach(payload, cargoHint);
 
   if (isSpikeType && !evaluation.isAnomaly) {
-    // If event explicitly is TEMPERATURE_SPIKE, enforce minimum CRITICAL anomaly classification
+
     return {
       isAnomaly: true,
       severity: 'CRITICAL',

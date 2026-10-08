@@ -1,14 +1,5 @@
 const { ValidationError } = require('../utils/errors');
 
-/**
- * Request Validation Middleware Factory
- *
- * Provides a higher-order middleware to validate incoming request data
- * (body, params, query) against custom validator functions or schemas.
- *
- * @param {Function} validatorFn - Function receiving (req) and returning true or throwing/returning error details.
- * @returns {Function} Express middleware
- */
 function validateRequest(validatorFn) {
   return (req, res, next) => {
     try {

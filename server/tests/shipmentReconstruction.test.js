@@ -471,7 +471,6 @@ test('temporal replay with 100+ sequential logistics events', () => {
 
   const startTime = Date.parse('2026-08-01T10:00:00.000Z');
 
-  // Version 1: shipment creation
   events.push(
     createEvent(
       shipmentId,
@@ -481,7 +480,6 @@ test('temporal replay with 100+ sequential logistics events', () => {
     )
   );
 
-  // Version 2: shipment loaded
   events.push(
     createEvent(
       shipmentId,
@@ -495,7 +493,6 @@ test('temporal replay with 100+ sequential logistics events', () => {
     )
   );
 
-  // Versions 3-119: repeated telemetry events
   for (let version = 3; version <= 119; version++) {
     events.push(
       createEvent(
@@ -512,7 +509,6 @@ test('temporal replay with 100+ sequential logistics events', () => {
     );
   }
 
-  // Version 120: shipment arrives at destination
   events.push(
     createEvent(
       shipmentId,
@@ -529,10 +525,6 @@ test('temporal replay with 100+ sequential logistics events', () => {
 
   assert.strictEqual(events.length, 120);
 
-  // ---------------------------------------------------------
-  // Full replay benchmark
-  // ---------------------------------------------------------
-
   const heapBefore = process.memoryUsage().heapUsed;
   const start = process.hrtime.bigint();
 
@@ -548,10 +540,6 @@ test('temporal replay with 100+ sequential logistics events', () => {
   const heapDeltaKb =
     (heapAfter - heapBefore) / 1024;
 
-  // ---------------------------------------------------------
-  // Verify final reconstructed state
-  // ---------------------------------------------------------
-
   assert.strictEqual(finalState.shipmentId, shipmentId);
   assert.strictEqual(finalState.version, 120);
   assert.strictEqual(finalState.status, 'ARRIVED');
@@ -564,15 +552,10 @@ test('temporal replay with 100+ sequential logistics events', () => {
     'MV-AUDIT-01'
   );
 
-  // Version 119 is the final temperature event.
   assert.strictEqual(
     finalState.temperature,
     8 + (119 % 5)
   );
-
-  // ---------------------------------------------------------
-  // Verify historical reconstruction in the middle
-  // ---------------------------------------------------------
 
   const historicalState = reconstructStateAsOf(
     shipmentId,
@@ -600,15 +583,10 @@ test('temporal replay with 100+ sequential logistics events', () => {
     'MV-AUDIT-01'
   );
 
-  // Version 60 temperature must come from event 60.
   assert.strictEqual(
     historicalState.temperature,
     8 + (60 % 5)
   );
-
-  // ---------------------------------------------------------
-  // Verify timestamp-based reconstruction
-  // ---------------------------------------------------------
 
   const timestampState =
     reconstructStateAsOfTimestamp(
@@ -628,10 +606,6 @@ test('temporal replay with 100+ sequential logistics events', () => {
     timestampState.status,
     'TEMPERATURE_SPIKE'
   );
-
-  // ---------------------------------------------------------
-  // Benchmark output
-  // ---------------------------------------------------------
 
   console.log(
     `\n[Day 20] Replayed ${events.length} events`

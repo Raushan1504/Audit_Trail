@@ -63,7 +63,7 @@ test('ShipmentReadModel schema path defaults and types', () => {
 });
 
 test('ShipmentReadModel validates required fields and acceptable values', async () => {
-  // Helper to validate and catch error
+
   const getValidationError = async (doc) => {
     try {
       await doc.validate();
@@ -73,12 +73,10 @@ test('ShipmentReadModel validates required fields and acceptable values', async 
     }
   };
 
-  // Missing shipmentId should fail
   const missingIdDoc = new ShipmentReadModel({});
   const missingIdError = await getValidationError(missingIdDoc);
   assert.ok(missingIdError?.errors?.shipmentId, 'Should require shipmentId');
 
-  // Valid status values should pass
   const validStatuses = ['CREATED', 'LOADED', 'TEMPERATURE_SPIKE', 'ARRIVED'];
   for (const status of validStatuses) {
     const validDoc = new ShipmentReadModel({
@@ -92,7 +90,6 @@ test('ShipmentReadModel validates required fields and acceptable values', async 
     assert.strictEqual(error, null, `Status "${status}" should be valid`);
   }
 
-  // Invalid status value should fail
   const invalidStatusDoc = new ShipmentReadModel({
     shipmentId: 'SHP-TEST',
     status: 'INVALID_STATUS'
@@ -100,7 +97,6 @@ test('ShipmentReadModel validates required fields and acceptable values', async 
   const invalidStatusError = await getValidationError(invalidStatusDoc);
   assert.ok(invalidStatusError?.errors?.status, 'Should reject invalid status enum');
 
-  // Negative version should fail
   const negativeVersionDoc = new ShipmentReadModel({
     shipmentId: 'SHP-TEST',
     lastAppliedVersion: -1
@@ -116,7 +112,6 @@ test('ShipmentReadModel aliases provide bidirectional interoperability', () => {
     version: 3
   });
 
-  // Check that aliases populate underlying schema fields
   assert.strictEqual(doc.shipmentId, 'SHP-ALIAS-1');
   assert.strictEqual(doc.aggregateId, 'SHP-ALIAS-1');
 
@@ -126,7 +121,6 @@ test('ShipmentReadModel aliases provide bidirectional interoperability', () => {
   assert.strictEqual(doc.lastAppliedVersion, 3);
   assert.strictEqual(doc.version, 3);
 
-  // Check mutation through aliases
   doc.location = 'Port of Shanghai';
   assert.strictEqual(doc.currentLocation, 'Port of Shanghai');
 

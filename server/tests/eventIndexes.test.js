@@ -7,7 +7,6 @@ const { EVENT_TYPES } = require('../src/events/eventTypes');
 test('Event model schema defines expected event store indexes', () => {
   const indexes = Event.schema.indexes();
 
-  // Find index definitions
   const hasAggregateVersionUnique = indexes.some(
     ([fields, options]) => fields.aggregateId === 1 && fields.version === 1 && options?.unique === true
   );
@@ -35,15 +34,10 @@ test('Event model exposes ensureIndexes helper', () => {
   assert.strictEqual(typeof Event.ensureIndexes, 'function', 'Event.ensureIndexes should be a function');
 });
 
-// ═══════════════════════════════════════════════════════════════════════
-// Day 22 — Compound Unique Index Concurrency Control Simulation
-// ═══════════════════════════════════════════════════════════════════════
-
 test('Day 22 OCC: Compound unique index { aggregateId: 1, version: 1 } prevents simultaneous duplicate versions', async (t) => {
   const originalSave = Event.prototype.save;
-  const persistedEvents = new Map(); // key: `${aggregateId}#${version}`
+  const persistedEvents = new Map();
 
-  // Simulate MongoDB compound unique index { aggregateId: 1, version: 1 } behavior
   Event.prototype.save = async function () {
     const key = `${this.aggregateId}#${this.version}`;
     if (persistedEvents.has(key)) {
@@ -89,7 +83,6 @@ test('Day 22 OCC: Compound unique index { aggregateId: 1, version: 1 } prevents 
       version: 1
     };
 
-    // Execute two simultaneous commands trying to append version 1
     const results = await Promise.allSettled([
       appendEvent(command1Event),
       appendEvent(command2Event)
@@ -112,7 +105,6 @@ test('Day 22 OCC: Compound unique index { aggregateId: 1, version: 1 } prevents 
   await t.test('enforces version uniqueness during rapid burst concurrency of 5 simultaneous commands', async () => {
     const shipmentId = 'SHIP-BURST-CONCURRENCY-002';
 
-    // First write version 1
     await appendEvent({
       aggregateId: shipmentId,
       eventType: EVENT_TYPES.CONTAINER_CREATED,
@@ -120,7 +112,6 @@ test('Day 22 OCC: Compound unique index { aggregateId: 1, version: 1 } prevents 
       version: 1
     });
 
-    // 5 simultaneous commands all competing to write version 2
     const burstPromises = Array.from({ length: 5 }, (_, i) =>
       appendEvent({
         aggregateId: shipmentId,
@@ -147,7 +138,6 @@ test('Day 22 OCC: Compound unique index { aggregateId: 1, version: 1 } prevents 
     const aggregateA = 'SHIP-INDEPENDENT-A';
     const aggregateB = 'SHIP-INDEPENDENT-B';
 
-    // Both attempt to write version 1 simultaneously
     const results = await Promise.allSettled([
       appendEvent({
         aggregateId: aggregateA,

@@ -145,8 +145,6 @@ test('projection state contract', async (t) => {
     );
   });
 
-  // Day 16: Pure projection updater tests
-
   await t.test('should not mutate the original projection state', () => {
     const state = {
       ...createInitialProjectionState('SHIP-001'),

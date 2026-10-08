@@ -6,11 +6,6 @@ const eventStore = require('../events/eventStore');
 const { persistDomainEvent } = require('../events/persistDomainEvent');
 const { validateOptimisticLock, ConcurrencyException } = require('../concurrency/optimisticConcurrency');
 
-/**
- * Replays domain events sequentially to reconstruct the current shipment state.
- * @param {Array} events - The chronological list of events for the shipment.
- * @returns {Object} The reconstructed shipment state.
- */
 function replayEvents(events) {
   if (!events || events.length === 0) {
     return { status: null, version: 0 };
@@ -42,11 +37,6 @@ function replayEvents(events) {
   return state;
 }
 
-/**
- * Handle the CreateShipment command.
- * @param {Object} commandData - { shipmentId, origin, destination, cargo }
- * @returns {Promise<Object>} The result of the command execution.
- */
 const handleCreateShipment = async (commandData) => {
   const { shipmentId, origin, destination, cargo, expectedVersion, modifiedBy } = commandData;
 
@@ -115,11 +105,6 @@ const handleCreateShipment = async (commandData) => {
   };
 };
 
-/**
- * Handle the LoadShipment command.
- * @param {Object} commandData - { shipmentId, vessel, port, expectedVersion, modifiedBy }
- * @returns {Promise<Object>} The result of the command execution.
- */
 const handleLoadShipment = async (commandData) => {
   const { shipmentId, vessel, port, expectedVersion, modifiedBy } = commandData;
 
@@ -182,13 +167,6 @@ const handleLoadShipment = async (commandData) => {
   };
 };
 
-/**
- * Handle the TemperatureSpike command.
- * Enriched with environmental and GPS telemetry metrics (Day 24).
- *
- * @param {Object} commandData - { shipmentId, temperature, threshold, sensorId, humidity, batteryVoltage, ambientTemp, coordinates, gps, expectedVersion, modifiedBy }
- * @returns {Promise<Object>} The result of the command execution.
- */
 const handleTemperatureSpike = async (commandData) => {
   const {
     shipmentId,
@@ -274,11 +252,6 @@ const handleTemperatureSpike = async (commandData) => {
   };
 };
 
-/**
- * Handle the ArriveAtPort command.
- * @param {Object} commandData - { shipmentId, port, expectedVersion, modifiedBy }
- * @returns {Promise<Object>} The result of the command execution.
- */
 const handleArriveAtPort = async (commandData) => {
   const { shipmentId, port, expectedVersion, modifiedBy } = commandData;
 

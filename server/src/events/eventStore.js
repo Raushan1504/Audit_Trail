@@ -11,11 +11,10 @@ async function appendEvent(domainEvent) {
     });
     const saved = await persistedEvent.save();
 
-    // Trigger registered event hooks (e.g. projection worker)
     try {
         eventBus.emit(EVENT_HOOKS.EVENT_APPENDED, saved);
     } catch (err) {
-        // Non-blocking: ensure hook handler errors do not disrupt persistence
+
         console.error('Error in eventAppended hook listener:', err);
     }
 

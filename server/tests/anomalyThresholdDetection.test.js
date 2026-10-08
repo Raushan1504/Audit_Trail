@@ -46,7 +46,7 @@ describe('Day 25: Person 1 Domain - Automated Anomaly Threshold Detection', () =
       assert.equal(result.severity, 'CRITICAL');
       assert.equal(result.breachesCount, 1);
       assert.equal(result.breaches[0].type, 'CARGO_TEMP_EXCEEDED');
-      assert.equal(result.breaches[0].delta, 9.5); // -8.5 - (-18.0) = 9.5°C over safe limit
+      assert.equal(result.breaches[0].delta, 9.5);
     });
 
     test('detects critical breach when temperature exceeds explicit threshold', () => {

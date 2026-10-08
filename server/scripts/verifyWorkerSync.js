@@ -1,18 +1,3 @@
-/**
- * ════════════════════════════════════════════════════════════════════════
- * Week 3 — Day 21: Background Worker Real-Time Sync Verification Script
- * ════════════════════════════════════════════════════════════════════════
- *
- * Mandate:
- *   Demonstrate that dispatching a new command immediately updates the
- *   ShipmentReadModel within the 200ms real-time SLA threshold.
- *
- * Usage:
- *   node scripts/verifyWorkerSync.js
- *   node scripts/verifyWorkerSync.js --iterations=5 --sla=200
- *   node scripts/verifyWorkerSync.js --live
- *   npm run verify:worker
- */
 
 require('dotenv').config();
 const { performance } = require('node:perf_hooks');
@@ -29,8 +14,6 @@ const {
 const { getShipmentState } = require('../src/queries/queryService');
 const { ProjectionWorker } = require('../src/projections/projectionWorker');
 const { eventBus, EVENT_HOOKS } = require('../src/events/eventHandlers');
-
-// ── ANSI Color Helpers ───────────────────────────────────────────────────
 
 const colors = {
   reset: '\x1b[0m',
@@ -49,8 +32,6 @@ const colors = {
 const pass = (msg) => `${colors.green}✓ PASS:${colors.reset} ${msg}`;
 const fail = (msg) => `${colors.red}✗ FAIL (SLA BREACH):${colors.reset} ${msg}`;
 const info = (msg) => `${colors.cyan}ℹ ${msg}${colors.reset}`;
-
-// ── In-Memory Persistence Harness ────────────────────────────────────────
 
 function setupInMemoryHarness() {
   const eventLog = [];
@@ -184,8 +165,6 @@ function setupInMemoryHarness() {
   };
 }
 
-// ── Statistics Helper ────────────────────────────────────────────────────
-
 function calculateStats(samples) {
   if (!samples || samples.length === 0) {
     return { count: 0, min: 0, max: 0, mean: 0, median: 0, p95: 0, p99: 0 };
@@ -205,8 +184,6 @@ function calculateStats(samples) {
   };
 }
 
-// ── CLI Argument Parser ──────────────────────────────────────────────────
-
 function parseArgs(args = process.argv.slice(2)) {
   let iterations = 3;
   let sla = 200;
@@ -220,8 +197,6 @@ function parseArgs(args = process.argv.slice(2)) {
 
   return { iterations, sla, isLive };
 }
-
-// ── Main Verification Runner ─────────────────────────────────────────────
 
 async function runWorkerSyncVerification() {
   const { iterations, sla, isLive } = parseArgs();
@@ -257,16 +232,13 @@ async function runWorkerSyncVerification() {
   const logEntries = [];
 
   try {
-    // ─────────────────────────────────────────────────────────────────────
-    // 1. LIFECYCLE COMMAND-TO-READ-MODEL VERIFICATION
-    // ─────────────────────────────────────────────────────────────────────
+
     console.log(`\n${colors.bold}${colors.yellow}[STAGE 1/3] VERIFYING LIFECYCLE SYNC ACROSS ${iterations} SHIPMENTS${colors.reset}`);
 
     for (let i = 1; i <= iterations; i++) {
       const shipmentId = `SYNC-AUDIT-${Date.now().toString().slice(-4)}-${i}`;
       console.log(`\n  ${colors.bold}Shipment #${i}:${colors.reset} ${colors.cyan}${shipmentId}${colors.reset}`);
 
-      // Step 1: CreateShipment
       let t0 = performance.now();
       await handleCreateShipment({
         shipmentId,
@@ -284,7 +256,6 @@ async function runWorkerSyncVerification() {
       );
       logEntries.push({ command: 'CreateShipment', version: 1, durationMs, pass: isPass });
 
-      // Step 2: LoadShipment
       t0 = performance.now();
       await handleLoadShipment({
         shipmentId,
@@ -301,7 +272,6 @@ async function runWorkerSyncVerification() {
       );
       logEntries.push({ command: 'LoadShipment', version: 2, durationMs, pass: isPass });
 
-      // Step 3: TemperatureSpike
       t0 = performance.now();
       await handleTemperatureSpike({
         shipmentId,
@@ -319,7 +289,6 @@ async function runWorkerSyncVerification() {
       );
       logEntries.push({ command: 'TemperatureSpike', version: 3, durationMs, pass: isPass });
 
-      // Step 4: ArriveAtPort
       t0 = performance.now();
       await handleArriveAtPort({
         shipmentId,
@@ -335,7 +304,6 @@ async function runWorkerSyncVerification() {
       );
       logEntries.push({ command: 'ArriveAtPort', version: 4, durationMs, pass: isPass });
 
-      // Step 5: Fast Query Read Model Verification
       const qStart = performance.now();
       const state = await getShipmentState(shipmentId);
       const qDuration = performance.now() - qStart;
@@ -344,9 +312,6 @@ async function runWorkerSyncVerification() {
       );
     }
 
-    // ─────────────────────────────────────────────────────────────────────
-    // 2. HIGH-CONCURRENCY RAPID BURST VERIFICATION
-    // ─────────────────────────────────────────────────────────────────────
     console.log(`\n${colors.bold}${colors.yellow}[STAGE 2/3] RAPID BURST CONCURRENCY LATENCY TEST${colors.reset}`);
     const BURST_COUNT = 8;
     console.log(info(`Dispatching ${BURST_COUNT} rapid commands in succession across distinct aggregates...`));
@@ -366,9 +331,6 @@ async function runWorkerSyncVerification() {
     }
     console.log(pass(`Processed ${BURST_COUNT} burst commands; all synchronized within SLA.`));
 
-    // ─────────────────────────────────────────────────────────────────────
-    // 3. PUSH-HOOK VS PULL-POLLING RESILIENCY VERIFICATION
-    // ─────────────────────────────────────────────────────────────────────
     console.log(`\n${colors.bold}${colors.yellow}[STAGE 3/3] RESILIENT CATCH-UP SYNC (POLLING FALLBACK)${colors.reset}`);
     console.log(info('Simulating temporary hook detachment (worker outage / network partition)...'));
 
@@ -382,7 +344,6 @@ async function runWorkerSyncVerification() {
       cargo: 'High-Tech Sensor Bundles'
     });
 
-    // Verify ReadModel does not yet have it
     let readCheck = null;
     if (isConnectedToDb) {
       readCheck = await ShipmentReadModel.findOne({ shipmentId: catchupId });
@@ -394,7 +355,6 @@ async function runWorkerSyncVerification() {
       console.log(pass('Hook suppression verified: event safely held in Event Store without premature projection.'));
     }
 
-    // Execute background worker catch-up poll
     console.log(info('Executing worker.pollOnce() background catch-up...'));
     const pollResult = await worker.pollOnce();
     console.log(pass(`Catch-up poll completed successfully (${pollResult.processedCount} event(s) projected).`));
@@ -406,9 +366,6 @@ async function runWorkerSyncVerification() {
       throw new Error(`Catch-up failed: shipment ${catchupId} not at version 1`);
     }
 
-    // ─────────────────────────────────────────────────────────────────────
-    // 4. STATISTICAL SLA AUDIT REPORT
-    // ─────────────────────────────────────────────────────────────────────
     const stats = calculateStats(allLatencies);
     const failedCount = allLatencies.filter((l) => l > sla).length;
     const slaPassRate = (((allLatencies.length - failedCount) / allLatencies.length) * 100).toFixed(1);

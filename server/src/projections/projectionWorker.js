@@ -5,22 +5,8 @@ const ShipmentReadModel = require('../models/ShipmentReadModel');
 const { applyEventToReadModel } = require('./shipmentProjection');
 const { eventBus, EVENT_HOOKS } = require('../events/eventHandlers');
 
-/**
- * Background Node.js Projection Worker.
- *
- * Implements a dual-mode event consumption architecture for CQRS:
- *  1. Event Hook (Push): Registers an immediate in-memory hook on eventStore appends
- *     for sub-millisecond projection latency.
- *  2. Worker Loop (Pull): Runs a periodic background polling loop to detect unapplied
- *     or out-of-sync events in MongoDB, ensuring crash resiliency and eventual consistency.
- */
 class ProjectionWorker extends EventEmitter {
-  /**
-   * @param {Object} [options]
-   * @param {number} [options.intervalMs=2000] - Polling interval in milliseconds
-   * @param {number} [options.batchSize=100] - Max events to project per shipment per poll cycle
-   * @param {boolean} [options.autoHook=true] - Whether to attach eventBus hook on start
-   */
+
   constructor(options = {}) {
     super();
     this.intervalMs = Number(options.intervalMs) || 2000;
@@ -43,9 +29,6 @@ class ProjectionWorker extends EventEmitter {
     };
   }
 
-  /**
-   * Starts the background projection worker loop and attaches event hooks.
-   */
   start() {
     if (this.isRunning) {
       return this;
@@ -53,27 +36,23 @@ class ProjectionWorker extends EventEmitter {
 
     this.isRunning = true;
 
-    // 1. Attach real-time event hook
     if (this.autoHook) {
       this.attachHook();
     }
 
-    // 2. Perform initial catch-up poll immediately if autoPoll enabled
     if (this.autoPoll) {
       this.pollOnce().catch(() => {
-        // Error already emitted by pollOnce()
+
       });
 
-      // 3. Start recurring polling interval for background catch-up
       this.timer = setInterval(() => {
         if (this.isRunning) {
           this.pollOnce().catch(() => {
-            // Error already emitted by pollOnce()
+
           });
         }
       }, this.intervalMs);
 
-      // Prevent worker timer from blocking Node.js process exit if unref is supported
       if (this.timer && typeof this.timer.unref === 'function') {
         this.timer.unref();
       }
@@ -88,9 +67,6 @@ class ProjectionWorker extends EventEmitter {
     return this;
   }
 
-  /**
-   * Gracefully stops the worker loop and detaches all event hooks.
-   */
   stop() {
     this.isRunning = false;
 
@@ -105,11 +81,6 @@ class ProjectionWorker extends EventEmitter {
     return this;
   }
 
-  /**
-   * Registers listener on eventBus for instantaneous push-based projection updates.
-   *
-   * @param {EventEmitter} [bus=eventBus]
-   */
   attachHook(bus = eventBus) {
     if (this.hookListener) {
       return;
@@ -129,11 +100,6 @@ class ProjectionWorker extends EventEmitter {
     bus.on(EVENT_HOOKS.EVENT_APPENDED, this.hookListener);
   }
 
-  /**
-   * Removes listener from eventBus.
-   *
-   * @param {EventEmitter} [bus=eventBus]
-   */
   detachHook(bus = eventBus) {
     if (this.hookListener) {
       bus.removeListener(EVENT_HOOKS.EVENT_APPENDED, this.hookListener);
@@ -141,13 +107,6 @@ class ProjectionWorker extends EventEmitter {
     }
   }
 
-  /**
-   * Projects a single domain event into the ShipmentReadModel.
-   *
-   * @param {Object} event - Domain event document
-   * @param {string} [source='worker'] - Origin of event ('hook' | 'poll' | 'worker')
-   * @returns {Promise<Object>}
-   */
   async processEvent(event, source = 'worker') {
     const startTime = performance.now();
     const result = await applyEventToReadModel(event);
@@ -165,27 +124,16 @@ class ProjectionWorker extends EventEmitter {
     };
   }
 
-  /**
-   * Waits for the read model of a given shipment to reach or exceed the expected version.
-   * Guarantees resolution within timeoutMs (default 200ms) or rejects with an SLA timeout error.
-   *
-   * @param {string} shipmentId - The aggregate ID of the shipment.
-   * @param {number} expectedVersion - The version expected in the read model.
-   * @param {number} [timeoutMs=200] - Maximum latency threshold in milliseconds (SLA: 200ms).
-   * @returns {Promise<Object>} The updated read model document.
-   */
   async waitForVersion(shipmentId, expectedVersion, timeoutMs = 200) {
     if (!shipmentId) {
       throw new Error('shipmentId is required');
     }
 
-    // 1. Immediate check if already projected
     const immediate = await ShipmentReadModel.findOne({ shipmentId });
     if (immediate && (immediate.lastAppliedVersion ?? immediate.version) >= expectedVersion) {
       return immediate;
     }
 
-    // 2. Await worker event notification
     return new Promise((resolve, reject) => {
       let timer = null;
 
@@ -219,7 +167,7 @@ class ProjectionWorker extends EventEmitter {
             return resolve(doc);
           }
         } catch {
-          // ignore
+
         }
         cleanup();
         const err = new Error(
@@ -235,13 +183,6 @@ class ProjectionWorker extends EventEmitter {
     });
   }
 
-  /**
-   * Executes a single polling iteration across all shipments in the Event Store.
-   * Identifies any events whose version exceeds the ShipmentReadModel's lastAppliedVersion
-   * and projects them sequentially.
-   *
-   * @returns {Promise<{ status: string, processedCount: number }>}
-   */
   async pollOnce() {
     if (this.isPolling) {
       return { status: 'already_polling', processedCount: 0 };
@@ -254,11 +195,11 @@ class ProjectionWorker extends EventEmitter {
     let processedCount = 0;
 
     try {
-      // Find all unique aggregate IDs in the Event Store
+
       const aggregateIds = await Event.distinct('aggregateId');
 
       for (const shipmentId of aggregateIds) {
-        // If worker was stopped mid-poll, break early
+
         if (!this.isRunning && this.timer !== null) {
           break;
         }
@@ -266,7 +207,6 @@ class ProjectionWorker extends EventEmitter {
         const readModel = await ShipmentReadModel.findOne({ shipmentId });
         const lastVersion = readModel ? readModel.lastAppliedVersion : 0;
 
-        // Query pending unapplied events strictly higher than read model version
         const unappliedEvents = await Event.find({
           aggregateId: shipmentId,
           version: { $gt: lastVersion }
@@ -295,11 +235,6 @@ class ProjectionWorker extends EventEmitter {
     }
   }
 
-  /**
-   * Returns runtime statistics and health metrics for the projection worker.
-   *
-   * @returns {Object}
-   */
   getStats() {
     return {
       isRunning: this.isRunning,
@@ -311,18 +246,11 @@ class ProjectionWorker extends EventEmitter {
   }
 }
 
-// Default singleton worker instance for app-wide reuse
 const defaultWorker = new ProjectionWorker();
 defaultWorker.on('error', (err) => {
   console.error('[ProjectionWorker] Background worker error:', err?.message || err);
 });
 
-/**
- * Convenience helper to initialize and start the projection worker.
- *
- * @param {Object} [options]
- * @returns {ProjectionWorker}
- */
 function startProjectionWorker(options) {
   const worker = options ? new ProjectionWorker(options) : defaultWorker;
   if (options && typeof worker.on === 'function') {
@@ -334,16 +262,10 @@ function startProjectionWorker(options) {
   return worker;
 }
 
-/**
- * Convenience helper to stop the default projection worker.
- */
 function stopProjectionWorker() {
   defaultWorker.stop();
 }
 
-// ── Standalone CLI Entry Point ─────────────────────────────────────────
-// Enables running the projection worker as a dedicated independent process
-// e.g. via `node src/projections/projectionWorker.js` or Render background worker
 if (require.main === module) {
   require('dotenv').config();
   const { connectDB } = require('../config/db');

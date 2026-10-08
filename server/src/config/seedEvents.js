@@ -2,7 +2,7 @@ const Event = require('../models/Event');
 const { EVENT_TYPES } = require('../events/eventTypes');
 
 const DEMO_EVENTS = [
-  // SHIP-001: Standard Sea Freight (Full 4-event sequence)
+
   {
     aggregateId: 'SHIP-001',
     eventType: EVENT_TYPES.CONTAINER_CREATED,
@@ -32,7 +32,6 @@ const DEMO_EVENTS = [
     timestamp: new Date(Date.now() - 1 * 86400000)
   },
 
-  // SHIP-TEMP-ALERT: Cold Chain Anomaly
   {
     aggregateId: 'SHIP-TEMP-ALERT',
     eventType: EVENT_TYPES.CONTAINER_CREATED,
@@ -55,7 +54,6 @@ const DEMO_EVENTS = [
     timestamp: new Date(Date.now() - 1 * 86400000)
   },
 
-  // CONT-GENESIS-99: New Container Inception
   {
     aggregateId: 'CONT-GENESIS-99',
     eventType: EVENT_TYPES.CONTAINER_CREATED,

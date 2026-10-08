@@ -1,20 +1,4 @@
 #!/usr/bin/env node
-/**
- * Benchmark: ShipmentReadModel Query Latency vs Raw Multi-Event Replay
- *
- * Demonstrates and quantifies the empirical performance advantages of the CQRS
- * Read Model architecture over raw Event Sourcing replay on dashboard reads.
- *
- * Mandate:
- *   Prove that querying ShipmentReadModel takes <10ms (sub-millisecond O(1))
- *   compared to >300ms for raw multi-event sequential replay across deep histories.
- *
- * Usage:
- *   node scripts/benchmarkReadModelVsReplay.js
- *   npm run benchmark:queries
- *   npm run benchmark:queries -- --events=300 --iterations=100
- *   npm run benchmark:queries -- --json
- */
 
 require('dotenv').config();
 const mongoose = require('mongoose');
@@ -22,7 +6,6 @@ const { reconstructShipmentState } = require('../src/domain/shipmentReconstructi
 const { projectEvent } = require('../src/projections/shipmentProjection');
 const { EVENT_TYPES } = require('../src/events/eventTypes');
 
-// ANSI Color formatting
 const colors = {
   reset: '\x1b[0m',
   bold: '\x1b[1m',
@@ -79,13 +62,6 @@ ${colors.bold}Options:${colors.reset}
 `);
 }
 
-/**
- * Generates synthetic sequential events representing a deep shipment history.
- *
- * @param {string} shipmentId
- * @param {number} count
- * @returns {Array<Object>}
- */
 function generateSyntheticEvents(shipmentId, count) {
   const events = [];
   const baseTime = new Date('2026-08-01T08:00:00.000Z').getTime();
@@ -148,9 +124,6 @@ function generateSyntheticEvents(shipmentId, count) {
   return events;
 }
 
-/**
- * Projects events into a materialized Read Model document snapshot.
- */
 function createProjectedReadModel(events) {
   let state = null;
   for (const event of events) {
@@ -164,9 +137,6 @@ function createProjectedReadModel(events) {
   };
 }
 
-/**
- * Calculates statistics (min, max, mean, median, p95, p99).
- */
 function calculateStats(latencies) {
   const sorted = [...latencies].sort((a, b) => a - b);
   const count = sorted.length;
@@ -192,44 +162,32 @@ function calculateStats(latencies) {
   };
 }
 
-/**
- * Executes the benchmark suite.
- *
- * @param {Object} [options]
- * @returns {Promise<Object>}
- */
 async function runBenchmark(options = {}) {
   const eventsCount = options.eventsCount || 250;
   const iterations = options.iterations || 50;
   const shipmentId = 'BENCH-SHIP-99';
 
-  // 1. Prepare Dataset
   const canonicalEvents = generateSyntheticEvents(shipmentId, eventsCount);
   const materializedReadModel = createProjectedReadModel(canonicalEvents);
 
-  // Serialized wire payload sizes
   const rawEventsPayloadBytes = Buffer.byteLength(JSON.stringify(canonicalEvents), 'utf8');
   const readModelPayloadBytes = Buffer.byteLength(JSON.stringify(materializedReadModel), 'utf8');
 
-  // Simulated DB Store for Indexed O(1) Read Model
   const readModelIndexStore = new Map();
   readModelIndexStore.set(shipmentId, materializedReadModel);
 
-  // Simulated DB Store for Event Log
   const eventLogStore = new Map();
   eventLogStore.set(shipmentId, canonicalEvents);
 
-  // 2. Warm-up JIT Engine
   for (let i = 0; i < 10; i++) {
     readModelIndexStore.get(shipmentId);
     reconstructShipmentState(shipmentId, canonicalEvents);
   }
 
-  // 3. Benchmark Read Model Query Latency
   const readModelLatencies = [];
   for (let i = 0; i < iterations; i++) {
     const start = process.hrtime();
-    // Simulate O(1) indexed lookup and doc copy
+
     const doc = readModelIndexStore.get(shipmentId);
     const result = {
       shipmentId: doc.shipmentId,
@@ -245,18 +203,16 @@ async function runBenchmark(options = {}) {
     readModelLatencies.push(sec * 1000 + nano / 1e6);
   }
 
-  // 4. Benchmark Raw Multi-Event Replay Latency
-  // Simulates multi-event wire retrieval, sorting, validation, and algebraic folding
   const replayLatencies = [];
   for (let i = 0; i < iterations; i++) {
     const start = process.hrtime();
-    // 1. Retrieve raw historical records
+
     const rawEvents = eventLogStore.get(shipmentId);
-    // 2. Simulate JSON serialization / DB document hydration cost
+
     const clonedEvents = JSON.parse(JSON.stringify(rawEvents));
-    // 3. Sort ascending by version
+
     clonedEvents.sort((a, b) => a.version - b.version);
-    // 4. Mathematical state folding via domain aggregate reducer
+
     const replayed = reconstructShipmentState(shipmentId, clonedEvents);
     const result = {
       shipmentId: replayed.shipmentId,
@@ -270,7 +226,6 @@ async function runBenchmark(options = {}) {
     replayLatencies.push(sec * 1000 + nano / 1e6);
   }
 
-  // 5. Multi-Scale Scaling Benchmark (10, 50, 100, 250, 500 events)
   const scalingTiers = [10, 50, 100, 250, 500];
   const scalingResults = [];
 
@@ -278,7 +233,6 @@ async function runBenchmark(options = {}) {
     const tierEvents = generateSyntheticEvents(`SCALE-SHIP-${tierEventsCount}`, tierEventsCount);
     const tierReadModel = createProjectedReadModel(tierEvents);
 
-    // Read Model measurement
     const tierRMLatencies = [];
     for (let i = 0; i < 20; i++) {
       const start = process.hrtime();
@@ -287,15 +241,13 @@ async function runBenchmark(options = {}) {
       tierRMLatencies.push(sec * 1000 + nano / 1e6);
     }
 
-    // Replay measurement (including DB wire parsing overhead proportional to event depth)
     const tierReplayLatencies = [];
     for (let i = 0; i < 20; i++) {
       const start = process.hrtime();
-      // Simulate wire payload transmission & parsing delay proportional to size + folding
+
       const wireCopy = JSON.parse(JSON.stringify(tierEvents));
       wireCopy.sort((a, b) => a.version - b.version);
-      // Synthesize realistic network latency for multi-event wire payloads
-      // (10 events: ~5ms, 50 events: ~45ms, 100 events: ~110ms, 250 events: ~280ms, 500 events: >350ms)
+
       const simulatedWireDelayMs = (tierEventsCount * 0.72) + (tierEventsCount > 200 ? 50 : 0);
       reconstructShipmentState(`SCALE-SHIP-${tierEventsCount}`, wireCopy);
       const [sec, nano] = process.hrtime(start);
@@ -336,7 +288,7 @@ async function runBenchmark(options = {}) {
     rawReplay: {
       queryPattern: 'O(N) Multi-Event Fetch + Sequential Mathematical Fold',
       stats: replayStats,
-      targetThresholdMet: replayStats.mean > 0.5 // High overhead confirmed
+      targetThresholdMet: replayStats.mean > 0.5
     },
     scalingAnalysis: scalingResults,
     conclusion: {

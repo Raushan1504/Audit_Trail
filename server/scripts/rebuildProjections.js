@@ -1,24 +1,10 @@
 #!/usr/bin/env node
-/**
- * Projection Catch-Up and Rebuild CLI Utility
- *
- * Replays all domain events from scratch from the immutable MongoDB Event Store
- * to reconstruct and synchronize the ShipmentReadModel read model.
- *
- * Usage:
- *   node scripts/rebuildProjections.js
- *   npm run projections:rebuild
- *   npm run projections:rebuild -- --clean
- *   npm run projections:rebuild -- --shipment=SHIP-001
- *   npm run projections:rebuild -- --dry-run
- */
 
 require('dotenv').config();
 const mongoose = require('mongoose');
 const { rebuildAllReadModels } = require('../src/projections/shipmentProjection');
 const { connectDB } = require('../src/config/db');
 
-// ANSI Color formatting
 const colors = {
   reset: '\x1b[0m',
   bold: '\x1b[1m',
@@ -80,17 +66,6 @@ ${colors.bold}Examples:${colors.reset}
 `);
 }
 
-/**
- * Executes the projection rebuild process.
- * Can be called programmatically or via CLI.
- *
- * @param {Object} [options]
- * @param {boolean} [options.clean=false]
- * @param {string} [options.shipmentId=null]
- * @param {boolean} [options.dryRun=false]
- * @param {boolean} [options.silent=false]
- * @returns {Promise<Object>} Summary statistics
- */
 async function runRebuild(options = {}) {
   const startTime = Date.now();
   const isSilent = options.silent === true;
@@ -109,7 +84,6 @@ async function runRebuild(options = {}) {
     console.log('');
   }
 
-  // Ensure DB connection
   let openedConnection = false;
   if (mongoose.connection.readyState !== 1) {
     if (!isSilent) console.log(`${colors.cyan}ℹ Connecting to MongoDB...${colors.reset}`);
@@ -161,7 +135,6 @@ async function runRebuild(options = {}) {
   };
 }
 
-// CLI Execution entrypoint
 if (require.main === module) {
   const options = parseArgs();
 

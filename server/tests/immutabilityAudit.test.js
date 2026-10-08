@@ -8,16 +8,6 @@ const { immutabilityGuard, errorHandler } = require('../src/middleware');
 
 const EXPECTED_APPEND_ONLY_MSG = 'Event store is append-only: update/delete operations are not permitted';
 
-// ═══════════════════════════════════════════════════════════════════════
-// MID-PROJECT REVIEW — DAY 14: EVENT STORE IMMUTABILITY AUDIT
-// 
-// Verification Matrix:
-//   APPEND  → ✓ (Permitted)
-//   READ    → ✓ (Permitted)
-//   UPDATE  → ✗ (Rejected / Prevented)
-//   DELETE  → ✗ (Rejected / Prevented)
-// ═══════════════════════════════════════════════════════════════════════
-
 test('Day 14 Immutability Audit — Pillar 1: APPEND Works', async (t) => {
   const store = [];
   const originalSave = Event.prototype.save;
@@ -217,9 +207,8 @@ test('Day 14 Immutability Audit — Pillar 3: UPDATE Operations are Rejected', a
       version: 3
     });
 
-    // Mark as persisted existing document
     existingDoc.isNew = false;
-    existingDoc.payload.temperature = 18.0; // Adversary tries to falsify temp spike
+    existingDoc.payload.temperature = 18.0;
 
     let error = null;
     try {
@@ -406,7 +395,6 @@ test('Day 14 Immutability Audit — Pillar 6: End-to-End Tamper-Proof Audit Simu
   try {
     const auditShipmentId = 'SHIP-TAMPER-PROOF-AUDIT';
 
-    // ── Phase 1: APPEND Phase ─────────────────────────────────────────
     const ev1 = createDomainEvent(auditShipmentId, EVENT_TYPES.CONTAINER_CREATED, { origin: 'Tokyo', destination: 'Rotterdam' }, 1);
     const ev2 = createDomainEvent(auditShipmentId, EVENT_TYPES.LOADED_ON_SHIP, { vessel: 'Evergreen 2', port: 'Tokyo' }, 2);
     const ev3 = createDomainEvent(auditShipmentId, EVENT_TYPES.TEMPERATURE_SPIKE, { temperature: 36.5, threshold: 22.0 }, 3);
@@ -417,12 +405,10 @@ test('Day 14 Immutability Audit — Pillar 6: End-to-End Tamper-Proof Audit Simu
     await appendEvent(ev3);
     await appendEvent(ev4);
 
-    // Snapshot state before attack
     const eventsBeforeAttack = await getEventsByAggregateId(auditShipmentId);
     assert.strictEqual(eventsBeforeAttack.length, 4);
     const snapshotJson = JSON.stringify(eventsBeforeAttack);
 
-    // ── Phase 2: Adversarial UPDATE Attacks (All 5 query methods + doc.save) ──
     const attackOperations = [
       () => Event.updateOne({ aggregateId: auditShipmentId, version: 3 }, { $set: { 'payload.temperature': 20.0 } }),
       () => Event.updateMany({ aggregateId: auditShipmentId }, { $set: { eventType: 'FALSIFIED' } }),
@@ -443,7 +429,6 @@ test('Day 14 Immutability Audit — Pillar 6: End-to-End Tamper-Proof Audit Simu
     }
     assert.strictEqual(blockedAttackCount, 5, 'All 5 update attacks must be blocked');
 
-    // ── Phase 3: Adversarial DELETE Attacks (All 3 query methods) ─────────
     const deleteAttacks = [
       () => Event.deleteOne({ aggregateId: auditShipmentId, version: 3 }),
       () => Event.deleteMany({ aggregateId: auditShipmentId }),
@@ -462,7 +447,6 @@ test('Day 14 Immutability Audit — Pillar 6: End-to-End Tamper-Proof Audit Simu
     }
     assert.strictEqual(blockedDeleteCount, 3, 'All 3 delete attacks must be blocked');
 
-    // ── Phase 4: State Integrity Verification ─────────────────────────
     const eventsAfterAttack = await getEventsByAggregateId(auditShipmentId);
     assert.strictEqual(eventsAfterAttack.length, 4, 'Event count must remain exactly 4');
     assert.strictEqual(
@@ -471,7 +455,6 @@ test('Day 14 Immutability Audit — Pillar 6: End-to-End Tamper-Proof Audit Simu
       'Post-attack event store state must be byte-for-byte identical to original snapshot'
     );
 
-    // Verify specific critical payload values remained unchanged
     assert.strictEqual(eventsAfterAttack[2].payload.temperature, 36.5, 'Temp spike must not have been tampered');
     assert.strictEqual(eventsAfterAttack[0].eventType, EVENT_TYPES.CONTAINER_CREATED);
     assert.strictEqual(eventsAfterAttack[1].eventType, EVENT_TYPES.LOADED_ON_SHIP);
