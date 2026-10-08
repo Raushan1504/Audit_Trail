@@ -26,6 +26,18 @@ app.use(express.urlencoded({ extended: true }));
 app.get('/health', (_request, response) => {
 	response.status(200).json({ status: 'ok' });
 });
+app.get('/', (_request, response) => {
+	response.status(200).json({
+		status: 'ok',
+		message: 'Audit Trail API Server is running',
+		endpoints: {
+			health: '/health',
+			commands: '/api/commands',
+			queries: '/api/queries',
+			audit: '/api/audit'
+		}
+	});
+});
 
 app.use(['/api/events', '/api/commands', '/api/queries', '/api/audit'], immutabilityGuard);
 
