@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 🚢 AUDIT TRAIL: EVENT-SOURCED INVENTORY & LOGISTICS LEDGER
 ## Comprehensive Project Engineering Report & Architectural Specification
 
@@ -8,11 +9,31 @@
 [![Concurrency](https://img.shields.io/badge/Concurrency-Optimistic_Concurrency_Control_(OCC)-orange)](#35-optimistic-concurrency-control-occ)
 [![Deployment](https://img.shields.io/badge/Deployment-Vercel_%2B_Render-000000?logo=vercel&logoColor=white)](#10-production-cloud-deployment-guide)
 [![Commits](https://img.shields.io/badge/Roadmap-84_Verified_Commits_(28_Days)-success)](#8-team-commit-matrix--engineering-roadmap)
+=======
+# 📦 Audit Trail
+
+**Enterprise Event-Sourced Inventory & Logistics Ledger**  
+*MERN • Event Sourcing • CQRS • Optimistic Concurrency Control (OCC) • 28-Day Milestone Complete Delivery*
+
+[![Live Demo](https://img.shields.io/badge/Live_Demo-audit--trail--gray.vercel.app-00f0ff?style=for-the-badge&logo=vercel&logoColor=black)](https://audit-trail-gray.vercel.app/)
+[![Backend API](https://img.shields.io/badge/API_Status-audit--trail--backend.onrender.com-46E3B7?style=for-the-badge&logo=render&logoColor=white)](https://audit-trail-backend.onrender.com)
+[![Tests](https://img.shields.io/badge/Tests-100%25_Passing-brightgreen?style=for-the-badge&logo=node.js&logoColor=white)](https://github.com/Raushan1504/Audit_Trail)
+[![Roadmap Status](https://img.shields.io/badge/28--Day_Milestone-All_Days_Completed_%E2%9C%85-success?style=for-the-badge)](https://github.com/Raushan1504/Audit_Trail)
+
+---
+
+### 🌐 Live Deployment & Project Links
+- **🚀 Live Application (Frontend SPA):** [**https://audit-trail-gray.vercel.app/**](https://audit-trail-gray.vercel.app/)
+- **⚡ Backend REST API:** [**https://audit-trail-backend.onrender.com/**](https://audit-trail-backend.onrender.com/)
+- **🩺 API Health Check:** [**https://audit-trail-backend.onrender.com/health**](https://audit-trail-backend.onrender.com/health)
+- **🎓 Forensic Walkthrough & Case Study:** [**Forensic Case Study Guide**](docs/FORENSIC_CASE_STUDY_DEMO.md)
+>>>>>>> 446dcce8a2fb0b18d01d2168e1b5ffedd1ec5599
 
 ---
 
 ### Project Metadata & Evaluation Summary
 
+<<<<<<< HEAD
 | Parameter | Details |
 |---|---|
 | **Project Title** | **Audit Trail: Event-Sourced Cold-Chain & Logistics Ledger** |
@@ -23,6 +44,14 @@
 | **Backend API Deployment** | [https://audit-trail-backend.onrender.com](https://audit-trail-backend.onrender.com) *(Render Web Service)* |
 | **Repository URL** | [https://github.com/Raushan1504/Audit_Trail](https://github.com/Raushan1504/Audit_Trail) |
 | **Target SLA** | Sub-10ms Read Model Queries ($\mathcal{O}(1)$) • 100% Immutability Guarantee • Zero Silent Overwrites |
+=======
+| Phase | Duration | Scope | Status |
+|---|---|---|---|
+| **Phase 1: Weeks 1 & 2** | Days 1 – 14 | Foundation, CQRS, MongoDB Event Store, React Timeline, Immutability Audit, State Reconstruction | **COMPLETED & VERIFIED** ✅ |
+| **Mid-Project Review** | Day 14 | Proof of Event Store Immutability (`APPEND/READ` only, `UPDATE/DELETE` rejected) + Historical Event Replay State Reconstruction | **OFFICIALLY PASSED** ✅ |
+| **Phase 2: Week 3** | Days 15 – 21 | High-Performance Read Models (Projections), Background Worker, React Time-Scrubbing Slider | **COMPLETED & VERIFIED** ✅ |
+| **Phase 3: Week 4** | Days 22 – 28 | Optimistic Concurrency Control (OCC), Recharts Sensor Telemetry, Production Deployment & Final Review | **COMPLETED & DELIVERED** ✅ |
+>>>>>>> 446dcce8a2fb0b18d01d2168e1b5ffedd1ec5599
 
 ---
 
