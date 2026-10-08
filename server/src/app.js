@@ -37,6 +37,10 @@ app.use(notFoundHandler);
 
 app.use(errorHandler);
 if (require.main === module) {
+	app.listen(port, '0.0.0.0', () => {
+		console.log(`🚀 Audit Trail API server listening on 0.0.0.0:${port}`);
+	});
+
 	connectDB()
 		.then(() => {
 			console.log(`✓ MongoDB connection established.`);
@@ -59,11 +63,6 @@ if (require.main === module) {
 		.catch((error) => {
 			console.warn(`⚠️ MongoDB connection unavailable (${error.message}).`);
 			console.warn(`💡 Server is running in resilient mode on port ${port}. (Tip: Add MONGODB_URI in server/.env or start local mongod for persistence)`);
-		})
-		.finally(() => {
-			app.listen(port, () => {
-				console.log(`🚀 Audit Trail API server listening on http://localhost:${port}`);
-			});
 		});
 }
 

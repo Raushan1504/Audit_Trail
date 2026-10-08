@@ -4,7 +4,7 @@
                         },
     "name":  "audit_trail",
     "version":  "1.0.0",
-    "description":  "**14-Day Team Development, GitHub \u0026 AI-Assisted Coding Workflow**",
+    "description": "Event-Sourced Inventory & Logistics Ledger with CQRS and Optimistic Concurrency Control",
     "main":  "index.js",
     "directories":  {
                         "doc":  "docs"
