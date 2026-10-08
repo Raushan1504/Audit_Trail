@@ -113,10 +113,7 @@ Traditional CRUD (Destructive In-Place Mutation):
 
 <div align="center">
 
-[![Audit Trail System Video Demonstration](docs/screenshots/demo_video_thumbnail.png)](https://www.youtube.com/watch?v=YOUR_VIDEO_ID_HERE "Click to Watch System Walkthrough Video")
-
-*Click the image above to launch the interactive high-definition video walkthrough.*  
-*(Alternative Direct Demo Link: [YouTube Walkthrough Video](https://www.youtube.com/watch?v=YOUR_VIDEO_ID_HERE) • [Loom Interactive Recording](https://www.loom.com/share/YOUR_LOOM_ID_HERE))*
+[![Audit Trail System Video Demonstration](docs/screenshots/demo_video_thumbnail.png)](https://youtu.be/XpYEyuK_MvE  "Click to Watch System Walkthrough Video")
 
 </div>
 
