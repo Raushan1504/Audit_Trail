@@ -10,9 +10,12 @@ function securityHeadersMiddleware(req, res, next) {
     res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
   }
 
+  const origin = (req.headers && req.headers.origin) ? req.headers.origin : (process.env.CORS_ORIGIN || '*');
+  res.setHeader('Access-Control-Allow-Origin', origin);
+
   if (req.method === 'OPTIONS') {
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, If-None-Match');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, If-None-Match, Cache-Control, Pragma');
     return res.status(204).end();
   }
 
