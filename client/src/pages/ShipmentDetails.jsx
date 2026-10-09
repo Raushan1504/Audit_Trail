@@ -1,6 +1,7 @@
 import { useParams, Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { getShipmentState, getShipmentEvents } from '../services/api';
+import { getOfflineEvents, getOfflineState } from '../utils/offlineDataEngine';
 import EventTimeline from '../components/EventTimeline';
 import ShipmentState from '../components/ShipmentState';
 import LoadingState from '../components/LoadingState';
@@ -138,8 +139,7 @@ function ShipmentDetails() {
         setEvents(Array.isArray(eventsData) ? eventsData : []);
       })
       .catch((err) => {
-
-        const fallback = DEMO_FALLBACKS[normId] || DEMO_FALLBACKS[shipmentId];
+        const fallback = getOfflineEvents(normId);
         if (fallback && fallback.length > 0) {
           const reconstructed = foldEventsUpTo(fallback, null);
           setShipmentData(reconstructed);
