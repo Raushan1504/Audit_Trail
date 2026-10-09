@@ -483,6 +483,17 @@ export function getOfflineTelemetry(shipmentId) {
 
   return {
     shipmentId: String(shipmentId).trim().toUpperCase(),
+    totalDataPoints: timeSeries.length,
+    metrics: {
+      minTemperature: minTemp,
+      maxTemperature: maxTemp,
+      avgTemperature: avgTemp,
+      meanTemperature: avgTemp,
+      criticalThreshold: lastThreshold,
+      anomaliesDetected: anomaliesCount,
+      latestBatteryVoltage: lastVoltage,
+      latestHumidity: lastHumidity
+    },
     summary: {
       minTemp,
       maxTemp,

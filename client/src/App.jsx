@@ -6,6 +6,7 @@ import Home from "./pages/Home";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import ShipmentDetails from "./pages/ShipmentDetails";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 function App() {
   return (
@@ -13,19 +14,17 @@ function App() {
       <AuthProvider>
         <BrowserRouter>
           <Navbar />
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/shipment/:shipmentId" element={<ShipmentDetails />} />
-          </Routes>
-
+          <ErrorBoundary title="Audit Trail Application View">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/shipment/:shipmentId" element={<ShipmentDetails />} />
+            </Routes>
+          </ErrorBoundary>
         </BrowserRouter>
-
       </AuthProvider>
-
     </ThemeProvider>
-
   );
 }
 

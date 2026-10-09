@@ -80,8 +80,9 @@ export default function SensorTelemetryChart({
     return null;
   }
 
-  const { metrics, timeSeries } = telemetry;
-  const threshold = metrics?.criticalThreshold ?? 4.0;
+  const metrics = telemetry?.metrics || telemetry?.summary || {};
+  const timeSeries = telemetry?.timeSeries || [];
+  const threshold = metrics?.criticalThreshold ?? metrics?.currentThreshold ?? 4.0;
 
   const chartData = timeSeries.map((item) => ({
     name: `v${item.version} ${item.eventType.replace(/_/g, ' ')}`,
@@ -241,53 +242,37 @@ export default function SensorTelemetryChart({
       <div className="telemetry-metrics-grid">
         <div className="metric-kpi-card">
           <span className="kpi-label">MIN RECORDED</span>
-
-          <span className="kpi-value">{metrics.minTemperature ?? 4.0}°C</span>
-
+          <span className="kpi-value">{metrics?.minTemperature ?? metrics?.minTemp ?? 4.0}°C</span>
           <span className="kpi-sub">Cold-chain floor</span>
-
         </div>
 
         <div className="metric-kpi-card">
           <span className="kpi-label">MAX RECORDED</span>
-
-          <span className={`kpi-value ${metrics.maxTemperature > threshold ? 'kpi-value--alert' : ''}`}>
-            {metrics.maxTemperature ?? 4.0}°C
+          <span className={`kpi-value ${(metrics?.maxTemperature ?? metrics?.maxTemp ?? 4.0) > threshold ? 'kpi-value--alert' : ''}`}>
+            {metrics?.maxTemperature ?? metrics?.maxTemp ?? 4.0}°C
           </span>
-
           <span className="kpi-sub">Peak temperature reached</span>
-
         </div>
 
         <div className="metric-kpi-card">
           <span className="kpi-label">CRITICAL THRESHOLD</span>
-
           <span className="kpi-value kpi-value--threshold">{threshold}°C</span>
-
           <span className="kpi-sub">Max safe tolerance</span>
-
         </div>
 
         <div className="metric-kpi-card">
           <span className="kpi-label">THERMAL ANOMALIES</span>
-
-          <span className={`kpi-value ${metrics.anomaliesDetected > 0 ? 'kpi-value--alert' : 'kpi-value--ok'}`}>
-            {metrics.anomaliesDetected}
+          <span className={`kpi-value ${(metrics?.anomaliesDetected ?? metrics?.anomaliesCount ?? 0) > 0 ? 'kpi-value--alert' : 'kpi-value--ok'}`}>
+            {metrics?.anomaliesDetected ?? metrics?.anomaliesCount ?? 0}
           </span>
-
-          <span className="kpi-sub">{metrics.anomaliesDetected > 0 ? 'Breaches flagged' : 'Within safe range'}</span>
-
+          <span className="kpi-sub">{(metrics?.anomaliesDetected ?? metrics?.anomaliesCount ?? 0) > 0 ? 'Breaches flagged' : 'Within safe range'}</span>
         </div>
 
         <div className="metric-kpi-card">
           <span className="kpi-label">LATEST BATTERY</span>
-
-          <span className="kpi-value">{metrics.latestBatteryVoltage ?? 3.8} V</span>
-
+          <span className="kpi-value">{metrics?.latestBatteryVoltage ?? 3.8} V</span>
           <span className="kpi-sub">Sensor operational</span>
-
         </div>
-
       </div>
 
       <div className="telemetry-chart-wrapper">

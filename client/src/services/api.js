@@ -13,7 +13,20 @@ const BASE_URL =
     ? `${window.location.origin}/api`
     : 'http://localhost:5000/api');
 
-const REQUEST_TIMEOUT_MS = 2500;
+const REQUEST_TIMEOUT_MS = 1500;
+let circuitTrippedUntil = 0;
+
+function isCircuitTripped() {
+  return Date.now() < circuitTrippedUntil;
+}
+
+function tripCircuit() {
+  circuitTrippedUntil = Date.now() + 30000;
+}
+
+function resetCircuit() {
+  circuitTrippedUntil = 0;
+}
 
 async function fetchWithTimeout(url, options = {}, timeoutMs = REQUEST_TIMEOUT_MS) {
   const controller = new AbortController();
@@ -46,75 +59,124 @@ async function handleResponse(response) {
 }
 
 export async function getShipmentState(shipmentId) {
-  try {
-    const response = await fetchWithTimeout(`${BASE_URL}/queries/shipments/${shipmentId}`);
-    return await handleResponse(response);
-  } catch (err) {
-    console.info(`[AuditTrail] Remote backend unreachable (${err.message}). Using resilient local ledger for ${shipmentId}.`);
-    const fallback = getOfflineState(shipmentId);
-    if (fallback) return fallback;
-    throw err;
+  const normId = String(shipmentId || '').trim().toUpperCase();
+  if (!normId) throw new Error('Shipment ID is required');
+
+  if (!isCircuitTripped()) {
+    try {
+      const response = await fetchWithTimeout(`${BASE_URL}/queries/shipments/${encodeURIComponent(normId)}`);
+      const data = await handleResponse(response);
+      if (data && data.status) {
+        resetCircuit();
+        return data;
+      }
+    } catch (err) {
+      tripCircuit();
+      console.info(`[AuditTrail] Remote backend unreachable (${err.message}). Using resilient local ledger for ${normId}.`);
+    }
   }
+
+  const fallback = getOfflineState(normId);
+  if (fallback) return fallback;
+  throw new Error(`Shipment state for ${normId} could not be resolved.`);
 }
 
 export async function getShipmentEvents(shipmentId) {
-  try {
-    const response = await fetchWithTimeout(`${BASE_URL}/queries/shipment/${shipmentId}/events`);
-    return await handleResponse(response);
-  } catch (err) {
-    console.info(`[AuditTrail] Remote backend unreachable (${err.message}). Using resilient local events for ${shipmentId}.`);
-    const fallback = getOfflineEvents(shipmentId);
-    if (fallback) return fallback;
-    throw err;
+  const normId = String(shipmentId || '').trim().toUpperCase();
+  if (!normId) return [];
+
+  if (!isCircuitTripped()) {
+    try {
+      const response = await fetchWithTimeout(`${BASE_URL}/queries/shipments/${encodeURIComponent(normId)}/events`);
+      const data = await handleResponse(response);
+      const events = Array.isArray(data) ? data : (data && Array.isArray(data.events) ? data.events : null);
+      if (events && events.length > 0) {
+        resetCircuit();
+        return events;
+      }
+    } catch (err) {
+      tripCircuit();
+      console.info(`[AuditTrail] Remote backend unreachable (${err.message}). Using resilient local events for ${normId}.`);
+    }
   }
+
+  const fallback = getOfflineEvents(normId);
+  if (fallback && fallback.length > 0) return fallback;
+  return [];
 }
 
 export async function getShipmentStateAsOf(shipmentId, target) {
-  try {
-    const response = await fetchWithTimeout(
-      `${BASE_URL}/queries/shipments/${encodeURIComponent(shipmentId)}/as-of/${encodeURIComponent(target)}`
-    );
-    return await handleResponse(response);
-  } catch (err) {
-    console.info(`[AuditTrail] Remote backend unreachable (${err.message}). Using local state-as-of for ${shipmentId}.`);
-    const fallback = getOfflineStateAsOf(shipmentId, target);
-    if (fallback) return fallback;
-    throw err;
+  const normId = String(shipmentId || '').trim().toUpperCase();
+  if (!normId) throw new Error('Shipment ID is required');
+
+  if (!isCircuitTripped()) {
+    try {
+      const response = await fetchWithTimeout(
+        `${BASE_URL}/queries/shipments/${encodeURIComponent(normId)}/as-of/${encodeURIComponent(target)}`
+      );
+      const data = await handleResponse(response);
+      if (data && data.status) {
+        resetCircuit();
+        return data;
+      }
+    } catch (err) {
+      tripCircuit();
+      console.info(`[AuditTrail] Remote backend unreachable (${err.message}). Using local state-as-of for ${normId}.`);
+    }
   }
+
+  const fallback = getOfflineStateAsOf(normId, target);
+  if (fallback) return fallback;
+  throw new Error(`Shipment state-as-of for ${normId} could not be resolved.`);
 }
 
 export async function getShipmentTelemetry(shipmentId) {
-  try {
-    const response = await fetchWithTimeout(
-      `${BASE_URL}/queries/shipments/${encodeURIComponent(shipmentId)}/telemetry`
-    );
-    return await handleResponse(response);
-  } catch (err) {
-    console.info(`[AuditTrail] Remote backend unreachable (${err.message}). Using local telemetry for ${shipmentId}.`);
-    const fallback = getOfflineTelemetry(shipmentId);
-    if (fallback) return fallback;
-    throw err;
+  const normId = String(shipmentId || '').trim().toUpperCase();
+  if (!normId) throw new Error('Shipment ID is required');
+
+  if (!isCircuitTripped()) {
+    try {
+      const response = await fetchWithTimeout(
+        `${BASE_URL}/queries/shipments/${encodeURIComponent(normId)}/telemetry`
+      );
+      const data = await handleResponse(response);
+      if (data && Array.isArray(data.timeSeries) && data.timeSeries.length > 0) {
+        resetCircuit();
+        return data;
+      }
+    } catch (err) {
+      tripCircuit();
+      console.info(`[AuditTrail] Remote backend unreachable (${err.message}). Using local telemetry for ${normId}.`);
+    }
   }
+
+  const fallback = getOfflineTelemetry(normId);
+  if (fallback) return fallback;
+  throw new Error(`Telemetry for ${normId} could not be resolved.`);
 }
 
 async function sendCommand(endpoint, payload) {
-  try {
-    const response = await fetchWithTimeout(`${BASE_URL}${endpoint}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(payload)
-    });
-    return await handleResponse(response);
-  } catch (err) {
-    // If it's a genuine 409 conflict from backend, re-throw so UI modal catches it
-    if (err.status === 409) {
-      throw err;
+  if (!isCircuitTripped()) {
+    try {
+      const response = await fetchWithTimeout(`${BASE_URL}${endpoint}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+      const data = await handleResponse(response);
+      resetCircuit();
+      return data;
+    } catch (err) {
+      if (err.status === 409) {
+        throw err;
+      }
+      tripCircuit();
+      console.info(`[AuditTrail] Remote backend unreachable (${err.message}). Applying command to local ledger.`);
     }
-    console.info(`[AuditTrail] Remote backend unreachable (${err.message}). Applying command to local ledger.`);
-    return applyOfflineCommand(endpoint, payload);
   }
+  return applyOfflineCommand(endpoint, payload);
 }
 
 export async function createShipmentCommand(payload) {

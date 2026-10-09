@@ -68,6 +68,15 @@ describe('Resilient Offline Data Engine', () => {
       assert.ok(typeof telemetry.summary.maxTemp === 'number');
       assert.ok(typeof telemetry.summary.avgTemp === 'number');
       assert.equal(telemetry.summary.anomaliesCount, 1);
+
+      assert.ok(telemetry.metrics);
+      assert.equal(telemetry.metrics.minTemperature, telemetry.summary.minTemp);
+      assert.equal(telemetry.metrics.maxTemperature, telemetry.summary.maxTemp);
+      assert.equal(telemetry.metrics.avgTemperature, telemetry.summary.avgTemp);
+      assert.equal(telemetry.metrics.anomaliesDetected, 1);
+      assert.ok(typeof telemetry.metrics.criticalThreshold === 'number');
+      assert.ok(typeof telemetry.metrics.latestBatteryVoltage === 'number');
+      assert.ok(typeof telemetry.metrics.latestHumidity === 'number');
     });
   });
 

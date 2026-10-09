@@ -11,6 +11,7 @@ import ShipmentMap from '../components/ShipmentMap';
 import HistoricalWarningBanner from '../components/HistoricalWarningBanner';
 import CommandPanel from '../components/CommandPanel';
 import SensorTelemetryChart from '../components/SensorTelemetryChart';
+import ErrorBoundary from '../components/ErrorBoundary';
 import './ShipmentDetails.css';
 
 function getErrorMessage(err) {
@@ -105,11 +106,23 @@ function ShipmentDetails() {
       getShipmentEvents(normId),
     ])
       .then(([stateData, eventsData]) => {
-        setShipmentData(stateData);
-        setAggregateVersion(stateData?.version ?? 0);
-        setEvents(Array.isArray(eventsData) ? eventsData : []);
+        const eventsList = Array.isArray(eventsData) && eventsData.length > 0
+          ? eventsData
+          : getOfflineEvents(normId);
+        const finalState = stateData || foldEventsUpTo(eventsList, null) || getOfflineState(normId);
+
+        setShipmentData(finalState);
+        setAggregateVersion(finalState?.version ?? eventsList.length);
+        setEvents(eventsList);
       })
       .catch((err) => {
+        const fallback = getOfflineEvents(normId);
+        const reconstructed = foldEventsUpTo(fallback, null) || getOfflineState(normId);
+        if (reconstructed) {
+          setShipmentData(reconstructed);
+          setAggregateVersion(reconstructed?.version ?? fallback.length);
+          setEvents(fallback);
+        }
         console.warn('Could not refresh shipment data:', err);
       });
   };
@@ -134,16 +147,21 @@ function ShipmentDetails() {
       getShipmentEvents(normId),
     ])
       .then(([stateData, eventsData]) => {
-        setShipmentData(stateData);
-        setAggregateVersion(stateData?.version ?? 0);
-        setEvents(Array.isArray(eventsData) ? eventsData : []);
+        const eventsList = Array.isArray(eventsData) && eventsData.length > 0
+          ? eventsData
+          : getOfflineEvents(normId);
+        const finalState = stateData || foldEventsUpTo(eventsList, null) || getOfflineState(normId);
+
+        setShipmentData(finalState);
+        setAggregateVersion(finalState?.version ?? eventsList.length);
+        setEvents(eventsList);
       })
       .catch((err) => {
         const fallback = getOfflineEvents(normId);
-        if (fallback && fallback.length > 0) {
-          const reconstructed = foldEventsUpTo(fallback, null);
+        const reconstructed = foldEventsUpTo(fallback, null) || getOfflineState(normId);
+        if (reconstructed) {
           setShipmentData(reconstructed);
-          setAggregateVersion(reconstructed?.version ?? 0);
+          setAggregateVersion(reconstructed?.version ?? fallback.length);
           setEvents(fallback);
           setError(null);
         } else {
@@ -347,19 +365,21 @@ function ShipmentDetails() {
       )}
 
       {!loading && !error && shipmentData && (
-        <SensorTelemetryChart
-          shipmentId={shipmentId}
-          activeScrubberVersion={isHistoricalActive ? replayStep : null}
-          highlightedVersion={hoveredEventVersion}
-          onPointHover={(point) => {
-            setHoveredEventVersion(point ? point.version : null);
-          }}
-          onPointClick={(point) => {
-            if (point && point.version) {
-              handleStepChange(point.version);
-            }
-          }}
-        />
+        <ErrorBoundary title="IoT Sensor Telemetry Monitor">
+          <SensorTelemetryChart
+            shipmentId={shipmentId}
+            activeScrubberVersion={isHistoricalActive ? replayStep : null}
+            highlightedVersion={hoveredEventVersion}
+            onPointHover={(point) => {
+              setHoveredEventVersion(point ? point.version : null);
+            }}
+            onPointClick={(point) => {
+              if (point && point.version) {
+                handleStepChange(point.version);
+              }
+            }}
+          />
+        </ErrorBoundary>
       )}
 
       {!loading && !error && shipmentData && (
